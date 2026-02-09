@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Inter;
+  background: #f9f9f9;
+  color: #191919;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+#root {
+  min-height: 100dvh;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ---------------------------
+   Elements
+--------------------------- */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  cursor: pointer;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+/* 스크롤바 숨기고 싶을 때 class로만 제어 (전체에 숨기지 않기) */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE, Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+/* 모바일에서 터치 스크롤 부드럽게 (필요한 컨테이너에 class로 붙여) */
+.ios-scroll {
+  -webkit-overflow-scrolling: touch;
+}
