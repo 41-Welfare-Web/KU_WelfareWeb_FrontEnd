@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+:root {
+  --font-crimson: "Crimson Text", serif;
+  --font-noto-serif-kr: "Noto Serif KR", serif;
+  --font-playfair: "Playfair Display", serif;
+}
+
+@layer utilities {
+  .font-crimson {
+    font-family: var(--font-crimson);
+  }
+  .font-noto-serif-kr {
+    font-family: var(--font-noto-serif-kr);
+  }
+  .font-playfair {
+    font-family: var(--font-playfair);
+  }
+}
+
 html,
 body {
   width: 100%;
