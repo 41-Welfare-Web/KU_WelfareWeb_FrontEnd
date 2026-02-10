@@ -28,7 +28,7 @@ type LoginPayload = {
 
 type AuthContextValue = AuthState & {
   login: (payload: LoginPayload) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshFromStorage: () => void;
 };
 
@@ -39,6 +39,10 @@ const STORAGE_KEYS = {
   refreshToken: "refreshToken",
   me: "me",
 };
+
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ??
+  "https://rentalweb-production.up.railway.app";
 
 function readUserFromStorage(): User | null {
   const raw = localStorage.getItem(STORAGE_KEYS.me);
@@ -54,8 +58,12 @@ function readAuthFromStorage(): AuthState {
   const accessToken = localStorage.getItem(STORAGE_KEYS.accessToken);
   const refreshToken = localStorage.getItem(STORAGE_KEYS.refreshToken);
   const user = readUserFromStorage();
-  const isLoggedIn = !!accessToken;
-  return { isLoggedIn, user, accessToken, refreshToken };
+  return {
+    isLoggedIn: !!accessToken,
+    user,
+    accessToken,
+    refreshToken,
+  };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -69,17 +77,81 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEYS.accessToken, payload.accessToken);
     localStorage.setItem(STORAGE_KEYS.refreshToken, payload.refreshToken);
     localStorage.setItem(STORAGE_KEYS.me, JSON.stringify(payload.user));
-    refreshFromStorage();
+
+    // 즉시 state 반영 (Header 바로 변경)
+    setState({
+      isLoggedIn: true,
+      user: payload.user,
+      accessToken: payload.accessToken,
+      refreshToken: payload.refreshToken,
+    });
   };
 
-  const logout = () => {
+  // 서버 로그아웃 연동
+  const logout = async () => {
+    const refreshToken = localStorage.getItem(STORAGE_KEYS.refreshToken);
+    const accessToken = localStorage.getItem(STORAGE_KEYS.accessToken);
+
+    // 1) UI 먼저 즉시 로그아웃(PC/모바일 모두 즉시 반영)
     localStorage.removeItem(STORAGE_KEYS.accessToken);
     localStorage.removeItem(STORAGE_KEYS.refreshToken);
     localStorage.removeItem(STORAGE_KEYS.me);
-    refreshFromStorage();
+
+    setState({
+      isLoggedIn: false,
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+    });
+
+    // 2) 서버 로그아웃은 “시도만”
+    if (!refreshToken) return;
+
+    // refresh를 호출하더라도 "state/localStorage 갱신 금지" (임시 토큰만)
+    const getFreshAccessToken = async (): Promise<string | null> => {
+      try {
+        const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+        if (!res.ok) return null;
+
+        const data = await res.json();
+        return data?.accessToken ?? data?.result?.accessToken ?? null;
+      } catch {
+        return null;
+      }
+    };
+
+    const tryLogout = async (token?: string | null) => {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      return fetch(`${BASE_URL}/api/auth/logout`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ refreshToken }),
+      });
+    };
+
+    try {
+      // 1차 시도 (기존 accessToken으로)
+      const res1 = await tryLogout(accessToken);
+
+      // 401이면 refresh 후 재시도
+      if (res1.status === 401) {
+        const fresh = await getFreshAccessToken();
+        await tryLogout(fresh);
+      }
+    } catch {
+      // 서버 실패는 무시 (클라는 이미 로그아웃 완료 상태)
+    }
   };
 
-  // 다른 탭에서 로그인/로그아웃 했을 때도 동기화
+  // 다른 탭에서 로그인/로그아웃 동기화
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (
