@@ -1,10 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/all/logo.svg";
+import my from "../assets/all/my.svg";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Header() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+
+  const { isLoggedIn, user } = useAuth();
+
+  const go = (path: string) => {
+    setOpen(false);
+    navigate(path);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white">
@@ -37,25 +46,55 @@ export default function Header() {
           <button type="button" className="font-semibold text-base">
             플로터인쇄사업
           </button>
-          <button
-            type="button"
-            onClick={() => navigate("/login")}
-            className="font-semibold text-base"
-          >
-            로그인
-          </button>
+
+          {!isLoggedIn ? (
+            <button
+              type="button"
+              onClick={() => go("/login")}
+              className="font-semibold text-base"
+            >
+              로그인
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => go("/mypage")}
+              className="flex items-center gap-3 rounded-full bg-[#FD8060] px-4 py-2 text-black text-sm hover:opacity-90"
+              aria-label="마이페이지"
+              title="마이페이지"
+            >
+              <img src={my} alt="사용자" />
+              {user?.name ?? "사용자"}님
+            </button>
+          )}
         </nav>
 
-        {/* Mobile menu button */}
-        <button
-          type="button"
-          className="inline-flex items-center justify-center rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-[#410F07] md:hidden"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-label="메뉴 열기"
-        >
-          메뉴
-        </button>
+        {/* Mobile: pill(오른쪽) + menu button */}
+        <div className="flex items-center gap-2 md:hidden">
+          {isLoggedIn && (
+            <button
+              type="button"
+              onClick={() => go("/mypage")}
+              className="flex items-center gap-3 rounded-full bg-[#FD8060] px-3 py-2 text-black text-[10px] hover:opacity-90"
+              aria-label="마이페이지"
+              title="마이페이지"
+            >
+              <img src={my} alt="사용자" />
+              {user?.name ?? "사용자"}님
+            </button>
+          )}
+
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-[#410F07]"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-label="메뉴 열기"
+          >
+            메뉴
+          </button>
+        </div>
       </div>
 
       {/* Mobile dropdown */}
@@ -81,13 +120,24 @@ export default function Header() {
               >
                 플로터인쇄사업
               </button>
-              <button
-                type="button"
-                onClick={() => navigate("/login")}
-                className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold"
-              >
-                로그인
-              </button>
+
+              {!isLoggedIn ? (
+                <button
+                  type="button"
+                  onClick={() => go("/login")}
+                  className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold"
+                >
+                  로그인
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => go("/mypage")}
+                  className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold"
+                >
+                  마이페이지
+                </button>
+              )}
             </div>
           </div>
         </div>
