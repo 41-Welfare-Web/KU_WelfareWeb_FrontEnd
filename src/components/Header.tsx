@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import logo from "../assets/all/logo.svg";
 
 export default function Header() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   return (
@@ -35,7 +37,11 @@ export default function Header() {
           <button type="button" className="font-semibold text-base">
             플로터인쇄사업
           </button>
-          <button type="button" className="font-semibold text-base">
+          <button
+            type="button"
+            onClick={() => navigate("/login")}
+            className="font-semibold text-base"
+          >
             로그인
           </button>
         </nav>
@@ -77,6 +83,7 @@ export default function Header() {
               </button>
               <button
                 type="button"
+                onClick={() => navigate("/login")}
                 className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold"
               >
                 로그인
