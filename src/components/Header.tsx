@@ -1,19 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/all/logo.svg";
 import my from "../assets/all/my.svg";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Header() {
   const navigate = useNavigate();
-
-  // 상단 "메뉴"(모바일 네비) 토글
+  const location = useLocation();
   const [open, setOpen] = useState(false);
-
-  // 사용자 pill 드롭다운 토글
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  // ✅ desktop/mobile 각각 ref 분리
   const desktopUserMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileUserMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -30,20 +26,23 @@ export default function Header() {
   };
 
   const onLogout = async () => {
-    // logout이 state를 먼저 비우도록 AuthContext에서 처리하면 가장 깔끔
     await logout();
     closeAll();
     navigate("/");
   };
 
-  // ✅ 바깥 클릭하면 user menu 닫기 (desktop/mobile 둘 다 체크)
+  const menuClass = (path: string) =>
+    `font-semibold text-base transition-colors ${
+      location.pathname.startsWith(path)
+        ? "text-[#FE6949]"
+        : "text-[#410F07] hover:text-[#FE6949]"
+    }`;
+
   useEffect(() => {
     const onDown = (e: MouseEvent | TouchEvent) => {
       const target = e.target as Node;
-
       const inDesktop = desktopUserMenuRef.current?.contains(target) ?? false;
       const inMobile = mobileUserMenuRef.current?.contains(target) ?? false;
-
       if (!inDesktop && !inMobile) setUserMenuOpen(false);
     };
 
@@ -55,7 +54,6 @@ export default function Header() {
     };
   }, []);
 
-  // ✅ ESC로 닫기
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setUserMenuOpen(false);
@@ -67,7 +65,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-white">
       <div className="mx-auto flex h-20 items-center justify-between px-4 sm:h-16 sm:px-6 lg:h-20 lg:px-7">
-        {/* Left: logo + title */}
+        {/* Logo */}
         <div className="flex items-center gap-2 sm:gap-3">
           <img
             src={logo}
@@ -84,15 +82,21 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-3 text-[#410F07] sm:gap-5 md:flex lg:gap-7">
-          <button type="button" className="font-semibold text-base">
+        {/* Desktop Nav */}
+        <nav className="hidden items-center gap-5 md:flex">
+          <button type="button" className={menuClass("/committee")}>
             학생복지위원회
           </button>
-          <button type="button" className="font-semibold text-base">
+
+          <button
+            type="button"
+            onClick={() => navigate("/rental")}
+            className={menuClass("/rental")}
+          >
             중앙대여사업
           </button>
-          <button type="button" className="font-semibold text-base">
+
+          <button type="button" className={menuClass("/plotter")}>
             플로터인쇄사업
           </button>
 
@@ -100,7 +104,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => go("/login")}
-              className="font-semibold text-base"
+              className={menuClass("/login")}
             >
               로그인
             </button>
@@ -109,10 +113,8 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((v) => !v)}
-                onMouseEnter={() => setUserMenuOpen(true)} // desktop hover
+                onMouseEnter={() => setUserMenuOpen(true)}
                 className="flex items-center gap-3 rounded-full bg-[#FD8060] px-4 py-2 text-black text-sm hover:opacity-90"
-                aria-label="사용자 메뉴"
-                aria-expanded={userMenuOpen}
               >
                 <img src={my} alt="사용자" />
                 {user?.name ?? "사용자"}님
@@ -121,44 +123,30 @@ export default function Header() {
               {userMenuOpen && (
                 <div
                   className="absolute right-0 mt-2 w-[160px] overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.12)]"
-                  onMouseLeave={() => setUserMenuOpen(false)} // desktop hover out
+                  onMouseLeave={() => setUserMenuOpen(false)}
                 >
-                  <button
-                    type="button"
-                    onClick={() => go("/mypage")}
-                    className="w-full px-4 py-3 text-left text-[16px] font-semibold hover:bg-black/5"
-                  >
-                    마이페이지
-                  </button>
-                  <div className="h-px bg-black/10" />
-                  <button
-                    type="button"
-                    onClick={() => go("/mypage/rental")}
-                    className="w-full px-4 py-3 text-left text-[16px] font-semibold hover:bg-black/5"
-                  >
-                    대여 현황
-                  </button>
-                  <div className="h-px bg-black/10" />
-                  <button
-                    type="button"
-                    onClick={() => go("/mypage/plotter")}
-                    className="w-full px-4 py-3 text-left text-[16px] font-semibold hover:bg-black/5"
-                  >
-                    플로터 현황
-                  </button>
-                  <div className="h-px bg-black/10" />
-                  <button
-                    type="button"
-                    onClick={() => go("/mypage/edit")}
-                    className="w-full px-4 py-3 text-left text-[16px] font-semibold hover:bg-black/5"
-                  >
-                    정보 수정
-                  </button>
-                  <div className="h-px bg-black/10" />
+                  {[
+                    { label: "마이페이지", path: "/mypage" },
+                    { label: "대여 현황", path: "/mypage/rental" },
+                    { label: "플로터 현황", path: "/mypage/plotter" },
+                    { label: "정보 수정", path: "/mypage/edit" },
+                  ].map((item) => (
+                    <div key={item.path}>
+                      <button
+                        type="button"
+                        onClick={() => go(item.path)}
+                        className="w-full px-4 py-3 text-left text-[16px] font-semibold text-[#410F07] hover:text-[#FE6949] transition-colors"
+                      >
+                        {item.label}
+                      </button>
+                      <div className="h-px bg-black/10" />
+                    </div>
+                  ))}
+
                   <button
                     type="button"
                     onClick={onLogout}
-                    className="w-full px-4 py-3 text-left text-[16px] font-semibold hover:bg-black/5"
+                    className="w-full px-4 py-3 text-left text-[16px] font-semibold text-[#410F07] hover:text-[#FE6949] transition-colors"
                   >
                     로그아웃
                   </button>
@@ -168,14 +156,14 @@ export default function Header() {
           )}
         </nav>
 
-        {/* Mobile: pill(오른쪽) + menu button */}
+        {/* Mobile */}
         <div className="flex items-center gap-2 md:hidden">
           {isLoggedIn && (
             <div ref={mobileUserMenuRef} className="relative">
               <button
                 type="button"
-                onClick={() => setUserMenuOpen((v) => !v)} // mobile click
-                className="flex items-center gap-3 rounded-full bg-[#FD8060] px-3 py-2 text-black text-[10px] hover:opacity-90"
+                onClick={() => setUserMenuOpen((v) => !v)}
+                className="flex items-center gap-2 rounded-full bg-[#FD8060] px-3 py-2 text-black text-[10px] hover:opacity-90"
                 aria-label="사용자 메뉴"
                 aria-expanded={userMenuOpen}
               >
@@ -188,7 +176,7 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={() => go("/mypage")}
-                    className="w-full px-4 py-3 text-left text-[16px] font-semibold hover:bg-black/5"
+                    className="w-full px-4 py-3 text-left text-[16px] font-semibold text-[#410F07] hover:text-[#FE6949] transition-colors"
                   >
                     마이페이지
                   </button>
@@ -196,7 +184,7 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={() => go("/mypage/rental")}
-                    className="w-full px-4 py-3 text-left text-[16px] font-semibold hover:bg-black/5"
+                    className="w-full px-4 py-3 text-left text-[16px] font-semibold text-[#410F07] hover:text-[#FE6949] transition-colors"
                   >
                     대여 현황
                   </button>
@@ -204,7 +192,7 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={() => go("/mypage/plotter")}
-                    className="w-full px-4 py-3 text-left text-[16px] font-semibold hover:bg-black/5"
+                    className="w-full px-4 py-3 text-left text-[16px] font-semibold text-[#410F07] hover:text-[#FE6949] transition-colors"
                   >
                     플로터 현황
                   </button>
@@ -212,7 +200,7 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={() => go("/mypage/edit")}
-                    className="w-full px-4 py-3 text-left text-[16px] font-semibold hover:bg-black/5"
+                    className="w-full px-4 py-3 text-left text-[16px] font-semibold text-[#410F07] hover:text-[#FE6949] transition-colors"
                   >
                     정보 수정
                   </button>
@@ -220,7 +208,7 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={onLogout}
-                    className="w-full px-4 py-3 text-left text-[16px] font-semibold hover:bg-black/5"
+                    className="w-full px-4 py-3 text-left text-[16px] font-semibold text-[#410F07] hover:text-[#FE6949] transition-colors"
                   >
                     로그아웃
                   </button>
@@ -229,10 +217,9 @@ export default function Header() {
             </div>
           )}
 
-          {/* Mobile menu button */}
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-[#410F07]"
+            className="rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-[#410F07]"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-label="메뉴 열기"
@@ -242,7 +229,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile dropdown (상단 메뉴) */}
+      {/* Mobile Dropdown */}
       {open && (
         <div className="md:hidden">
           <div className="px-4 pb-4">
@@ -255,6 +242,7 @@ export default function Header() {
               </button>
               <button
                 type="button"
+                onClick={() => navigate("/rental")}
                 className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold"
               >
                 중앙대여사업
@@ -265,7 +253,6 @@ export default function Header() {
               >
                 플로터인쇄사업
               </button>
-
               {!isLoggedIn ? (
                 <button
                   type="button"

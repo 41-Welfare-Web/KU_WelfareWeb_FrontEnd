@@ -95,16 +95,16 @@ export default function Login() {
                 onLogin();
               }}
             >
-              {/* 학번 */}
+              {/* 아이디 */}
               <div className="space-y-2">
                 <label className="block text-[16px] font-semibold text-black">
-                  학번
+                  아이디
                 </label>
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   type="text"
-                  inputMode="numeric"
+                  inputMode="text"
                   className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                 />
               </div>
