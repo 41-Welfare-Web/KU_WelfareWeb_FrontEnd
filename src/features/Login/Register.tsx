@@ -37,7 +37,7 @@ export default function Register() {
   const [phone, setPhone] = useState(""); // phoneNumber
   const [verificationCode, setVerificationCode] = useState("");
 
-  const [serverIssuedCode, setServerIssuedCode] = useState<string>(""); // 개발 편의: 응답 code 표시용(UI는 안 바꾸려고 화면에 안 뿌림)
+  const [, setServerIssuedCode] = useState<string>(""); // 개발 편의: 응답 code 표시용(UI는 안 바꾸려고 화면에 안 뿌림)
   const [isVerified, setIsVerified] = useState(false); //  인증 성공 여부
 
   const [errorMsg, setErrorMsg] = useState("");
