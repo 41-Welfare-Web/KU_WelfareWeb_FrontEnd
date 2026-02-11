@@ -143,7 +143,11 @@ export default function Login() {
                   아이디/비밀번호 찾기
                 </button>
                 <span className="text-[#868686]">|</span>
-                <button type="button" className="hover:text-[#555]">
+                <button
+                  type="button"
+                  onClick={() => navigate("/signup")}
+                  className="hover:text-[#555]"
+                >
                   회원가입
                 </button>
               </div>
