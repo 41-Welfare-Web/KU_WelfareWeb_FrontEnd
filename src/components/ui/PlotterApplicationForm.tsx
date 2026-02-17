@@ -15,13 +15,13 @@ const PlotterApplicationForm = ({
   phone = '010-1234-5678',
   className = '',
 }: PlotterApplicationFormProps) => {
-  const [organization, setOrganization] = useState('학생복지위원회');
+  const [organization, _setOrganization] = useState('학생복지위원회');
   const [orgOpen, setOrgOpen] = useState(false);
   
-  const [purpose, setPurpose] = useState('대자보 출력');
+  const [purpose, _setPurpose] = useState('대자보 출력');
   const [purposeOpen, setPurposeOpen] = useState(false);
   
-  const [paperSize, setPaperSize] = useState('A1(594 x 941mm)');
+  const [paperSize, _setPaperSize] = useState('A1(594 x 941mm)');
   const [paperOpen, setPaperOpen] = useState(false);
   
   const [printCount, setPrintCount] = useState('1');
@@ -148,7 +148,7 @@ const PlotterApplicationForm = ({
             <p className="mt-2 text-[15px] font-medium text-[#868686]">
               PDF 파일을 이곳에 드래그 하거나 클릭하세요
             </p>
-            <div className="mt-2 bg-white border-[0.5px] border-[#a4a4a4] rounded-[6px] px-4 py-1">
+            <div className="mt-2 bg-white border-[0.5px] border-[#a4a4a4] rounded-md px-4 py-1">
               <span className="text-[15px] font-medium text-[#868686]">파일 선택</span>
             </div>
           </label>

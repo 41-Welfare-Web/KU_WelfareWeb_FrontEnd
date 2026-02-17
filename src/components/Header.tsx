@@ -129,7 +129,7 @@ export default function Header() {
 
               {userMenuOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-[160px] overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.12)]"
+                  className="absolute right-0 mt-2 w-40 overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.12)]"
                   onMouseLeave={() => setUserMenuOpen(false)}
                 >
                   {[
@@ -179,7 +179,7 @@ export default function Header() {
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-[160px] overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.12)]">
+                <div className="absolute right-0 mt-2 w-40 overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.12)]">
                   <button
                     type="button"
                     onClick={() => go("/mypage")}

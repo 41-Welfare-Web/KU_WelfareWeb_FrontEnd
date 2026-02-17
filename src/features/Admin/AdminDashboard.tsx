@@ -277,12 +277,12 @@ export default function AdminDashboard() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                       placeholder="이름, 학과, 물품 검색"
-                      className="w-full h-[40px] bg-[#d9d9d9] rounded-[10px] pl-12 pr-4 text-[20px] placeholder:text-[#8e8e8e]"
+                      className="w-full h-10 bg-[#d9d9d9] rounded-[10px] pl-12 pr-4 text-[20px] placeholder:text-[#8e8e8e]"
                     />
                   </div>
                   <button
                     onClick={handleSearch}
-                    className="h-[40px] px-6 bg-black text-white rounded-[10px] text-[20px] hover:bg-gray-800 transition"
+                    className="h-10 px-6 bg-black text-white rounded-[10px] text-[20px] hover:bg-gray-800 transition"
                   >
                     검색
                   </button>
