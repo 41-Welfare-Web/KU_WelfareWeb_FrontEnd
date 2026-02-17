@@ -41,7 +41,7 @@ export default function SelectModal({
       } transition-colors ${className}`}
     >
       <p 
-        className={`text-[20px] font-medium ${
+        className={`font-medium ${
           disabled ? "text-[#afafaf]" : "text-black"
         }`}
         style={{ fontFamily: "'Gmarket Sans', sans-serif" }}
