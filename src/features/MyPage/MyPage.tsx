@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import ProfileEditForm from "../../components/ui/ProfileEditForm";
 
 type ReservationStatus = "예약" | "정상 반납" | "대여 중" | "불량 반납" | "예약 취소";
 type PlotterStatus = "예약 대기" | "수령 완료" | "예약 확정" | "인쇄 완료" | "예약 반려" | "예약 취소";
@@ -68,11 +69,11 @@ const MOCK_RENTAL_RESERVATIONS: Reservation[] = [
 const MOCK_PLOTTER_RESERVATIONS: PlotterReservation[] = [
   {
     id: "1",
-    title: "대자보 플로터 인쇄",
+    title: "행사용 현수막 외 0건",
     status: "예약 대기",
     code: "HBW-202612345",
     applicationDate: "2026-01-05",
-    date: "2026-01-14",
+    date: "2026-01-10 ~ 2026-01-14   |   총 1개",
   },
   {
     id: "2",
@@ -168,8 +169,6 @@ export default function MyPage() {
 
   // 개인정보 수정 폼 상태
   const [userId] = useState("202112345");
-  const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [department, setDepartment] = useState("학생복지 위원회");
 
   const handleEdit = (id: string) => {
@@ -179,31 +178,23 @@ export default function MyPage() {
   const handleCancel = (id: string) => {
     if (window.confirm("예약을 취소하시겠습니까?")) {
       console.log("취소:", id);
+      alert("예약이 취소되었습니다.");
     }
   };
 
-  const handlePasswordCheck = () => {
-    if (password !== passwordConfirm) {
-      alert("비밀번호가 일치하지 않습니다.");
-      return;
-    }
-    alert("비밀번호가 확인되었습니다.");
-  };
-
-  const handleProfileUpdate = () => {
-    if (password && password !== passwordConfirm) {
-      alert("비밀번호가 일치하지 않습니다.");
-      return;
-    }
+  const handleProfileUpdate = (data: {
+    password: string;
+    passwordConfirm: string;
+    department: string;
+  }) => {
+    console.log("프로필 수정:", data);
+    setDepartment(data.department);
     alert("개인정보가 수정되었습니다.");
-    // TODO: API 호출하여 정보 업데이트
   };
 
   const handleAccountDelete = () => {
-    if (window.confirm("정말로 회원 탈퇴하시겠습니까?\n탈퇴 후 모든 예약 정보가 삭제됩니다.")) {
-      console.log("회원 탈퇴");
-      // TODO: 회원 탈퇴 API 호출
-    }
+    console.log("회원 탈퇴");
+    alert("회원 탈퇴가 완료되었습니다.");
   };
 
   return (
@@ -340,6 +331,22 @@ export default function MyPage() {
                             신청일 {reservation.applicationDate}
                           </span>
                         </div>
+                        {reservation.status === "예약 대기" && (
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => handleEdit(reservation.id)}
+                              className="bg-white border border-[#a4a4a4] rounded-[13px] px-6 py-3 text-[20px] hover:bg-gray-50 transition"
+                            >
+                              수정
+                            </button>
+                            <button
+                              onClick={() => handleCancel(reservation.id)}
+                              className="bg-[#ffd2d2] border border-[#ff5151] rounded-[13px] px-6 py-3 text-[20px] text-red-600 hover:bg-[#ffbdbd] transition"
+                            >
+                              예약 취소
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       <h4 className="text-[32px] font-semibold text-[#410f07] mb-4">
@@ -359,91 +366,12 @@ export default function MyPage() {
 
               {activeTab === "profile" && (
                 <div className="flex justify-center py-8">
-                  <div className="bg-white border border-[#e2e2e2] rounded-[22px] shadow-lg p-12 w-[544px]">
-                    <h2 className="text-[32px] font-bold text-black text-center mb-8">
-                      개인정보 수정
-                    </h2>
-
-                    {/* 아이디 */}
-                    <div className="mb-8">
-                      <label className="block text-[20px] text-black mb-3">아이디</label>
-                      <input
-                        type="text"
-                        value={userId}
-                        disabled
-                        className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-[#afafaf]"
-                      />
-                    </div>
-
-                    {/* 비밀번호 */}
-                    <div className="mb-8">
-                      <label className="block text-[20px] text-black mb-3">비밀번호</label>
-                      <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="***********"
-                        className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-[#afafaf] placeholder:text-[#afafaf]"
-                      />
-                    </div>
-
-                    {/* 비밀번호 확인 */}
-                    <div className="mb-8">
-                      <label className="block text-[20px] text-black mb-3">비밀번호 확인</label>
-                      <div className="flex gap-3">
-                        <input
-                          type="password"
-                          value={passwordConfirm}
-                          onChange={(e) => setPasswordConfirm(e.target.value)}
-                          placeholder="***********"
-                          className="flex-1 h-[67px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-[#afafaf] placeholder:text-[#afafaf]"
-                        />
-                        <button
-                          onClick={handlePasswordCheck}
-                          className="w-[106px] h-[67px] bg-[#fe6949] rounded-[10px] text-[24px] text-white font-bold hover:bg-[#e55838] transition"
-                        >
-                          확인
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* 단위 변경 */}
-                    <div className="mb-8">
-                      <label className="block text-[20px] text-black mb-3">단위 변경</label>
-                      <select
-                        value={department}
-                        onChange={(e) => setDepartment(e.target.value)}
-                        className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-black appearance-none cursor-pointer"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z' fill='%23000000'/%3E%3C/svg%3E")`,
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'right 1rem center',
-                        }}
-                      >
-                        <option value="학생복지 위원회">학생복지 위원회</option>
-                        <option value="총학생회">총학생회</option>
-                        <option value="단과대 학생회">단과대 학생회</option>
-                        <option value="동아리">동아리</option>
-                        <option value="학과 학생회">학과 학생회</option>
-                      </select>
-                    </div>
-
-                    {/* 수정 완료 버튼 */}
-                    <button
-                      onClick={handleProfileUpdate}
-                      className="w-full h-[71px] bg-[#fd7d5d] rounded-[10px] text-[24px] text-white font-bold hover:bg-[#e46c4c] transition mb-6"
-                    >
-                      수정 완료
-                    </button>
-
-                    {/* 회원 탈퇴 */}
-                    <button
-                      onClick={handleAccountDelete}
-                      className="w-full text-[20px] text-[#868686] underline hover:text-[#666] transition"
-                    >
-                      회원 탈퇴하기
-                    </button>
-                  </div>
+                  <ProfileEditForm
+                    userId={userId}
+                    initialDepartment={department}
+                    onUpdate={handleProfileUpdate}
+                    onDelete={handleAccountDelete}
+                  />
                 </div>
               )}
             </div>
