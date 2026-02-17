@@ -1,11 +1,16 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import PlotterRequestSummary from "../../components/ui/PlotterRequestSummary";
+import LogoCircle from "../../assets/plotter/logo-circle.svg";
 
 type LocationState = {
   name?: string;
   studentNo?: string;
   phone?: string;
+  purpose?: string;
+  quantity?: number;
+  expectedDate?: string;
 };
 
 export default function PlotterComplete() {
@@ -16,6 +21,9 @@ export default function PlotterComplete() {
   const name = state?.name || "홍길동";
   const studentNo = state?.studentNo || "202112345";
   const phone = state?.phone || "010-1234-5678";
+  const purpose = state?.purpose || "대자보";
+  const quantity = state?.quantity || 1;
+  const expectedDate = state?.expectedDate || "2026-01-10";
 
   return (
     <>
@@ -23,23 +31,9 @@ export default function PlotterComplete() {
       
       <div className="w-full bg-gradient-to-b from-[#ffdcc5] to-white min-h-screen pb-20">
         <div className="max-w-[1440px] mx-auto px-4 pt-16">
-          {/* 체크마크 아이콘 */}
+          {/* 로고 서클 */}
           <div className="flex justify-center mb-8">
-            <div className="relative w-[131px] h-[131px]">
-              <div className="absolute inset-0 bg-white rounded-full shadow-lg"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg className="w-[115px] h-[115px]" viewBox="0 0 115 115" fill="none">
-                  <circle cx="57.5" cy="57.5" r="47.5" fill="#FF7755" />
-                  <path 
-                    d="M35 57.5L50 72.5L80 42.5" 
-                    stroke="white" 
-                    strokeWidth="8" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            </div>
+            <img src={LogoCircle} alt="Logo" className="w-[131px] h-[131px]" />
           </div>
 
           {/* 완료 메시지 */}
@@ -53,29 +47,20 @@ export default function PlotterComplete() {
             </p>
           </div>
 
-          {/* 신청자 정보 카드 */}
-          <div className="max-w-[782px] mx-auto mt-12">
-            <div className="bg-white rounded-t-[17px] p-8">
-              <div className="flex justify-between items-center">
-                <span className="text-[25px] text-[#676767]">신청자</span>
-                <span className="text-[25px] text-black font-medium">
-                  {name} ({studentNo})
-                </span>
-              </div>
-            </div>
-            
-            <div className="h-px bg-gray-300"></div>
-            
-            <div className="bg-white rounded-b-[17px] p-8">
-              <div className="flex justify-between items-center">
-                <span className="text-[25px] text-[#676767]">연락처</span>
-                <span className="text-[25px] text-black font-medium">
-                  {phone}
-                </span>
-              </div>
-            </div>
+          {/* 신청 정보 요약 */}
+          <div className="flex justify-center mt-12">
+            <PlotterRequestSummary
+              purpose={purpose}
+              quantity={quantity}
+              expectedDate={expectedDate}
+              applicantName={name}
+              studentNo={studentNo}
+              phone={phone}
+            />
+          </div>
 
-            {/* 홈으로 돌아가기 버튼 */}
+          {/* 홈으로 돌아가기 버튼 */}
+          <div className="max-w-[782px] mx-auto">
             <button
               onClick={() => navigate("/")}
               className="w-full mt-8 h-[63px] bg-[#f72] rounded-[10px] shadow-lg text-white text-[24px] font-bold hover:bg-[#e65a3d] transition"
