@@ -5,6 +5,7 @@ import Register from "../features/Login/Register";
 import RentalList from "../features/Rental/RentalList";
 import PlotterRequest from "../features/Plotter/PlotterRequest";
 import PlotterComplete from "../features/Plotter/PlotterComplete";
+import PlotterTest from "../features/Plotter/PlotterTest";
 import MyPage from "../features/MyPage/MyPage";
 import AdminDashboard from "../features/Admin/AdminDashboard";
 
@@ -18,6 +19,7 @@ export default function AppRouter() {
       <Route path="/rental" element={<RentalList />} />
       <Route path="/plotter" element={<PlotterRequest />} />
       <Route path="/plotter/complete" element={<PlotterComplete />} />
+      <Route path="/plotter/test" element={<PlotterTest />} />
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/admin" element={<AdminDashboard />} />
     </Routes>
