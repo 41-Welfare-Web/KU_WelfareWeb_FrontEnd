@@ -2,10 +2,14 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import TabSelector from "../../components/ui/TabSelector";
+import RentalContainer from "../../components/ui/RentalContainer";
+import PlotterContainer from "../../components/ui/PlotterContainer";
 import ProfileEditForm from "../../components/ui/ProfileEditForm";
+import myOrangeIcon from "../../assets/mypage/my-orange.svg";
 
-type ReservationStatus = "예약" | "정상 반납" | "대여 중" | "불량 반납" | "예약 취소";
-type PlotterStatus = "예약 대기" | "수령 완료" | "예약 확정" | "인쇄 완료" | "예약 반려" | "예약 취소";
+type ReservationStatus = 'reserved' | 'renting' | 'returned' | 'defective' | 'canceled';
+type PlotterStatus = 'waiting' | 'confirmed' | 'printing' | 'completed' | 'rejected';
 type TabType = "rental" | "plotter" | "profile";
 
 type Reservation = {
@@ -14,8 +18,9 @@ type Reservation = {
   status: ReservationStatus;
   code: string;
   applicationDate: string;
-  date: string;
-  items?: string;
+  startDate: string;
+  endDate: string;
+  totalCount: number;
 };
 
 type PlotterReservation = {
@@ -24,134 +29,94 @@ type PlotterReservation = {
   status: PlotterStatus;
   code: string;
   applicationDate: string;
-  date: string;
+  printDate: string;
 };
 
 const MOCK_RENTAL_RESERVATIONS: Reservation[] = [
   {
     id: "1",
-    title: "행사용 현수막 외 0건",
-    status: "예약",
+    title: "행사용 현수막",
+    status: "reserved",
     code: "HBW-202612345",
     applicationDate: "2026-01-05",
-    date: "2026-01-10 ~ 2026-01-14",
-    items: "총 1개",
+    startDate: "2026-01-10",
+    endDate: "2026-01-14",
+    totalCount: 1,
   },
   {
     id: "2",
-    title: "행사용 현수막 외 0건",
-    status: "정상 반납",
+    title: "행사용 현수막",
+    status: "returned",
     code: "HBW-202612345",
     applicationDate: "2026-01-05",
-    date: "2026-01-10 ~ 2026-01-14",
-    items: "총 1개",
+    startDate: "2026-01-10",
+    endDate: "2026-01-14",
+    totalCount: 1,
   },
   {
     id: "3",
-    title: "행사용 현수막 외 0건",
-    status: "대여 중",
+    title: "행사용 현수막",
+    status: "renting",
     code: "HBW-202612345",
     applicationDate: "2026-01-05",
-    date: "2026-01-10 ~ 2026-01-14",
-    items: "총 1개",
+    startDate: "2026-01-10",
+    endDate: "2026-01-14",
+    totalCount: 1,
   },
   {
     id: "4",
-    title: "행사용 현수막 외 0건",
-    status: "불량 반납",
+    title: "행사용 현수막",
+    status: "defective",
     code: "HBW-202612345",
     applicationDate: "2026-01-05",
-    date: "2026-01-10 ~ 2026-01-14",
-    items: "총 1개",
+    startDate: "2026-01-10",
+    endDate: "2026-01-14",
+    totalCount: 1,
   },
 ];
 
 const MOCK_PLOTTER_RESERVATIONS: PlotterReservation[] = [
   {
     id: "1",
-    title: "행사용 현수막 외 0건",
-    status: "예약 대기",
+    title: "대자보 플로터 인쇄",
+    status: "waiting",
     code: "HBW-202612345",
     applicationDate: "2026-01-05",
-    date: "2026-01-10 ~ 2026-01-14   |   총 1개",
+    printDate: "2026-01-14",
   },
   {
     id: "2",
     title: "대자보 플로터 인쇄",
-    status: "수령 완료",
+    status: "completed",
     code: "HBW-202612345",
     applicationDate: "2026-01-05",
-    date: "2026-01-14",
+    printDate: "2026-01-14",
   },
   {
     id: "3",
     title: "대자보 플로터 인쇄",
-    status: "예약 확정",
+    status: "confirmed",
     code: "HBW-202612345",
     applicationDate: "2026-01-05",
-    date: "2026-01-14",
+    printDate: "2026-01-14",
   },
   {
     id: "4",
     title: "대자보 플로터 인쇄",
-    status: "인쇄 완료",
+    status: "printing",
     code: "HBW-202612345",
     applicationDate: "2026-01-05",
-    date: "2026-01-14",
+    printDate: "2026-01-14",
   },
   {
     id: "5",
     title: "대자보 플로터 인쇄",
-    status: "예약 반려",
+    status: "rejected",
     code: "HBW-202612345",
     applicationDate: "2026-01-05",
-    date: "2026-01-14",
-  },
-  {
-    id: "6",
-    title: "대자보 플로터 인쇄",
-    status: "예약 취소",
-    code: "HBW-202612345",
-    applicationDate: "2026-01-05",
-    date: "2026-01-14",
+    printDate: "2026-01-14",
   },
 ];
-
-const getStatusColor = (status: ReservationStatus) => {
-  switch (status) {
-    case "예약":
-      return "bg-[#fdd297] text-[#f54a00]";
-    case "정상 반납":
-      return "bg-[#bebebe] text-black";
-    case "대여 중":
-      return "bg-[#96ffbd] text-[#1b811f]";
-    case "불량 반납":
-      return "bg-[#ffa2a2] text-red-600";
-    case "예약 취소":
-      return "bg-[#fcff9c] text-[#ffae00]";
-    default:
-      return "bg-gray-200 text-gray-600";
-  }
-};
-
-const getPlotterStatusColor = (status: PlotterStatus) => {
-  switch (status) {
-    case "예약 대기":
-      return "bg-[#fdd297] text-[#f54a00]";
-    case "수령 완료":
-      return "bg-[#ddd] text-[#4a5565]";
-    case "예약 확정":
-      return "bg-[#97f2fd] text-[#155dfc]";
-    case "인쇄 완료":
-      return "bg-[#a9ffca] text-[#1b811f]";
-    case "예약 반려":
-      return "bg-[#ffa2a2] text-red-600";
-    case "예약 취소":
-      return "bg-[#fcff9c] text-[#ffae00]";
-    default:
-      return "bg-gray-200 text-gray-600";
-  }
-};
 
 export default function MyPage() {
   const [searchParams] = useSearchParams();
@@ -205,105 +170,38 @@ export default function MyPage() {
         <div className="max-w-[1440px] mx-auto px-4 pt-8">
           {/* 페이지 타이틀 */}
           <div className="flex items-center gap-4 mb-8">
-            <svg className="w-9 h-9 text-[#FE6949]" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
-            </svg>
+            <img src={myOrangeIcon} alt="user" className="w-9 h-9" />
             <h1 className="text-[32px] font-bold text-[#410f07]">마이페이지</h1>
           </div>
 
           {/* 메인 컨텐츠 카드 */}
-          <div className="bg-white rounded-[30px] shadow-lg overflow-hidden">
+          <div className="rounded-[30px] bg-[#f4f4f4] overflow-hidden">
             {/* 탭 헤더 */}
-            <div className="bg-[#f4f4f4] flex">
-              <button
-                onClick={() => setActiveTab("rental")}
-                className={`flex-1 py-8 text-[30px] font-medium transition ${
-                  activeTab === "rental"
-                    ? "bg-[#f72] text-white rounded-tl-[10px]"
-                    : "text-[#410f07] bg-transparent"
-                }`}
-              >
-                물품 대여 예약 내역
-              </button>
-              <button
-                onClick={() => setActiveTab("plotter")}
-                className={`flex-1 py-8 text-[30px] font-medium transition ${
-                  activeTab === "plotter"
-                    ? "bg-[#f72] text-white"
-                    : "text-[#410f07] bg-transparent"
-                }`}
-              >
-                플로터 예약 내역
-              </button>
-              <button
-                onClick={() => setActiveTab("profile")}
-                className={`flex-1 py-8 text-[30px] font-medium transition ${
-                  activeTab === "profile"
-                    ? "bg-[#f72] text-white rounded-tr-[10px]"
-                    : "text-[#410f07] bg-transparent"
-                }`}
-              >
-                개인정보 수정
-              </button>
+            <div className="bg-[#f4f4f4] flex mr-10">
+              <TabSelector 
+                activeTab={activeTab} 
+                onTabChange={setActiveTab}
+              />
             </div>
 
             {/* 탭 컨텐츠 */}
-            <div className="px-11 py-8">
+            <div className="px-11 py-8 bg-white min-h-[400px] flex flex-col items-center">
               {activeTab === "rental" && (
                 <div className="space-y-5">
                   {reservations.map((reservation) => (
-                    <div
+                    <RentalContainer
                       key={reservation.id}
-                      className="border border-[#b9b9b9] rounded-[21px] p-6"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-3">
-                            <span
-                              className={`${getStatusColor(reservation.status)} px-5 py-2 rounded-[11px] text-[15px] font-medium`}
-                            >
-                              {reservation.status}
-                            </span>
-                            <span className="text-[13px] text-[#919191]">
-                              {reservation.code}
-                            </span>
-                          </div>
-                          <span className="text-[13px] text-[#919191] ml-3">
-                            신청일 {reservation.applicationDate}
-                          </span>
-                        </div>
-                        {reservation.status === "예약" && (
-                          <div className="flex gap-3">
-                            <button
-                              onClick={() => handleEdit(reservation.id)}
-                              className="bg-white border border-[#a4a4a4] rounded-[13px] px-6 py-3 text-[20px] hover:bg-gray-50 transition"
-                            >
-                              수정
-                            </button>
-                            <button
-                              onClick={() => handleCancel(reservation.id)}
-                              className="bg-[#ffd2d2] border border-[#ff5151] rounded-[13px] px-6 py-3 text-[20px] text-red-600 hover:bg-[#ffbdbd] transition"
-                            >
-                              예약 취소
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      <h4 className="text-[32px] font-semibold text-[#410f07] mb-4">
-                        {reservation.title}
-                      </h4>
-
-                      <div className="flex items-center gap-2 text-[15px] text-[#5b5b5b]">
-                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M19,4H18V2H16V4H8V2H6V4H5C3.89,4 3,4.9 3,6V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V6A2,2 0 0,0 19,4M19,20H5V10H19V20M19,8H5V6H19V8Z" />
-                        </svg>
-                        <span className="font-medium">
-                          {reservation.date}
-                          {reservation.items && `   |   ${reservation.items}`}
-                        </span>
-                      </div>
-                    </div>
+                      status={reservation.status}
+                      reservationNumber={reservation.code}
+                      applicationDate={reservation.applicationDate}
+                      title={reservation.title}
+                      itemCount={0}
+                      startDate={reservation.startDate}
+                      endDate={reservation.endDate}
+                      totalCount={reservation.totalCount}
+                      onEdit={reservation.status === "reserved" ? () => handleEdit(reservation.id) : undefined}
+                      onCancel={reservation.status === "reserved" ? () => handleCancel(reservation.id) : undefined}
+                    />
                   ))}
                 </div>
               )}
@@ -311,55 +209,14 @@ export default function MyPage() {
               {activeTab === "plotter" && (
                 <div className="space-y-5">
                   {plotterReservations.map((reservation) => (
-                    <div
+                    <PlotterContainer
                       key={reservation.id}
-                      className="border border-[#b9b9b9] rounded-[21px] p-6"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-3">
-                            <span
-                              className={`${getPlotterStatusColor(reservation.status)} px-5 py-2 rounded-[11px] text-[15px] font-medium`}
-                            >
-                              {reservation.status}
-                            </span>
-                            <span className="text-[13px] text-[#919191]">
-                              {reservation.code}
-                            </span>
-                          </div>
-                          <span className="text-[13px] text-[#919191] ml-3">
-                            신청일 {reservation.applicationDate}
-                          </span>
-                        </div>
-                        {reservation.status === "예약 대기" && (
-                          <div className="flex gap-3">
-                            <button
-                              onClick={() => handleEdit(reservation.id)}
-                              className="bg-white border border-[#a4a4a4] rounded-[13px] px-6 py-3 text-[20px] hover:bg-gray-50 transition"
-                            >
-                              수정
-                            </button>
-                            <button
-                              onClick={() => handleCancel(reservation.id)}
-                              className="bg-[#ffd2d2] border border-[#ff5151] rounded-[13px] px-6 py-3 text-[20px] text-red-600 hover:bg-[#ffbdbd] transition"
-                            >
-                              예약 취소
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      <h4 className="text-[32px] font-semibold text-[#410f07] mb-4">
-                        {reservation.title}
-                      </h4>
-
-                      <div className="flex items-center gap-2 text-[15px] text-[#5b5b5b]">
-                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M19,4H18V2H16V4H8V2H6V4H5C3.89,4 3,4.9 3,6V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V6A2,2 0 0,0 19,4M19,20H5V10H19V20M19,8H5V6H19V8Z" />
-                        </svg>
-                        <span className="font-medium">{reservation.date}</span>
-                      </div>
-                    </div>
+                      status={reservation.status}
+                      reservationNumber={reservation.code}
+                      applicationDate={reservation.applicationDate}
+                      title={reservation.title}
+                      printDate={reservation.printDate}
+                    />
                   ))}
                 </div>
               )}
