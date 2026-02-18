@@ -6,6 +6,7 @@ interface ApplicationSummaryProps {
   totalAmount: number;
   onSubmit: () => void;
   className?: string;
+  isSubmitting?: boolean;
 }
 
 export default function ApplicationSummary({
@@ -15,7 +16,8 @@ export default function ApplicationSummary({
   isFree = false,
   totalAmount,
   onSubmit,
-  className = ""
+  className = "",
+  isSubmitting = false,
 }: ApplicationSummaryProps) {
   return (
     <div className={`bg-white rounded-[30px] p-8 shadow-lg ${className}`}>
@@ -56,9 +58,14 @@ export default function ApplicationSummary({
 
       <button
         onClick={onSubmit}
-        className="w-full h-[63px] bg-[#f72] rounded-[10px] shadow-lg text-white text-[24px] font-bold hover:bg-[#e65a3d] transition"
+        disabled={isSubmitting}
+        className={`w-full h-[63px] rounded-[10px] shadow-lg text-white text-[24px] font-bold transition ${
+          isSubmitting
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-[#f72] hover:bg-[#e65a3d]"
+        }`}
       >
-        신청하기
+        {isSubmitting ? "신청 중..." : "신청하기"}
       </button>
     </div>
   );

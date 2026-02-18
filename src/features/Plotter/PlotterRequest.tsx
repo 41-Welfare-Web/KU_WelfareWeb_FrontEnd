@@ -8,6 +8,7 @@ import FileUploadBox from "../../components/ui/FileUploadBox";
 import PaymentProofBox from "../../components/ui/PaymentProofBox";
 import PageHeader from "../../components/ui/PageHeader";
 import PlotterFormFields from "../../components/ui/PlotterFormFields";
+import { createPlotterOrder } from "../../services/plotterApi";
 
 export default function PlotterRequest() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function PlotterRequest() {
   const [quantity, setQuantity] = useState(1);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 예상 수령일 계산 (근무일 기준 2일 후)
   const getExpectedDate = () => {
@@ -58,7 +60,7 @@ export default function PlotterRequest() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!paperSize) {
       alert("용지 크기를 선택해 주세요.");
       return;
@@ -76,17 +78,50 @@ export default function PlotterRequest() {
       return;
     }
 
-    // 신청 완료 페이지로 이동 (신청자 정보 전달)
-    navigate("/plotter/complete", {
-      state: {
-        name,
-        studentNo,
-        phone,
-        purpose,
-        quantity,
-        expectedDate: getExpectedDate(),
-      },
-    });
+    setIsSubmitting(true);
+
+    try {
+      // 용지 크기에서 실제 값 추출 (예: "A1(594 x 941mm)" -> "A1")
+      const extractedPaperSize = paperSize.split("(")[0].trim();
+      
+      // 유료 서비스 여부 판별 (A1, A2는 유료)
+      const isPaidService = ["A1", "A2"].includes(extractedPaperSize);
+      
+      // API 호출
+      const response = await createPlotterOrder({
+        purpose: purpose.trim(),
+        paperSize: extractedPaperSize,
+        pageCount: quantity,
+        isPaidService,
+        pdfFile,
+        paymentReceiptImage: isPaidService ? receiptFile : undefined,
+      });
+
+      // 신청 완료 페이지로 이동 (응답 데이터 전달)
+      navigate("/plotter/complete", {
+        state: {
+          orderId: response.id,
+          name,
+          studentNo,
+          phone,
+          purpose: response.purpose,
+          quantity: response.pageCount,
+          paperSize: response.paperSize,
+          expectedDate: response.pickupDate,
+          price: response.price,
+          status: response.status,
+        },
+      });
+    } catch (error) {
+      console.error("플로터 주문 신청 실패:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "플로터 주문 신청에 실패했습니다. 다시 시도해주세요."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -150,6 +185,7 @@ export default function PlotterRequest() {
                 isFree={false}
                 totalAmount={totalPrice}
                 onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
               />
 
               {/* 유의사항 */}

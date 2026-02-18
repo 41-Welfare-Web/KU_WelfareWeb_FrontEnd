@@ -5,12 +5,16 @@ import PlotterRequestSummary from "../../components/ui/PlotterRequestSummary";
 import LogoCircle from "../../assets/plotter/logo-circle.svg";
 
 type LocationState = {
+  orderId?: number;
   name?: string;
   studentNo?: string;
   phone?: string;
   purpose?: string;
   quantity?: number;
+  paperSize?: string;
   expectedDate?: string;
+  price?: number;
+  status?: string;
 };
 
 export default function PlotterComplete() {
