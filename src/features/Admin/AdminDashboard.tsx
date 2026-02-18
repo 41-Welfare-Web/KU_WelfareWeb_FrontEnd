@@ -1,390 +1,540 @@
-import { useState } from "react";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
+import filterIcon from '../../assets/admin/filter.svg';
+import searchIcon from '../../assets/admin/glass.svg';
+import editIcon from '../../assets/admin/pencil.svg';
+import downloadIcon from '../../assets/admin/download.svg';
 
-type TabType = "rental" | "plotter";
-type RentalStatus = "민증" | "대여 중" | "반납 완료" | "예약 대기";
-type PlotterStatus = "대기" | "진행 중" | "완료" | "취소";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
-type RentalRecord = {
-  id: string;
-  applicationNo: string;
-  applicant: string;
-  department: string;
-  item: string;
-  rentalDate: string;
-  returnDate: string;
-  status: RentalStatus;
-};
+type TabType = 'rental' | 'plotter';
 
-type PlotterRecord = {
-  id: string;
-  applicationNo: string;
-  applicant: string;
-  department: string;
-  fileName: string;
+interface RentalData {
+  id: number;
+  user: {
+    name: string;
+    studentId: string;
+  };
+  startDate: string;
+  endDate: string;
+  status: 'RESERVED' | 'RENTED' | 'RETURNED' | 'OVERDUE' | 'CANCELED';
+  itemSummary: string;
+  createdAt: string;
+}
+
+interface PlotterData {
+  id: number;
+  user: {
+    name: string;
+    studentId: string;
+  };
+  purpose: string;
   paperSize: string;
-  quantity: number;
-  date: string;
-  status: PlotterStatus;
-};
-
-const MOCK_RENTAL_RECORDS: RentalRecord[] = [
-  {
-    id: "1",
-    applicationNo: "2026-R1",
-    applicant: "김도은",
-    department: "학생복지위원회",
-    item: "행사용 천막",
-    rentalDate: "2026-02-10",
-    returnDate: "2026-02-12",
-    status: "민증",
-  },
-  {
-    id: "2",
-    applicationNo: "2026-R2",
-    applicant: "정근녕",
-    department: "총학생회",
-    item: "무선 마이크",
-    rentalDate: "2026-02-10",
-    returnDate: "2026-02-12",
-    status: "대여 중",
-  },
-  {
-    id: "3",
-    applicationNo: "2026-R3",
-    applicant: "전건호",
-    department: "너드더락",
-    item: "사각 앰프",
-    rentalDate: "2026-02-01",
-    returnDate: "2026-02-07",
-    status: "반납 완료",
-  },
-  {
-    id: "4",
-    applicationNo: "2026-R4",
-    applicant: "조세현",
-    department: "연구실",
-    item: "유선 마이크",
-    rentalDate: "2026-02-10",
-    returnDate: "2026-02-12",
-    status: "대여 중",
-  },
-  {
-    id: "5",
-    applicationNo: "2026-R5",
-    applicant: "이건희",
-    department: "유학생",
-    item: "유선 마이크",
-    rentalDate: "2026-02-10",
-    returnDate: "2026-02-12",
-    status: "예약 대기",
-  },
-];
-
-const MOCK_PLOTTER_RECORDS: PlotterRecord[] = [
-  {
-    id: "1",
-    applicationNo: "2026-P1",
-    applicant: "김도은",
-    department: "학생복지위원회",
-    fileName: "졸업전시_포스터",
-    paperSize: "A0",
-    quantity: 1,
-    date: "2026-02-10",
-    status: "대기",
-  },
-  {
-    id: "2",
-    applicationNo: "2026-P2",
-    applicant: "정근녕",
-    department: "학생복지위원회",
-    fileName: "대자보",
-    paperSize: "A0",
-    quantity: 1,
-    date: "2026-02-12",
-    status: "진행 중",
-  },
-  {
-    id: "3",
-    applicationNo: "2026-P3",
-    applicant: "김도은",
-    department: "학생복지위원회",
-    fileName: "길안내 포스터",
-    paperSize: "A3",
-    quantity: 6,
-    date: "2026-02-08",
-    status: "완료",
-  },
-  {
-    id: "4",
-    applicationNo: "2026-P4",
-    applicant: "전건호",
-    department: "너드더락",
-    fileName: "공연 포스터",
-    paperSize: "A3",
-    quantity: 5,
-    date: "2026-02-10",
-    status: "대기",
-  },
-  {
-    id: "5",
-    applicationNo: "2026-P5",
-    applicant: "이건희",
-    department: "일본어 동아리",
-    fileName: "모집 포스터",
-    paperSize: "A2",
-    quantity: 5,
-    date: "2026-02-15",
-    status: "대기",
-  },
-];
+  pageCount: number;
+  pickupDate: string;
+  status: 'PENDING' | 'CONFIRMED' | 'PRINTED' | 'REJECTED' | 'COMPLETED';
+  createdAt: string;
+}
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<TabType>("rental");
-  const [filterStatus, setFilterStatus] = useState("전체 상태");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [records] = useState<RentalRecord[]>(MOCK_RENTAL_RECORDS);
-  const [plotterRecords] = useState<PlotterRecord[]>(MOCK_PLOTTER_RECORDS);
+  const [activeTab, setActiveTab] = useState<TabType>('rental');
+  const [rentalStatusFilter, setRentalStatusFilter] = useState('전체 상태');
+  const [plotterStatusFilter, setPlotterStatusFilter] = useState('전체 상태');
+  const [rentalSearchQuery, setRentalSearchQuery] = useState('');
+  const [plotterSearchQuery, setPlotterSearchQuery] = useState('');
+  const [rentalFilterOpen, setRentalFilterOpen] = useState(false);
+  const [plotterFilterOpen, setPlotterFilterOpen] = useState(false);
+  
+  const [rentalData, setRentalData] = useState<RentalData[]>([]);
+  const [plotterData, setPlotterData] = useState<PlotterData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleExcelDownload = () => {
-    console.log("엑셀 다운로드");
-    alert("엑셀 파일을 다운로드합니다.");
-    // TODO: 실제 엑셀 다운로드 구현
+  // 대여 목록 조회
+  const fetchRentals = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem('accessToken');
+      
+      const params: any = {
+        page: 1,
+        pageSize: 100
+      };
+      
+      // 상태 필터 적용
+      if (rentalStatusFilter !== '전체 상태') {
+        const statusMap: Record<string, string> = {
+          '예약': 'RESERVED',
+          '대여 중': 'RENTED',
+          '정상 반납': 'RETURNED',
+          '불량 반납': 'DEFECTIVE',
+          '예약 취소': 'CANCELED'
+        };
+        params.status = statusMap[rentalStatusFilter];
+      }
+
+      const response = await axios.get(`${API_BASE_URL}/rentals`, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      setRentalData(response.data.rentals || []);
+    } catch (err: any) {
+      console.error('대여 목록 조회 실패:', err);
+      setError(err.response?.data?.message || '대여 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEdit = (id: string) => {
-    console.log("수정:", id);
-    // TODO: 수정 모달 또는 페이지 이동
+  // 플로터 목록 조회
+  const fetchPlotterOrders = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem('accessToken');
+      
+      const params: any = {
+        page: 1,
+        pageSize: 100
+      };
+      
+      // 상태 필터 적용
+      if (plotterStatusFilter !== '전체 상태') {
+        const statusMap: Record<string, string> = {
+          '예약 대기': 'PENDING',
+          '예약 확정': 'CONFIRMED',
+          '인쇄 완료': 'PRINTED',
+          '예약 반려': 'REJECTED',
+          '수령 완료': 'COMPLETED'
+        };
+        params.status = statusMap[plotterStatusFilter];
+      }
+
+      const response = await axios.get(`${API_BASE_URL}/plotter/orders`, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      setPlotterData(response.data.orders || []);
+    } catch (err: any) {
+      console.error('플로터 목록 조회 실패:', err);
+      setError(err.response?.data?.message || '플로터 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSearch = () => {
-    console.log("검색:", searchQuery);
+  // 탭 변경 시 데이터 로드
+  useEffect(() => {
+    if (activeTab === 'rental') {
+      fetchRentals();
+    } else {
+      fetchPlotterOrders();
+    }
+  }, [activeTab, rentalStatusFilter, plotterStatusFilter]);
+
+  // 대여 상태 변경
+  const handleRentalStatusChange = async (rentalId: number, newStatus: string) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      await axios.put(
+        `${API_BASE_URL}/rentals/${rentalId}/status`,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      alert('상태가 변경되었습니다.');
+      fetchRentals();
+    } catch (err: any) {
+      console.error('상태 변경 실패:', err);
+      alert(err.response?.data?.message || '상태 변경에 실패했습니다.');
+    }
+  };
+
+  // 플로터 상태 변경
+  const handlePlotterStatusChange = async (orderId: number, newStatus: string) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      await axios.put(
+        `${API_BASE_URL}/plotter/orders/${orderId}/status`,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      alert('상태가 변경되었습니다.');
+      fetchPlotterOrders();
+    } catch (err: any) {
+      console.error('상태 변경 실패:', err);
+      alert(err.response?.data?.message || '상태 변경에 실패했습니다.');
+    }
+  };
+
+  const rentalStatusConfig = {
+    RESERVED: { label: '예약', bgColor: 'bg-[#FDD297]', textColor: 'text-[#F54A00]' },
+    RENTED: { label: '대여 중', bgColor: 'bg-[#A9FFCA]', textColor: 'text-[#1B811F]' },
+    RETURNED: { label: '정상 반납', bgColor: 'bg-[#BEBEBE]', textColor: 'text-[#5B5B5B]' },
+    OVERDUE: { label: '연체', bgColor: 'bg-[#FFA2A2]', textColor: 'text-[#FF0000]' },
+    CANCELED: { label: '예약 취소', bgColor: 'bg-[#F5FFAA]', textColor: 'text-[#FFDA00]' }
+  };
+
+  const plotterStatusConfig = {
+    PENDING: { label: '예약 대기', bgColor: 'bg-[#FDD297]', textColor: 'text-[#F54A00]' },
+    CONFIRMED: { label: '예약 확정', bgColor: 'bg-[#97F2FD]', textColor: 'text-[#155DFC]' },
+    PRINTED: { label: '인쇄 완료', bgColor: 'bg-[#A9FFCA]', textColor: 'text-[#1B811F]' },
+    REJECTED: { label: '예약 반려', bgColor: 'bg-[#FFA2A2]', textColor: 'text-[#FF0000]' },
+    COMPLETED: { label: '수령 완료', bgColor: 'bg-[#DDDDDD]', textColor: 'text-[#4A5565]' }
+  };
+
+  const handleRentalEdit = (rentalId: number) => {
+    // TODO: 상태 변경 모달 띄우기
+    const newStatus = prompt('변경할 상태를 입력하세요 (RESERVED, RENTED, RETURNED, OVERDUE, CANCELED):');
+    if (newStatus) {
+      handleRentalStatusChange(rentalId, newStatus.toUpperCase());
+    }
+  };
+
+  const handlePlotterEdit = (orderId: number) => {
+    // TODO: 상태 변경 모달 띄우기
+    const newStatus = prompt('변경할 상태를 입력하세요 (PENDING, CONFIRMED, PRINTED, REJECTED, COMPLETED):');
+    if (newStatus) {
+      handlePlotterStatusChange(orderId, newStatus.toUpperCase());
+    }
+  };
+
+  const handleRentalSearch = () => {
     // TODO: 검색 기능 구현
+    console.log('Search rental:', rentalSearchQuery);
+    fetchRentals();
   };
 
-  const filteredRecords = records.filter((record) => {
-    const matchesSearch =
-      record.applicant.includes(searchQuery) ||
-      record.department.includes(searchQuery) ||
-      record.item.includes(searchQuery);
-    
-    const matchesStatus =
-      filterStatus === "전체 상태" || record.status === filterStatus;
+  const handlePlotterSearch = () => {
+    // TODO: 검색 기능 구현
+    console.log('Search plotter:', plotterSearchQuery);
+    fetchPlotterOrders();
+  };
 
-    return matchesSearch && matchesStatus;
-  });
-
-  const filteredPlotterRecords = plotterRecords.filter((record) => {
-    const matchesSearch =
-      record.applicant.includes(searchQuery) ||
-      record.department.includes(searchQuery) ||
-      record.fileName.includes(searchQuery);
-    
-    const matchesStatus =
-      filterStatus === "전체 상태" || record.status === filterStatus;
-
-    return matchesSearch && matchesStatus;
-  });
+  const handleDownload = () => {
+    // TODO: CSV 다운로드 구현
+    console.log('Download data for tab:', activeTab);
+    alert('데이터 다운로드: ' + (activeTab === 'rental' ? '대여 관리' : '플로터 관리'));
+  };
 
   return (
     <>
       <Header />
-
+      
       <div className="w-full bg-gradient-to-b from-[#ffdcc5] to-white min-h-screen pb-20">
-        <div className="max-w-[1440px] mx-auto px-4 pt-8">
-          {/* 페이지 헤더 */}
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-[32px] font-bold text-[#410f07]">관리자 대시보드</h1>
+        <div className="max-w-[1440px] mx-auto px-8 pt-8">
+          {/* 상단 영역: 타이틀과 다운로드 버튼 */}
+          <div className="flex justify-between items-start mb-6">
+            <div className="relative inline-block">
+              <h1 className="text-[48px] font-bold text-[#410f07] mb-2">관리자 대시보드</h1>
+              <div className="absolute left-0 bottom-0 w-[300px] h-[4px] bg-[#410f07]"></div>
+            </div>
+            
+            {/* 다운로드 버튼 */}
             <button
-              onClick={handleExcelDownload}
-              className="flex items-center gap-2 bg-white border border-[#a4a4a4] rounded-[13px] px-6 py-2 text-[20px] hover:bg-gray-50 transition"
+              onClick={handleDownload}
+              className="flex items-center gap-2 bg-white border border-[#C3C3C3] rounded-[10px] h-[40px] px-4 hover:bg-gray-50 transition-colors"
             >
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
-              </svg>
-              엑셀 다운로드
+              <img src={downloadIcon} alt="다운로드" className="w-5 h-5" />
+              <span className="font-['Gmarket_Sans'] font-medium text-[15px]">다운로드</span>
             </button>
           </div>
 
-          {/* 메인 컨텐츠 카드 */}
-          <div className="bg-white rounded-[30px] shadow-lg overflow-hidden">
-            {/* 탭 헤더 */}
-            <div className="border-b border-[#c3c3c3] px-11 pt-6">
-              <div className="flex gap-8">
-                <button
-                  onClick={() => setActiveTab("rental")}
-                  className={`pb-4 text-[30px] font-medium transition relative ${
-                    activeTab === "rental" ? "text-[#fe6949]" : "text-[#410f07]"
-                  }`}
-                >
-                  물품 대여 관리
-                  {activeTab === "rental" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#fe6949]" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab("plotter")}
-                  className={`pb-4 text-[30px] font-medium transition relative ${
-                    activeTab === "plotter" ? "text-[#fe6949]" : "text-[#410f07]"
-                  }`}
-                >
-                  플로터 인쇄 관리
-                  {activeTab === "plotter" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#fe6949]" />
-                  )}
-                </button>
-              </div>
-            </div>
+          {/* 탭 네비게이션 */}
+          <div className="flex gap-8 mb-6 border-b-2 border-[#D9D9D9]">
+            <button
+              onClick={() => setActiveTab('rental')}
+              className={`pb-2 font-['HanbatGothic'] font-medium text-[24px] relative ${
+                activeTab === 'rental' ? 'text-[#FE6949]' : 'text-[#8E8E8E]'
+              }`}
+            >
+              물품 대여 관리
+              {activeTab === 'rental' && (
+                <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#FE6949]"></div>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('plotter')}
+              className={`pb-2 font-['HanbatGothic'] font-medium text-[24px] relative ${
+                activeTab === 'plotter' ? 'text-[#FE6949]' : 'text-[#8E8E8E]'
+              }`}
+            >
+              플로터 인쇄 관리
+              {activeTab === 'plotter' && (
+                <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#FE6949]"></div>
+              )}
+            </button>
+          </div>
 
-            {/* 필터 및 검색 */}
-            <div className="px-11 py-6">
-              <div className="flex items-center gap-4 mb-8">
-                {/* 필터 */}
-                <div className="flex items-center gap-2">
-                  <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M11,11L16.76,3.62A1,1 0 0,0 16.59,2.22A1,1 0 0,0 16,2H2A1,1 0 0,0 1.38,2.22A1,1 0 0,0 1.21,3.62L7,11V16.87A1,1 0 0,0 7.29,17.7L9.29,19.7A1,1 0 0,0 10.7,19.7A1,1 0 0,0 11,18.87V11M13,16L18,21L23,16Z" />
-                  </svg>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="border border-[#a6a6a6] rounded-[10px] px-3 py-1 text-[15px] bg-white"
-                  >
-                    <option value="전체 상태">전체 상태</option>
-                    <option value="민증">민증</option>
-                    <option value="대여 중">대여 중</option>
-                    <option value="반납 완료">반납 완료</option>
-                    <option value="예약 대기">예약 대기</option>
-                  </select>
-                </div>
-
-                {/* 검색바 */}
-                <div className="flex-1 flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <svg
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-7 h-7"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#8e8e8e"
-                      strokeWidth="2"
-                    >
-                      <circle cx="11" cy="11" r="8" />
-                      <path d="m21 21-4.35-4.35" />
-                    </svg>
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                      placeholder="이름, 학과, 물품 검색"
-                      className="w-full h-10 bg-[#d9d9d9] rounded-[10px] pl-12 pr-4 text-[20px] placeholder:text-[#8e8e8e]"
-                    />
-                  </div>
+          {/* 대여 관리 탭 내용 */}
+          {activeTab === 'rental' && (
+            <div>
+              {/* 필터 및 검색 바 */}
+              <div className="bg-white border border-[#C3C3C3] rounded-[10px] h-[77px] flex items-center px-4 gap-4 mb-6">
+                {/* 필터 아이콘 */}
+                <img src={filterIcon} alt="필터" className="w-8 h-8" />
+                
+                {/* 상태 필터 드롭다운 */}
+                <div className="relative">
                   <button
-                    onClick={handleSearch}
-                    className="h-10 px-6 bg-black text-white rounded-[10px] text-[20px] hover:bg-gray-800 transition"
+                    onClick={() => setRentalFilterOpen(!rentalFilterOpen)}
+                    className="bg-white border border-[#A6A6A6] rounded-[10px] h-[31px] px-3 flex items-center gap-2 min-w-[98px]"
                   >
-                    검색
+                    <span className="font-['Gmarket_Sans'] font-medium text-[15px]">{rentalStatusFilter}</span>
+                    <span className="text-gray-400">▼</span>
                   </button>
+                  {rentalFilterOpen && (
+                    <div className="absolute top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 min-w-[120px]">
+                      {['전체 상태', '예약', '대여 중', '정상 반납', '불량 반납', '예약 취소'].map((status) => (
+                        <button
+                          key={status}
+                          onClick={() => {
+                            setRentalStatusFilter(status);
+                            setRentalFilterOpen(false);
+                          }}
+                          className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-[15px]"
+                        >
+                          {status}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
+                {/* 검색창 */}
+                <div className="flex-1 bg-[#D9D9D9] rounded-[10px] h-[40px] flex items-center px-3 gap-2">
+                  <img src={searchIcon} alt="검색" className="w-7 h-7" />
+                  <input
+                    type="text"
+                    placeholder="이름, 학과, 물품 검색"
+                    value={rentalSearchQuery}
+                    onChange={(e) => setRentalSearchQuery(e.target.value)}
+                    className="flex-1 bg-transparent outline-none font-['HanbatGothic'] font-medium text-[20px] text-[#8E8E8E] placeholder:text-[#8E8E8E]"
+                  />
+                </div>
+
+                {/* 검색 버튼 */}
+                <button
+                  onClick={handleRentalSearch}
+                  className="bg-black text-white rounded-[10px] h-[40px] px-6 font-['HanbatGothic'] font-medium text-[20px]"
+                >
+                  검색
+                </button>
               </div>
 
               {/* 테이블 */}
-              {activeTab === "rental" && (
-                <div className="border border-[#d9d9d9] rounded-[10px] overflow-hidden">
-                  {/* 테이블 헤더 */}
-                  <div className="bg-[#ededed] border-b border-[#c2c2c2] px-8 py-6 grid grid-cols-[1fr_1fr_1.5fr_1.5fr_1.5fr_1.5fr_1fr_0.8fr] gap-4 text-[20px] font-medium">
-                    <div>신청번호</div>
-                    <div>신청자</div>
-                    <div>소속</div>
-                    <div>대여 품목</div>
-                    <div>대여 날짜</div>
-                    <div>반납 날짜</div>
-                    <div>상태</div>
-                    <div>비고</div>
-                  </div>
-
-                  {/* 테이블 바디 */}
-                  <div className="bg-white">
-                    {filteredRecords.map((record, index) => (
-                      <div
-                        key={record.id}
-                        className={`px-8 py-4 grid grid-cols-[1fr_1fr_1.5fr_1.5fr_1.5fr_1.5fr_1fr_0.8fr] gap-4 items-center ${
-                          index !== filteredRecords.length - 1 ? "border-b border-[#d9d9d9]" : ""
-                        }`}
-                      >
-                        <div className="text-[20px]">{record.applicationNo}</div>
-                        <div className="text-[20px]">{record.applicant}</div>
-                        <div className="text-[20px]">{record.department}</div>
-                        <div className="text-[20px]">{record.item}</div>
-                        <div className="text-[15px]">{record.rentalDate}</div>
-                        <div className="text-[15px]">{record.returnDate}</div>
-                        <div className="text-[20px]">{record.status}</div>
-                        <div className="flex justify-center">
-                          <button
-                            onClick={() => handleEdit(record.id)}
-                            className="hover:bg-gray-100 p-1 rounded transition"
-                            title="수정"
-                          >
-                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-hidden">
+                {/* 테이블 헤더 */}
+                <div className="bg-[#EDEDED] border-b border-[#C2C2C2] h-[77px] flex items-center px-8 font-['HanbatGothic'] font-medium text-[20px] text-black">
+                  <div className="w-[120px]">신청번호</div>
+                  <div className="w-[100px]">신청자</div>
+                  <div className="w-[150px]">학번</div>
+                  <div className="w-[200px]">대여 품목</div>
+                  <div className="w-[120px]">대여 날짜</div>
+                  <div className="w-[120px]">반납 날짜</div>
+                  <div className="w-[100px]">상태</div>
+                  <div className="flex-1">관리</div>
                 </div>
-              )}
 
-              {activeTab === "plotter" && (
-                <div className="border border-[#d9d9d9] rounded-[10px] overflow-hidden">
-                  {/* 테이블 헤더 */}
-                  <div className="bg-[#ededed] border-b border-[#c2c2c2] px-8 py-6 grid grid-cols-[1fr_1fr_1.5fr_2fr_1.5fr_1fr_1fr_0.8fr] gap-4 text-[20px] font-medium">
-                    <div>신청번호</div>
-                    <div>신청자</div>
-                    <div>소속</div>
-                    <div>파일명</div>
-                    <div>옵션</div>
-                    <div>날짜</div>
-                    <div>상태</div>
-                    <div>관리</div>
+                {/* 로딩 및 에러 표시 */}
+                {loading && (
+                  <div className="h-[200px] flex items-center justify-center">
+                    <span className="text-gray-500">로딩 중...</span>
                   </div>
+                )}
+                {error && (
+                  <div className="h-[200px] flex items-center justify-center">
+                    <span className="text-red-500">{error}</span>
+                  </div>
+                )}
 
-                  {/* 테이블 바디 */}
-                  <div className="bg-white">
-                    {filteredPlotterRecords.map((record, index) => (
-                      <div
-                        key={record.id}
-                        className={`px-8 py-4 grid grid-cols-[1fr_1fr_1.5fr_2fr_1.5fr_1fr_1fr_0.8fr] gap-4 items-center ${
-                          index !== filteredPlotterRecords.length - 1 ? "border-b border-[#d9d9d9]" : ""
-                        }`}
-                      >
-                        <div className="text-[20px]">{record.applicationNo}</div>
-                        <div className="text-[20px]">{record.applicant}</div>
-                        <div className="text-[20px]">{record.department}</div>
-                        <div className="text-[20px]">{record.fileName}</div>
-                        <div className="text-[20px]">{record.paperSize}/{record.quantity}장</div>
-                        <div className="text-[15px]">{record.date}</div>
-                        <div className="text-[20px]">{record.status}</div>
-                        <div className="flex justify-center">
-                          <button
-                            onClick={() => handleEdit(record.id)}
-                            className="hover:bg-gray-100 p-1 rounded transition"
-                            title="수정"
-                          >
-                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" />
-                            </svg>
-                          </button>
-                        </div>
+                {/* 테이블 바디 */}
+                {!loading && !error && (
+                  <div className="divide-y divide-gray-200">
+                    {rentalData.length === 0 ? (
+                      <div className="h-[200px] flex items-center justify-center">
+                        <span className="text-gray-500">대여 내역이 없습니다.</span>
                       </div>
-                    ))}
+                    ) : (
+                      rentalData.map((rental) => {
+                        const status = rentalStatusConfig[rental.status];
+                        return (
+                          <div key={rental.id} className="h-[53px] flex items-center px-8 hover:bg-gray-50 transition-colors">
+                            <div className="w-[120px] font-['HanbatGothic'] font-medium text-[20px]">R-{rental.id}</div>
+                            <div className="w-[100px] font-['HanbatGothic'] font-medium text-[20px]">{rental.user.name}</div>
+                            <div className="w-[150px] font-['HanbatGothic'] font-medium text-[20px]">{rental.user.studentId}</div>
+                            <div className="w-[200px] font-['HanbatGothic'] font-medium text-[20px]">{rental.itemSummary}</div>
+                            <div className="w-[120px] font-['HanbatGothic'] font-medium text-[15px]">{rental.startDate}</div>
+                            <div className="w-[120px] font-['HanbatGothic'] font-medium text-[15px]">{rental.endDate}</div>
+                            <div className="w-[100px]">
+                              <div className={`inline-flex h-[26px] px-3 rounded-[5px] items-center justify-center ${status.bgColor}`}>
+                                <span className={`font-['Gmarket_Sans'] font-medium text-[15px] ${status.textColor}`}>
+                                  {status.label}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex-1 flex items-center justify-center">
+                              <button
+                                onClick={() => handleRentalEdit(rental.id)}
+                                className="w-6 h-6 hover:opacity-70 transition-opacity"
+                                aria-label="상태 변경"
+                              >
+                                <img src={editIcon} alt="수정" className="w-6 h-6" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* 플로터 관리 탭 내용 */}
+          {activeTab === 'plotter' && (
+            <div>
+              {/* 필터 및 검색 바 */}
+              <div className="bg-white border border-[#C3C3C3] rounded-[10px] h-[77px] flex items-center px-4 gap-4 mb-6">
+                {/* 필터 아이콘 */}
+                <img src={filterIcon} alt="필터" className="w-8 h-8" />
+                
+                {/* 상태 필터 드롭다운 */}
+                <div className="relative">
+                  <button
+                    onClick={() => setPlotterFilterOpen(!plotterFilterOpen)}
+                    className="bg-white border border-[#A6A6A6] rounded-[10px] h-[31px] px-3 flex items-center gap-2 min-w-[98px]"
+                  >
+                    <span className="font-['Gmarket_Sans'] font-medium text-[15px]">{plotterStatusFilter}</span>
+                    <span className="text-gray-400">▼</span>
+                  </button>
+                  {plotterFilterOpen && (
+                    <div className="absolute top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 min-w-[120px]">
+                      {['전체 상태', '예약 대기', '예약 확정', '인쇄 완료', '예약 반려', '수령 완료'].map((status) => (
+                        <button
+                          key={status}
+                          onClick={() => {
+                            setPlotterStatusFilter(status);
+                            setPlotterFilterOpen(false);
+                          }}
+                          className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-[15px]"
+                        >
+                          {status}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 검색창 */}
+                <div className="flex-1 bg-[#D9D9D9] rounded-[10px] h-[40px] flex items-center px-3 gap-2">
+                  <img src={searchIcon} alt="검색" className="w-7 h-7" />
+                  <input
+                    type="text"
+                    placeholder="이름, 학과, 물품 검색"
+                    value={plotterSearchQuery}
+                    onChange={(e) => setPlotterSearchQuery(e.target.value)}
+                    className="flex-1 bg-transparent outline-none font-['HanbatGothic'] font-medium text-[20px] text-[#8E8E8E] placeholder:text-[#8E8E8E]"
+                  />
+                </div>
+
+                {/* 검색 버튼 */}
+                <button
+                  onClick={handlePlotterSearch}
+                  className="bg-black text-white rounded-[10px] h-[40px] px-6 font-['HanbatGothic'] font-medium text-[20px]"
+                >
+                  검색
+                </button>
+              </div>
+
+              {/* 테이블 */}
+              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-hidden">
+                {/* 테이블 헤더 */}
+                <div className="bg-[#EDEDED] border-b border-[#C2C2C2] h-[77px] flex items-center px-8 font-['HanbatGothic'] font-medium text-[20px] text-black">
+                  <div className="w-[120px]">신청번호</div>
+                  <div className="w-[100px]">신청자</div>
+                  <div className="w-[140px]">학번</div>
+                  <div className="w-[160px]">인쇄 목적</div>
+                  <div className="w-[100px]">용지 크기</div>
+                  <div className="w-[80px]">장수</div>
+                  <div className="w-[120px]">수령일</div>
+                  <div className="w-[100px]">상태</div>
+                  <div className="flex-1 text-center">관리</div>
+                </div>
+
+                {/* 로딩 및 에러 표시 */}
+                {loading && (
+                  <div className="h-[200px] flex items-center justify-center">
+                    <span className="text-gray-500">로딩 중...</span>
+                  </div>
+                )}
+                {error && (
+                  <div className="h-[200px] flex items-center justify-center">
+                    <span className="text-red-500">{error}</span>
+                  </div>
+                )}
+
+                {/* 테이블 바디 */}
+                {!loading && !error && (
+                  <div className="divide-y divide-gray-200">
+                    {plotterData.length === 0 ? (
+                      <div className="h-[200px] flex items-center justify-center">
+                        <span className="text-gray-500">플로터 주문 내역이 없습니다.</span>
+                      </div>
+                    ) : (
+                      plotterData.map((plotter) => {
+                        const status = plotterStatusConfig[plotter.status];
+                        return (
+                          <div key={plotter.id} className="h-[53px] flex items-center px-8 hover:bg-gray-50 transition-colors">
+                            <div className="w-[120px] font-['HanbatGothic'] font-medium text-[20px]">P-{plotter.id}</div>
+                            <div className="w-[100px] font-['HanbatGothic'] font-medium text-[20px]">{plotter.user.name}</div>
+                            <div className="w-[140px] font-['HanbatGothic'] font-medium text-[20px]">{plotter.user.studentId}</div>
+                            <div className="w-[160px] font-['HanbatGothic'] font-medium text-[20px]">{plotter.purpose}</div>
+                            <div className="w-[100px] font-['HanbatGothic'] font-medium text-[20px]">{plotter.paperSize}</div>
+                            <div className="w-[80px] font-['HanbatGothic'] font-medium text-[20px]">{plotter.pageCount}장</div>
+                            <div className="w-[120px] font-['HanbatGothic'] font-medium text-[15px]">{plotter.pickupDate}</div>
+                            <div className="w-[100px]">
+                              <div className={`inline-flex h-[26px] px-3 rounded-[5px] items-center justify-center ${status.bgColor}`}>
+                                <span className={`font-['Gmarket_Sans'] font-medium text-[15px] ${status.textColor}`}>
+                                  {status.label}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex-1 flex justify-center">
+                              <button
+                                onClick={() => handlePlotterEdit(plotter.id)}
+                                className="w-6 h-6 hover:opacity-70 transition-opacity"
+                                aria-label="상태 변경"
+                              >
+                                <img src={editIcon} alt="수정" className="w-6 h-6" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

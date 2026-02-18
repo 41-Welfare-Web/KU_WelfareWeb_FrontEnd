@@ -5,9 +5,11 @@ import Register from "../features/Login/Register";
 import RentalList from "../features/Rental/RentalList";
 import PlotterRequest from "../features/Plotter/PlotterRequest";
 import PlotterComplete from "../features/Plotter/PlotterComplete";
-import PlotterTest from "../features/Plotter/PlotterTest";
 import MyPage from "../features/MyPage/MyPage";
 import AdminDashboard from "../features/Admin/AdminDashboard";
+import AdminRentalList from "../features/Admin/AdminRentalList";
+import AdminPlotterList from "../features/Admin/AdminPlotterList";
+import ComponentTest from "../features/ComponentTest/ComponentTest";
 
 export default function AppRouter() {
   return (
@@ -19,9 +21,11 @@ export default function AppRouter() {
       <Route path="/rental" element={<RentalList />} />
       <Route path="/plotter" element={<PlotterRequest />} />
       <Route path="/plotter/complete" element={<PlotterComplete />} />
-      <Route path="/plotter/test" element={<PlotterTest />} />
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin/rental" element={<AdminRentalList />} />
+      <Route path="/admin/plotter" element={<AdminPlotterList />} />
+      <Route path="/test" element={<ComponentTest />} />
     </Routes>
   );
 }
