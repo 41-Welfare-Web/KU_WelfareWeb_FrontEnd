@@ -1,4 +1,4 @@
-import editIcon from "../../../assets/admin/pencil.svg";
+import editIcon from "../../assets/admin/pencil.svg";
 
 interface AdminRentalRowProps {
   rentalCode: string;

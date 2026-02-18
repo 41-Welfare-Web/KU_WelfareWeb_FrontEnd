@@ -1,4 +1,4 @@
-import FileOrangeIcon from "../../../assets/plotter/file-orange.svg";
+import FileOrangeIcon from "../../assets/plotter/file-orange.svg";
 
 interface PlotterFormFieldsProps {
   studentNo: string;

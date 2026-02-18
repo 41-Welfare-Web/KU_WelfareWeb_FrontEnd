@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import NoticeBox from "../../components/ui/NoticeBox";
-import ApplicationSummary from "../Rental/components/ApplicationSummary";
+import ApplicationSummary from "../../components/Rental/ApplicationSummary";
 import FileUploadBox from "../../components/ui/FileUploadBox";
 import PaymentProofBox from "../../components/ui/PaymentProofBox";
 import PageHeader from "../../components/ui/PageHeader";
-import PlotterFormFields from "./components/PlotterFormFields";
+import PlotterFormFields from "../../components/Plotter/PlotterFormFields";
 import { createPlotterOrder } from "../../services/plotterApi";
 
 export default function PlotterRequest() {

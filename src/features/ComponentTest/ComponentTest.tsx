@@ -3,19 +3,19 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
 // 플로터 관련 컴포넌트
-import ApplicationSummary from "../Rental/components/ApplicationSummary";
+import ApplicationSummary from "../../components/Rental/ApplicationSummary";
 import FileUploadBox from "../../components/ui/FileUploadBox";
 import PaymentProofBox from "../../components/ui/PaymentProofBox";
-import PlotterFormFields from "../Plotter/components/PlotterFormFields";
-import PlotterRequestSummary from "../Plotter/components/PlotterRequestSummary";
+import PlotterFormFields from "../../components/Plotter/PlotterFormFields";
+import PlotterRequestSummary from "../../components/Plotter/PlotterRequestSummary";
 import StatusBadge from "../../components/ui/StatusBadge";
 
 // 마이페이지 관련 컴포넌트
-import ProfileEditForm from "../MyPage/components/ProfileEditForm";
-import RentalContainer from "../MyPage/components/RentalContainer";
-import PlotterContainer from "../MyPage/components/PlotterContainer";
-import RentalStatusBadge from "../MyPage/components/RentalStatusBadge";
-import TabSelector from "../MyPage/components/TabSelector";
+import ProfileEditForm from "../../components/MyPage/ProfileEditForm";
+import RentalContainer from "../../components/MyPage/RentalContainer";
+import PlotterContainer from "../../components/MyPage/PlotterContainer";
+import RentalStatusBadge from "../../components/MyPage/RentalStatusBadge";
+import TabSelector from "../../components/MyPage/TabSelector";
 
 // 공통 컴포넌트
 import Btn from "../../components/ui/Btn";
@@ -25,8 +25,8 @@ import PageHeader from "../../components/ui/PageHeader";
 import SelectModal from "../../components/ui/SelectModal";
 
 // 관리자 컴포넌트
-import AdminRentalRow from "../Admin/components/AdminRentalRow";
-import AdminPlotterRow from "../Admin/components/AdminPlotterRow";
+import AdminRentalRow from "../../components/Admin/AdminRentalRow";
+import AdminPlotterRow from "../../components/Admin/AdminPlotterRow";
 
 export default function ComponentTest() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);

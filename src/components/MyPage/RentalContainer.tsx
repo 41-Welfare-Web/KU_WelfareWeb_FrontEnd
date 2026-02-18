@@ -1,5 +1,5 @@
 import RentalStatusBadge from './RentalStatusBadge';
-import calendarIcon from '../../../assets/mypage/calendar.svg';
+import calendarIcon from '../../assets/mypage/calendar.svg';
 
 interface RentalContainerProps {
   status: 'reserved' | 'renting' | 'returned' | 'defective' | 'canceled';

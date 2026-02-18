@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import PlotterRequestSummary from "./components/PlotterRequestSummary";
+import PlotterRequestSummary from "../../components/Plotter/PlotterRequestSummary";
 import LogoCircle from "../../assets/plotter/logo-circle.svg";
 
 type LocationState = {

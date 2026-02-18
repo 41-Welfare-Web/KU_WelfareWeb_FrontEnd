@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import InputField from '../../../components/ui/InputField';
-import SelectModal from '../../../components/ui/SelectModal';
-import fileOrangeIcon from '../../../assets/plotter/file-orange.svg';
-import uploadIcon from '../../../assets/plotter/upload.svg';
-import cardIcon from '../../../assets/plotter/card.svg';
+import InputField from '../ui/InputField';
+import SelectModal from '../ui/SelectModal';
+import fileOrangeIcon from '../../assets/plotter/file-orange.svg';
+import uploadIcon from '../../assets/plotter/upload.svg';
+import cardIcon from '../../assets/plotter/card.svg';
 
 interface PlotterApplicationFormProps {
   studentId?: string;
