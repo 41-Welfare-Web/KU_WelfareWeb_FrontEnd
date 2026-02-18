@@ -1,5 +1,5 @@
-import StatusBadge from './StatusBadge';
-import calendarIcon from '../../assets/mypage/calendar.svg';
+import StatusBadge from '../../../components/ui/StatusBadge';
+import calendarIcon from '../../../assets/mypage/calendar.svg';
 
 interface PlotterContainerProps {
   status: 'waiting' | 'confirmed' | 'printing' | 'completed' | 'rejected';
