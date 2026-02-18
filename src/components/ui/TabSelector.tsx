@@ -20,7 +20,7 @@ const TabSelector = ({ activeTab, onTabChange, className = '' }: TabSelectorProp
           className={`w-[293px] h-full text-[30px] font-medium text-[#410f07] transition-colors rounded-tl-[10px] rounded-tr-[10px] ${
             activeTab === tab.id
               ? 'bg-[#ff7755]'
-              : 'bg-[#efefef] hover:bg-[#e5e5e5]'
+              : 'bg-white hover:bg-[#f5f5f5] border border-[#e3e3e3]'
           }`}
           style={{
             fontFamily: "'Noto Sans', 'Noto Sans KR', sans-serif",

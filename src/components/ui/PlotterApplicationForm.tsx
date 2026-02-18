@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import InputField from './InputField';
 import SelectModal from './SelectModal';
+import fileOrangeIcon from '../../assets/plotter/file-orange.svg';
+import uploadIcon from '../../assets/plotter/upload.svg';
+import cardIcon from '../../assets/plotter/card.svg';
 
 interface PlotterApplicationFormProps {
   studentId?: string;
@@ -33,12 +36,7 @@ const PlotterApplicationForm = ({
     <div className={`bg-white rounded-[27px] w-[764px] p-8 ${className}`}>
       {/* 제목 */}
       <div className="flex items-center gap-3 mb-8">
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M27 4.5H13.5C12.7044 4.5 11.9413 4.81607 11.3787 5.37868C10.8161 5.94129 10.5 6.70435 10.5 7.5V28.5C10.5 29.2956 10.8161 30.0587 11.3787 30.6213C11.9413 31.1839 12.7044 31.5 13.5 31.5H27C27.7956 31.5 28.5587 31.1839 29.1213 30.6213C29.6839 30.0587 30 29.2956 30 28.5V7.5C30 6.70435 29.6839 5.94129 29.1213 5.37868C28.5587 4.81607 27.7956 4.5 27 4.5Z" stroke="#FF7755" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M16.5 13.5H24" stroke="#FF7755" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M16.5 19.5H24" stroke="#FF7755" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M16.5 25.5H24" stroke="#FF7755" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
+        <img src={fileOrangeIcon} alt="document" width="36" height="36" />
         <h2
           className="text-[32px] font-medium text-[#410f07]"
           style={{
@@ -142,9 +140,7 @@ const PlotterApplicationForm = ({
             htmlFor="pdf-upload"
             className="flex flex-col items-center justify-center w-[663px] h-[145px] border border-[#99a1af] border-dashed rounded-[10px] bg-white cursor-pointer hover:bg-gray-50"
           >
-            <svg width="43" height="43" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M21.5 30.458V12.5417M21.5 12.5417L13.5833 20.4583M21.5 12.5417L29.4167 20.4583M37.3333 30.458V34.2083C37.3333 35.1418 36.9625 36.0371 36.3029 36.6966C35.6434 37.3562 34.7481 37.7271 33.8146 37.7271H9.18542C8.25189 37.7271 7.35659 37.3562 6.69708 36.6966C6.03758 36.0371 5.66667 35.1418 5.66667 34.2083V30.458" stroke="#868686" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <img src={uploadIcon} alt="upload" width="43" height="43" />
             <p className="mt-2 text-[15px] font-medium text-[#868686]">
               PDF 파일을 이곳에 드래그 하거나 클릭하세요
             </p>
@@ -165,10 +161,7 @@ const PlotterApplicationForm = ({
       <div className="mt-6">
         <div className="bg-[#fff3e5] border border-[#99a1af] border-dashed rounded-[10px] p-6">
           <div className="flex items-center gap-2 mb-4">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M14 4H2C1.44772 4 1 4.44772 1 5V11C1 11.5523 1.44772 12 2 12H14C14.5523 12 15 11.5523 15 11V5C15 4.44772 14.5523 4 14 4Z" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M1 7H15" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <img src={cardIcon} alt="card" width="16" height="16" />
             <span className="text-[20px] font-medium text-black">입금 내역 증빙</span>
           </div>
           
