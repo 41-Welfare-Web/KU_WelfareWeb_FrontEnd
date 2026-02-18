@@ -8,7 +8,7 @@ interface ProfileEditFormProps {
     passwordConfirm: string;
     department: string;
   }) => void;
-  onDelete?: () => void;
+  onDelete?: (password: string) => void;
   className?: string;
 }
 
@@ -49,9 +49,14 @@ export default function ProfileEditForm({
   };
 
   const handleAccountDelete = () => {
+    if (!password) {
+      alert("탈퇴를 위해 비밀번호를 입력해주세요.");
+      return;
+    }
+    
     if (window.confirm("정말 탈퇴하시겠습니까?")) {
       if (onDelete) {
-        onDelete();
+        onDelete(password);
       } else {
         alert("회원 탈퇴가 완료되었습니다.");
       }
