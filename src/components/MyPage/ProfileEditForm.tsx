@@ -87,8 +87,7 @@ export default function ProfileEditForm({
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="***********"
-          className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-[#afafaf] placeholder:text-[#afafaf]"
+          className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[10px] text-[#afafaf] placeholder:text-[#afafaf]"
         />
       </div>
 
@@ -100,7 +99,6 @@ export default function ProfileEditForm({
             type="password"
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
-            placeholder="***********"
             className="flex-1 h-[67px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-[#afafaf] placeholder:text-[#afafaf]"
           />
           <button

@@ -67,11 +67,11 @@ const RentalContainer = ({
       </div>
 
       {/* 버튼 그룹 */}
-      <div className="absolute right-[37px] top-[79px] flex items-center gap-[10px]">
+      <div className="absolute right-[37px] top-[88px] flex items-center gap-[10px]">
         {onEdit && (
           <button
             onClick={onEdit}
-            className="w-[70px] h-[49px] bg-white border-[0.5px] border-[#a4a4a4] rounded-[13px] text-[20px] font-medium text-black hover:bg-gray-50"
+            className="w-[60px] h-[40px] bg-white border-[0.5px] border-[#a4a4a4] rounded-[13px] text-[16px] font-medium text-black hover:bg-gray-50"
           >
             수정
           </button>
@@ -79,7 +79,7 @@ const RentalContainer = ({
         {onCancel && (
           <button
             onClick={onCancel}
-            className="w-[120px] h-[49px] bg-[#ffd2d2] border-[0.5px] border-[#ff5151] rounded-[13px] text-[20px] font-medium text-[red] hover:bg-[#ffc0c0]"
+            className="w-[120px] h-[40px] bg-[#ffd2d2] border-[0.5px] border-[#ff5151] rounded-[13px] text-[16px] font-medium text-[red] hover:bg-[#ffc0c0]"
           >
             예약 취소
           </button>
