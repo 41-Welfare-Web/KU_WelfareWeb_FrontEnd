@@ -351,7 +351,7 @@ export default function ComponentTest() {
                     startDate="2026-02-10"
                     endDate="2026-02-12"
                     status="reserved"
-                    onEdit={() => alert("수정 클릭")}
+                    onStatusChange={(newStatus) => alert(`상태 변경: ${newStatus}`)}
                   />
                   <AdminRentalRow
                     rentalCode="2026-R2"
@@ -361,7 +361,7 @@ export default function ComponentTest() {
                     startDate="2026-02-15"
                     endDate="2026-02-20"
                     status="renting"
-                    onEdit={() => alert("수정 클릭")}
+                    onStatusChange={(newStatus) => alert(`상태 변경: ${newStatus}`)}
                   />
                   <AdminRentalRow
                     rentalCode="2026-R3"
@@ -371,7 +371,7 @@ export default function ComponentTest() {
                     startDate="2026-02-05"
                     endDate="2026-02-10"
                     status="returned"
-                    onEdit={() => alert("수정 클릭")}
+                    onStatusChange={(newStatus) => alert(`상태 변경: ${newStatus}`)}
                   />
                   <AdminRentalRow
                     rentalCode="2026-R4"
@@ -381,7 +381,7 @@ export default function ComponentTest() {
                     startDate="2026-01-25"
                     endDate="2026-02-15"
                     status="overdue"
-                    onEdit={() => alert("수정 클릭")}
+                    onStatusChange={(newStatus) => alert(`상태 변경: ${newStatus}`)}
                   />
                   <AdminRentalRow
                     rentalCode="2026-R5"
@@ -391,7 +391,7 @@ export default function ComponentTest() {
                     startDate="2026-02-22"
                     endDate="2026-02-27"
                     status="canceled"
-                    onEdit={() => alert("수정 클릭")}
+                    onStatusChange={(newStatus) => alert(`상태 변경: ${newStatus}`)}
                   />
                 </div>
               </div>
@@ -408,7 +408,7 @@ export default function ComponentTest() {
                     paperSizeAndCount="A3 /5장"
                     orderDate="2026-02-10"
                     status="pending"
-                    onEdit={() => alert("수정 클릭")}
+                    onStatusChange={(newStatus) => alert(`상태 변경: ${newStatus}`)}
                   />
                   <AdminPlotterRow
                     orderCode="2026-P2"
@@ -418,7 +418,7 @@ export default function ComponentTest() {
                     paperSizeAndCount="A1 /2장"
                     orderDate="2026-02-12"
                     status="confirmed"
-                    onEdit={() => alert("수정 클릭")}
+                    onStatusChange={(newStatus) => alert(`상태 변경: ${newStatus}`)}
                   />
                   <AdminPlotterRow
                     orderCode="2026-P3"
@@ -428,7 +428,7 @@ export default function ComponentTest() {
                     paperSizeAndCount="A2 /3장"
                     orderDate="2026-02-08"
                     status="printed"
-                    onEdit={() => alert("수정 클릭")}
+                    onStatusChange={(newStatus) => alert(`상태 변경: ${newStatus}`)}
                   />
                   <AdminPlotterRow
                     orderCode="2026-P4"
@@ -438,7 +438,7 @@ export default function ComponentTest() {
                     paperSizeAndCount="A0 /1장"
                     orderDate="2026-02-05"
                     status="rejected"
-                    onEdit={() => alert("수정 클릭")}
+                    onStatusChange={(newStatus) => alert(`상태 변경: ${newStatus}`)}
                   />
                   <AdminPlotterRow
                     orderCode="2026-P5"
@@ -448,7 +448,7 @@ export default function ComponentTest() {
                     paperSizeAndCount="A1 /4장"
                     orderDate="2026-02-01"
                     status="completed"
-                    onEdit={() => alert("수정 클릭")}
+                    onStatusChange={(newStatus) => alert(`상태 변경: ${newStatus}`)}
                   />
                 </div>
               </div>
