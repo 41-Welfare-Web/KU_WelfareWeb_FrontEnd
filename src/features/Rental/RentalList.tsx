@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Header from "../../components/Header";
-import Filter, { type Category } from "./components/Filter";
-import ItemCard from "./components/ItemCard";
+import Filter, { type Category } from "../../components/Rental/Filter";
+import ItemCard from "../../components/Rental/ItemCard";
 import searchImg from "../../assets/rental/search.svg";
 
 const API_BASE_URL =
