@@ -184,37 +184,38 @@ export default function AdminDashboard() {
     }
   };
 
-  const rentalStatusConfig = {
-    RESERVED: { label: '예약', bgColor: 'bg-[#FDD297]', textColor: 'text-[#F54A00]' },
-    RENTED: { label: '대여 중', bgColor: 'bg-[#A9FFCA]', textColor: 'text-[#1B811F]' },
-    RETURNED: { label: '정상 반납', bgColor: 'bg-[#BEBEBE]', textColor: 'text-[#5B5B5B]' },
-    OVERDUE: { label: '연체', bgColor: 'bg-[#FFA2A2]', textColor: 'text-[#FF0000]' },
-    CANCELED: { label: '예약 취소', bgColor: 'bg-[#F5FFAA]', textColor: 'text-[#FFDA00]' }
-  };
+  // TODO: 나중에 사용할 상태 설정
+  // const rentalStatusConfig = {
+  //   RESERVED: { label: '예약', bgColor: 'bg-[#FDD297]', textColor: 'text-[#F54A00]' },
+  //   RENTED: { label: '대여 중', bgColor: 'bg-[#A9FFCA]', textColor: 'text-[#1B811F]' },
+  //   RETURNED: { label: '정상 반납', bgColor: 'bg-[#BEBEBE]', textColor: 'text-[#5B5B5B]' },
+  //   OVERDUE: { label: '연체', bgColor: 'bg-[#FFA2A2]', textColor: 'text-[#FF0000]' },
+  //   CANCELED: { label: '예약 취소', bgColor: 'bg-[#F5FFAA]', textColor: 'text-[#FFDA00]' }
+  // };
 
-  const plotterStatusConfig = {
-    PENDING: { label: '예약 대기', bgColor: 'bg-[#FDD297]', textColor: 'text-[#F54A00]' },
-    CONFIRMED: { label: '예약 확정', bgColor: 'bg-[#97F2FD]', textColor: 'text-[#155DFC]' },
-    PRINTED: { label: '인쇄 완료', bgColor: 'bg-[#A9FFCA]', textColor: 'text-[#1B811F]' },
-    REJECTED: { label: '예약 반려', bgColor: 'bg-[#FFA2A2]', textColor: 'text-[#FF0000]' },
-    COMPLETED: { label: '수령 완료', bgColor: 'bg-[#DDDDDD]', textColor: 'text-[#4A5565]' }
-  };
+  // const plotterStatusConfig = {
+  //   PENDING: { label: '예약 대기', bgColor: 'bg-[#FDD297]', textColor: 'text-[#F54A00]' },
+  //   CONFIRMED: { label: '예약 확정', bgColor: 'bg-[#97F2FD]', textColor: 'text-[#155DFC]' },
+  //   PRINTED: { label: '인쇄 완료', bgColor: 'bg-[#A9FFCA]', textColor: 'text-[#1B811F]' },
+  //   REJECTED: { label: '예약 반려', bgColor: 'bg-[#FFA2A2]', textColor: 'text-[#FF0000]' },
+  //   COMPLETED: { label: '수령 완료', bgColor: 'bg-[#DDDDDD]', textColor: 'text-[#4A5565]' }
+  // };
 
-  const handleRentalEdit = (rentalId: number) => {
-    // TODO: 상태 변경 모달 띄우기
-    const newStatus = prompt('변경할 상태를 입력하세요 (RESERVED, RENTED, RETURNED, OVERDUE, CANCELED):');
-    if (newStatus) {
-      handleRentalStatusChange(rentalId, newStatus.toUpperCase());
-    }
-  };
+  // const handleRentalEdit = (rentalId: number) => {
+  //   // TODO: 상태 변경 모달 띄우기
+  //   const newStatus = prompt('변경할 상태를 입력하세요 (RESERVED, RENTED, RETURNED, OVERDUE, CANCELED):');
+  //   if (newStatus) {
+  //     handleRentalStatusChange(rentalId, newStatus.toUpperCase());
+  //   }
+  // };
 
-  const handlePlotterEdit = (orderId: number) => {
-    // TODO: 상태 변경 모달 띄우기
-    const newStatus = prompt('변경할 상태를 입력하세요 (PENDING, CONFIRMED, PRINTED, REJECTED, COMPLETED):');
-    if (newStatus) {
-      handlePlotterStatusChange(orderId, newStatus.toUpperCase());
-    }
-  };
+  // const handlePlotterEdit = (orderId: number) => {
+  //   // TODO: 상태 변경 모달 띄우기
+  //   const newStatus = prompt('변경할 상태를 입력하세요 (PENDING, CONFIRMED, PRINTED, REJECTED, COMPLETED):');
+  //   if (newStatus) {
+  //     handlePlotterStatusChange(orderId, newStatus.toUpperCase());
+  //   }
+  // };
 
   const handleRentalSearch = () => {
     // TODO: 검색 기능 구현
