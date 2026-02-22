@@ -1,4 +1,5 @@
-import editIcon from "../../assets/admin/pencil.svg";
+import { useState, useRef, useEffect } from "react";
+import RentalStatusBadge from "../MyPage/RentalStatusBadge";
 
 interface AdminRentalRowProps {
   rentalCode: string;
@@ -8,37 +9,9 @@ interface AdminRentalRowProps {
   startDate: string;
   endDate: string;
   status: "reserved" | "renting" | "returned" | "overdue" | "canceled";
-  onEdit?: () => void;
+  onStatusChange?: (newStatus: "reserved" | "renting" | "returned" | "overdue" | "canceled") => void;
   className?: string;
 }
-
-const statusConfig = {
-  reserved: {
-    text: "예약",
-    bgColor: "#fdd297",
-    textColor: "#f54a00",
-  },
-  renting: {
-    text: "대여중",
-    bgColor: "#c3e5ff",
-    textColor: "#0066cc",
-  },
-  returned: {
-    text: "반납완료",
-    bgColor: "#d4edda",
-    textColor: "#155724",
-  },
-  overdue: {
-    text: "연체",
-    bgColor: "#f8d7da",
-    textColor: "#721c24",
-  },
-  canceled: {
-    text: "취소",
-    bgColor: "#e2e3e5",
-    textColor: "#383d41",
-  },
-};
 
 export default function AdminRentalRow({
   rentalCode,
@@ -48,59 +21,111 @@ export default function AdminRentalRow({
   startDate,
   endDate,
   status,
-  onEdit,
+  onStatusChange,
   className = "",
 }: AdminRentalRowProps) {
-  const statusStyle = statusConfig[status];
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // status 변환: overdue -> defective로 매핑
+  const badgeStatus = status === "overdue" ? "defective" : status as "reserved" | "renting" | "returned" | "defective" | "canceled";
+
+  // 날짜 포맷팅 함수: ISO 형식에서 YYYY-MM-DD만 추출
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    return dateString.split('T')[0];
+  };
+
+  // 가능한 모든 상태
+  const allStatuses: Array<"reserved" | "renting" | "returned" | "overdue" | "canceled"> = [
+    "reserved", "renting", "returned", "overdue", "canceled"
+  ];
+
+  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
+  const handleStatusClick = (newStatus: "reserved" | "renting" | "returned" | "overdue" | "canceled") => {
+    if (onStatusChange) {
+      onStatusChange(newStatus);
+    }
+    setIsDropdownOpen(false);
+  };
 
   return (
     <div
-      className={`relative w-full h-[52px] bg-white border-b border-[#e5e5e5] ${className}`}
+      className={`w-full h-[52px] bg-white border-b border-[#e5e5e5] flex items-center px-8 gap-4 ${className}`}
     >
-      {/* 메인 콘텐츠 */}
-      <div className="absolute left-[33px] top-1/2 -translate-y-1/2 flex items-center gap-8">
-        <span className="text-[20px] font-medium text-black w-[100px]">
-          {rentalCode}
-        </span>
-        <span className="text-[20px] font-medium text-black w-[80px]">
-          {userName}
-        </span>
-        <span className="text-[20px] font-medium text-black w-[150px]">
-          {department}
-        </span>
-        <span className="text-[20px] font-medium text-black w-[150px]">
-          {itemName}
-        </span>
-        <span className="text-[15px] font-medium text-black w-[100px]">
-          {startDate}
-        </span>
-        <span className="text-[15px] font-medium text-black w-[100px]">
-          {endDate}
-        </span>
-      </div>
+      {/* 대여 코드 */}
+      <span className="text-[16px] font-medium text-black w-[100px]">
+        {rentalCode}
+      </span>
 
-      {/* 상태 뱃지 */}
-      <div
-        className="absolute right-[100px] top-1/2 -translate-y-1/2 w-[80px] h-[26px] rounded-[5px] flex items-center justify-center"
-        style={{ backgroundColor: statusStyle.bgColor }}
-      >
-        <span
-          className="text-[15px] font-medium"
-          style={{ color: statusStyle.textColor }}
-        >
-          {statusStyle.text}
-        </span>
-      </div>
+      {/* 이름 */}
+      <span className="text-[16px] font-medium text-black w-[80px]">
+        {userName}
+      </span>
 
-      {/* 수정 버튼 */}
-      {onEdit && (
+      {/* 단위 */}
+      <span className="text-[16px] font-medium text-black w-[120px]">
+        {department}
+      </span>
+
+      {/* 물품명 */}
+      <span className="text-[16px] font-medium text-black flex-1">
+        {itemName}
+      </span>
+
+      {/* 대여 시작일 */}
+      <span className="text-[16px] font-medium text-black w-[100px]">
+        {formatDate(startDate)}
+      </span>
+
+      {/* 대여 종료일 */}
+      <span className="text-[16px] font-medium text-black w-[100px]">
+        {formatDate(endDate)}
+      </span>
+
+      {/* 상태 배지 - 클릭 가능 */}
+      <div className="relative w-[97px]" ref={dropdownRef}>
         <button
-          onClick={onEdit}
-          className="absolute right-[40px] top-1/2 -translate-y-1/2 w-[18px] h-[18px] hover:opacity-70 transition"
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="w-full hover:opacity-80 transition"
         >
-          <img src={editIcon} alt="수정" className="w-full h-full" />
+          <RentalStatusBadge status={badgeStatus} />
         </button>
-      )}
+
+        {/* 상태 선택 드롭다운 */}
+        {isDropdownOpen && (
+          <div className="absolute top-full mt-1 left-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] py-2 min-w-[120px] max-h-[300px] overflow-y-auto">
+            {allStatuses.map((statusOption) => {
+              const displayStatus = statusOption === "overdue" ? "defective" : statusOption as "reserved" | "renting" | "returned" | "defective" | "canceled";
+              return (
+                <button
+                  key={statusOption}
+                  onClick={() => handleStatusClick(statusOption)}
+                  className="w-full px-3 py-2 hover:bg-gray-50 transition flex items-center justify-center"
+                >
+                  <RentalStatusBadge status={displayStatus} />
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

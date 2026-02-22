@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import AdminRentalRow from '../../components/Admin/AdminRentalRow';
+import AdminPlotterRow from '../../components/Admin/AdminPlotterRow';
 import filterIcon from '../../assets/admin/filter.svg';
 import searchIcon from '../../assets/admin/glass.svg';
-import editIcon from '../../assets/admin/pencil.svg';
 import downloadIcon from '../../assets/admin/download.svg';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 type TabType = 'rental' | 'plotter';
 
@@ -76,7 +77,7 @@ export default function AdminDashboard() {
         params.status = statusMap[rentalStatusFilter];
       }
 
-      const response = await axios.get(`${API_BASE_URL}/rentals`, {
+      const response = await axios.get(`${API_BASE_URL}/api/rentals`, {
         params,
         headers: {
           Authorization: `Bearer ${token}`
@@ -116,7 +117,7 @@ export default function AdminDashboard() {
         params.status = statusMap[plotterStatusFilter];
       }
 
-      const response = await axios.get(`${API_BASE_URL}/plotter/orders`, {
+      const response = await axios.get(`${API_BASE_URL}/api/plotter/orders`, {
         params,
         headers: {
           Authorization: `Bearer ${token}`
@@ -146,7 +147,7 @@ export default function AdminDashboard() {
     try {
       const token = localStorage.getItem('accessToken');
       await axios.put(
-        `${API_BASE_URL}/rentals/${rentalId}/status`,
+        `${API_BASE_URL}/api/rentals/${rentalId}/status`,
         { status: newStatus },
         {
           headers: {
@@ -167,7 +168,7 @@ export default function AdminDashboard() {
     try {
       const token = localStorage.getItem('accessToken');
       await axios.put(
-        `${API_BASE_URL}/plotter/orders/${orderId}/status`,
+        `${API_BASE_URL}/api/plotter/orders/${orderId}/status`,
         { status: newStatus },
         {
           headers: {
@@ -339,7 +340,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* 테이블 */}
-              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-hidden">
+              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible">
                 {/* 테이블 헤더 */}
                 <div className="bg-[#EDEDED] border-b border-[#C2C2C2] h-[77px] flex items-center px-8 font-['HanbatGothic'] font-medium text-[20px] text-black">
                   <div className="w-[120px]">신청번호</div>
@@ -366,39 +367,45 @@ export default function AdminDashboard() {
 
                 {/* 테이블 바디 */}
                 {!loading && !error && (
-                  <div className="divide-y divide-gray-200">
+                  <div>
                     {rentalData.length === 0 ? (
                       <div className="h-[200px] flex items-center justify-center">
                         <span className="text-gray-500">대여 내역이 없습니다.</span>
                       </div>
                     ) : (
                       rentalData.map((rental) => {
-                        const status = rentalStatusConfig[rental.status];
+                        // status 매핑: RENTED -> renting
+                        const statusMap: Record<string, "reserved" | "renting" | "returned" | "overdue" | "canceled"> = {
+                          'RESERVED': 'reserved',
+                          'RENTED': 'renting',
+                          'RETURNED': 'returned',
+                          'OVERDUE': 'overdue',
+                          'CANCELED': 'canceled'
+                        };
+                        
+                        // 역매핑: component status -> API status
+                        const reverseStatusMap: Record<"reserved" | "renting" | "returned" | "overdue" | "canceled", string> = {
+                          'reserved': 'RESERVED',
+                          'renting': 'RENTED',
+                          'returned': 'RETURNED',
+                          'overdue': 'OVERDUE',
+                          'canceled': 'CANCELED'
+                        };
+                        
                         return (
-                          <div key={rental.id} className="h-[53px] flex items-center px-8 hover:bg-gray-50 transition-colors">
-                            <div className="w-[120px] font-['HanbatGothic'] font-medium text-[20px]">R-{rental.id}</div>
-                            <div className="w-[100px] font-['HanbatGothic'] font-medium text-[20px]">{rental.user.name}</div>
-                            <div className="w-[150px] font-['HanbatGothic'] font-medium text-[20px]">{rental.user.studentId}</div>
-                            <div className="w-[200px] font-['HanbatGothic'] font-medium text-[20px]">{rental.itemSummary}</div>
-                            <div className="w-[120px] font-['HanbatGothic'] font-medium text-[15px]">{rental.startDate}</div>
-                            <div className="w-[120px] font-['HanbatGothic'] font-medium text-[15px]">{rental.endDate}</div>
-                            <div className="w-[100px]">
-                              <div className={`inline-flex h-[26px] px-3 rounded-[5px] items-center justify-center ${status.bgColor}`}>
-                                <span className={`font-['Gmarket_Sans'] font-medium text-[15px] ${status.textColor}`}>
-                                  {status.label}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex-1 flex items-center justify-center">
-                              <button
-                                onClick={() => handleRentalEdit(rental.id)}
-                                className="w-6 h-6 hover:opacity-70 transition-opacity"
-                                aria-label="상태 변경"
-                              >
-                                <img src={editIcon} alt="수정" className="w-6 h-6" />
-                              </button>
-                            </div>
-                          </div>
+                          <AdminRentalRow
+                            key={rental.id}
+                            rentalCode={`R-${rental.id}`}
+                            userName={rental.user.name}
+                            department={rental.user.studentId}
+                            itemName={rental.itemSummary}
+                            startDate={rental.startDate}
+                            endDate={rental.endDate}
+                            status={statusMap[rental.status] || 'reserved'}
+                            onStatusChange={(newStatus) => {
+                              handleRentalStatusChange(rental.id, reverseStatusMap[newStatus]);
+                            }}
+                          />
                         );
                       })
                     )}
@@ -465,7 +472,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* 테이블 */}
-              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-hidden">
+              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible">
                 {/* 테이블 헤더 */}
                 <div className="bg-[#EDEDED] border-b border-[#C2C2C2] h-[77px] flex items-center px-8 font-['HanbatGothic'] font-medium text-[20px] text-black">
                   <div className="w-[120px]">신청번호</div>
@@ -493,40 +500,45 @@ export default function AdminDashboard() {
 
                 {/* 테이블 바디 */}
                 {!loading && !error && (
-                  <div className="divide-y divide-gray-200">
+                  <div>
                     {plotterData.length === 0 ? (
                       <div className="h-[200px] flex items-center justify-center">
                         <span className="text-gray-500">플로터 주문 내역이 없습니다.</span>
                       </div>
                     ) : (
                       plotterData.map((plotter) => {
-                        const status = plotterStatusConfig[plotter.status];
+                        // status 매핑: PRINTED -> printing, PENDING -> pending
+                        const statusMap: Record<string, 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'> = {
+                          'PENDING': 'pending',
+                          'CONFIRMED': 'confirmed',
+                          'PRINTED': 'printed',
+                          'REJECTED': 'rejected',
+                          'COMPLETED': 'completed'
+                        };
+                        
+                        // 역매핑: component status -> API status
+                        const reverseStatusMap: Record<'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed', string> = {
+                          'pending': 'PENDING',
+                          'confirmed': 'CONFIRMED',
+                          'printed': 'PRINTED',
+                          'rejected': 'REJECTED',
+                          'completed': 'COMPLETED'
+                        };
+                        
                         return (
-                          <div key={plotter.id} className="h-[53px] flex items-center px-8 hover:bg-gray-50 transition-colors">
-                            <div className="w-[120px] font-['HanbatGothic'] font-medium text-[20px]">P-{plotter.id}</div>
-                            <div className="w-[100px] font-['HanbatGothic'] font-medium text-[20px]">{plotter.user.name}</div>
-                            <div className="w-[140px] font-['HanbatGothic'] font-medium text-[20px]">{plotter.user.studentId}</div>
-                            <div className="w-[160px] font-['HanbatGothic'] font-medium text-[20px]">{plotter.purpose}</div>
-                            <div className="w-[100px] font-['HanbatGothic'] font-medium text-[20px]">{plotter.paperSize}</div>
-                            <div className="w-[80px] font-['HanbatGothic'] font-medium text-[20px]">{plotter.pageCount}장</div>
-                            <div className="w-[120px] font-['HanbatGothic'] font-medium text-[15px]">{plotter.pickupDate}</div>
-                            <div className="w-[100px]">
-                              <div className={`inline-flex h-[26px] px-3 rounded-[5px] items-center justify-center ${status.bgColor}`}>
-                                <span className={`font-['Gmarket_Sans'] font-medium text-[15px] ${status.textColor}`}>
-                                  {status.label}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex-1 flex justify-center">
-                              <button
-                                onClick={() => handlePlotterEdit(plotter.id)}
-                                className="w-6 h-6 hover:opacity-70 transition-opacity"
-                                aria-label="상태 변경"
-                              >
-                                <img src={editIcon} alt="수정" className="w-6 h-6" />
-                              </button>
-                            </div>
-                          </div>
+                          <AdminPlotterRow
+                            key={plotter.id}
+                            orderCode={`P-${plotter.id}`}
+                            userName={plotter.user.name}
+                            club={plotter.user.studentId}
+                            purpose={plotter.purpose}
+                            paperSizeAndCount={`${plotter.paperSize} / ${plotter.pageCount}장`}
+                            orderDate={plotter.pickupDate}
+                            status={statusMap[plotter.status] || 'pending'}
+                            onStatusChange={(newStatus) => {
+                              handlePlotterStatusChange(plotter.id, reverseStatusMap[newStatus]);
+                            }}
+                          />
                         );
                       })
                     )}

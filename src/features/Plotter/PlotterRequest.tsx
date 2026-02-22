@@ -84,17 +84,14 @@ export default function PlotterRequest() {
       // 용지 크기에서 실제 값 추출 (예: "A1(594 x 941mm)" -> "A1")
       const extractedPaperSize = paperSize.split("(")[0].trim();
       
-      // 유료 서비스 여부 판별 (A1, A2는 유료)
-      const isPaidService = ["A1", "A2"].includes(extractedPaperSize);
-      
       // API 호출
       const response = await createPlotterOrder({
         purpose: purpose.trim(),
         paperSize: extractedPaperSize,
         pageCount: quantity,
-        isPaidService,
+        department: unit,
         pdfFile,
-        paymentReceiptImage: isPaidService ? receiptFile : undefined,
+        paymentReceiptImage: receiptFile || undefined,
       });
 
       // 신청 완료 페이지로 이동 (응답 데이터 전달)

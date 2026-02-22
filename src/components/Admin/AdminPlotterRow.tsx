@@ -1,4 +1,5 @@
-import editIcon from '../../assets/admin/pencil.svg';
+import { useState, useRef, useEffect } from 'react';
+import StatusBadge from '../ui/StatusBadge';
 
 interface AdminPlotterRowProps {
   orderCode: string;
@@ -8,7 +9,7 @@ interface AdminPlotterRowProps {
   paperSizeAndCount: string;
   orderDate: string;
   status: 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed';
-  onEdit?: () => void;
+  onStatusChange?: (newStatus: 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed') => void;
 }
 
 export default function AdminPlotterRow({
@@ -19,89 +20,114 @@ export default function AdminPlotterRow({
   paperSizeAndCount,
   orderDate,
   status,
-  onEdit
+  onStatusChange
 }: AdminPlotterRowProps) {
-  const statusConfig = {
-    pending: {
-      label: '예약 대기',
-      bgColor: 'bg-[#FFF4CC]',
-      textColor: 'text-[#FF9900]'
-    },
-    confirmed: {
-      label: '예약 확정',
-      bgColor: 'bg-[#CCF0FF]',
-      textColor: 'text-[#0099FF]'
-    },
-    printed: {
-      label: '인쇄 완료',
-      bgColor: 'bg-[#D4F4DD]',
-      textColor: 'text-[#00B050]'
-    },
-    rejected: {
-      label: '예약 반려',
-      bgColor: 'bg-[#FFA2A2]',
-      textColor: 'text-[#FF0000]'
-    },
-    completed: {
-      label: '수령 완료',
-      bgColor: 'bg-[#E0E0E0]',
-      textColor: 'text-[#666666]'
-    }
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // status 변환: pending -> waiting, printed -> printing으로 매핑
+  const badgeStatus = 
+    status === 'pending' ? 'waiting' :
+    status === 'printed' ? 'printing' :
+    status as 'waiting' | 'confirmed' | 'printing' | 'completed' | 'rejected';
+
+  // 날짜 포맷팅 함수: ISO 형식에서 YYYY-MM-DD만 추출
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    return dateString.split('T')[0];
   };
 
-  const currentStatus = statusConfig[status];
+  // 가능한 모든 상태
+  const allStatuses: Array<'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'> = [
+    'pending', 'confirmed', 'printed', 'rejected', 'completed'
+  ];
+
+  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
+  const handleStatusClick = (newStatus: 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed') => {
+    if (onStatusChange) {
+      onStatusChange(newStatus);
+    }
+    setIsDropdownOpen(false);
+  };
 
   return (
-    <div className="relative w-full h-[52px] bg-white border border-gray-200 rounded-lg flex items-center px-7 gap-8">
-      {/* 주문 코드, 신청자, 동아리 */}
-      <div className="flex items-center gap-4 min-w-[280px]">
-        <span className="font-['HanbatGothic'] font-medium text-[20px] text-black tracking-[0.6px]">
-          {orderCode}
-        </span>
-        <span className="font-['HanbatGothic'] font-medium text-[20px] text-black tracking-[0.6px]">
-          {userName}
-        </span>
-        <span className="font-['HanbatGothic'] font-medium text-[20px] text-black tracking-[0.6px]">
-          {club}
-        </span>
-      </div>
+    <div className="w-full h-[52px] bg-white border-b border-[#e5e5e5] flex items-center px-8 gap-4">
+      {/* 주문 코드 */}
+      <span className="text-[16px] font-medium text-black w-[100px]">
+        {orderCode}
+      </span>
+
+      {/* 신청자 */}
+      <span className="text-[16px] font-medium text-black w-[80px]">
+        {userName}
+      </span>
+
+      {/* 동아리 */}
+      <span className="text-[16px] font-medium text-black w-[120px]">
+        {club}
+      </span>
 
       {/* 출력 용도 */}
-      <div className="min-w-[140px]">
-        <span className="font-['HanbatGothic'] font-medium text-[20px] text-black tracking-[0.6px]">
-          {purpose}
-        </span>
-      </div>
+      <span className="text-[16px] font-medium text-black flex-1">
+        {purpose}
+      </span>
 
       {/* 용지 규격 및 매수 */}
-      <div className="min-w-[100px]">
-        <span className="font-['HanbatGothic'] font-medium text-[20px] text-black tracking-[0.6px]">
-          {paperSizeAndCount}
-        </span>
-      </div>
+      <span className="text-[16px] font-medium text-black w-[120px]">
+        {paperSizeAndCount}
+      </span>
 
       {/* 신청일 */}
-      <div className="min-w-[120px]">
-        <span className="font-['HanbatGothic'] font-medium text-[15px] text-black tracking-[0.45px]">
-          {orderDate}
-        </span>
-      </div>
+      <span className="text-[16px] font-medium text-black w-[100px]">
+        {formatDate(orderDate)}
+      </span>
 
-      {/* 상태 배지 */}
-      <div className={`h-[26px] px-[9px] rounded-[5px] flex items-center justify-center ${currentStatus.bgColor}`}>
-        <span className={`font-['Gmarket_Sans'] font-medium text-[15px] ${currentStatus.textColor}`}>
-          {currentStatus.label}
-        </span>
-      </div>
+      {/* 상태 배지 - 클릭 가능 */}
+      <div className="relative w-[97px]" ref={dropdownRef}>
+        <button
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="w-full hover:opacity-80 transition"
+        >
+          <StatusBadge status={badgeStatus} />
+        </button>
 
-      {/* 수정 아이콘 버튼 */}
-      <button
-        onClick={onEdit}
-        className="w-6 h-6 ml-auto flex items-center justify-center hover:opacity-70 transition-opacity"
-        aria-label="수정"
-      >
-        <img src={editIcon} alt="수정" className="w-6 h-6" />
-      </button>
+        {/* 상태 선택 드롭다운 */}
+        {isDropdownOpen && (
+          <div className="absolute top-full mt-1 left-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] py-2 min-w-[120px] max-h-[300px] overflow-y-auto">
+            {allStatuses.map((statusOption) => {
+              const displayStatus = 
+                statusOption === 'pending' ? 'waiting' :
+                statusOption === 'printed' ? 'printing' :
+                statusOption as 'waiting' | 'confirmed' | 'printing' | 'completed' | 'rejected';
+              return (
+                <button
+                  key={statusOption}
+                  onClick={() => handleStatusClick(statusOption)}
+                  className="w-full px-3 py-2 hover:bg-gray-50 transition flex items-center justify-center"
+                >
+                  <StatusBadge status={displayStatus} />
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

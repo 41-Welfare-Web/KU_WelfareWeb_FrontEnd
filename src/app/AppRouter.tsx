@@ -10,6 +10,7 @@ import AdminDashboard from "../features/Admin/AdminDashboard";
 import AdminRentalList from "../features/Admin/AdminRentalList";
 import AdminPlotterList from "../features/Admin/AdminPlotterList";
 import ComponentTest from "../features/ComponentTest/ComponentTest";
+import TestDataPage from "../features/Test/TestDataPage";
 
 export default function AppRouter() {
   return (
@@ -26,6 +27,7 @@ export default function AppRouter() {
       <Route path="/admin/rental" element={<AdminRentalList />} />
       <Route path="/admin/plotter" element={<AdminPlotterList />} />
       <Route path="/test" element={<ComponentTest />} />
+      <Route path="/test-data" element={<TestDataPage />} />
     </Routes>
   );
 }
