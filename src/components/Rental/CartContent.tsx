@@ -12,7 +12,7 @@ type CartItem = {
 type Props = {
   items: CartItem[];
   onGoCheckout: () => void;
-  headerRight?: ReactNode; // 모바일에서 닫기 버튼 넣고 싶을 때
+  headerRight?: ReactNode;
 };
 
 export default function CartContent({

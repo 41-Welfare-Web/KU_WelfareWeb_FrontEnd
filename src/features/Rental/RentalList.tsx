@@ -60,8 +60,7 @@ export default function RentalList() {
   const [search, setSearch] = useState("");
 
   // 장바구니 UI (서버 연동 전)
-  const [cartOpen, setCartOpen] = useState(false);
-  const [cartItems, setCartItems] = useState<
+  const [cartItems] = useState<
     { id: number; name: string; count: number; imageUrl?: string }[]
   >([{ id: 1, name: "행사용 천막", count: 1, imageUrl: exampleImg }]);
 
