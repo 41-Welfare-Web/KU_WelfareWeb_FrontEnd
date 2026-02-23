@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -9,19 +9,93 @@ import PaymentProofBox from "../../components/ui/PaymentProofBox";
 import PageHeader from "../../components/ui/PageHeader";
 import PlotterFormFields from "../../components/Plotter/PlotterFormFields";
 import { createPlotterOrder } from "../../services/plotterApi";
+import { useAuth } from "../../contexts/AuthContext";
+import { getMyProfile } from "../../services/userApi";
+import { getCommonMetadata } from "../../services/commonApi";
+
+interface DepartmentUnit {
+  id: number;
+  name: string;
+}
+
+interface Purpose {
+  id: number;
+  name: string;
+}
 
 export default function PlotterRequest() {
   const navigate = useNavigate();
-  const [studentNo] = useState("202112345");
-  const [name] = useState("홍길동");
+  const { isLoggedIn, user } = useAuth();
+  const [units, setUnits] = useState<DepartmentUnit[]>([]);
   const [unit, setUnit] = useState("학생복지위원회");
-  const [phone] = useState("010-1234-5678");
+  const [purposes, setPurposes] = useState<Purpose[]>([]);
   const [purpose, setPurpose] = useState("대자보 출력");
   const [paperSize, setPaperSize] = useState("A1(594 x 941mm)");
   const [quantity, setQuantity] = useState(1);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("010-0000-0000");
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+  // 로그인 체크
+  useEffect(() => {
+    if (!isLoggedIn) {
+      alert("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+    }
+  }, [isLoggedIn, navigate]);
+
+  // 사용자 프로필 로드 (전화번호 가져오기)
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!isLoggedIn) return;
+      
+      try {
+        const profile = await getMyProfile();
+        setPhoneNumber(profile.phoneNumber || "010-0000-0000");
+        // 프로필의 소속 단위로 초기값 설정
+        if (profile.department) {
+          setUnit(profile.department);
+        }
+      } catch (error) {
+        console.error("프로필 로드 실패:", error);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    fetchProfile();
+  }, [isLoggedIn]);
+
+  // 소속 단위 목록 로드
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const metadata = await getCommonMetadata();
+        
+        // 소속 단위 설정 (데이터가 없으면 빈 배열)
+        if (metadata.departments) {
+          setUnits(metadata.departments);
+        }
+        
+        // 목적 설정 (데이터가 없으면 빈 배열)
+        if (metadata.plotterPurposes) {
+          setPurposes(metadata.plotterPurposes);
+        }
+      } catch (error) {
+        console.error("메타데이터 로드 실패:", error);
+        // 에러 시 빈 배열 유지
+      }
+    };
+
+    fetchMetadata();
+  }, []);
+
+  // 로그인 안되어 있거나 프로필 로딩 중이면 null 반환 (빈 화면)
+  if (!isLoggedIn || !user || isLoadingProfile) {
+    return null;
+  }
 
   // 예상 수령일 계산 (근무일 기준 2일 후)
   const getExpectedDate = () => {
@@ -98,9 +172,9 @@ export default function PlotterRequest() {
       navigate("/plotter/complete", {
         state: {
           orderId: response.id,
-          name,
-          studentNo,
-          phone,
+          name: user?.name || "",
+          studentNo: user?.username || "",
+          phone: phoneNumber,
           purpose: response.purpose,
           quantity: response.pageCount,
           paperSize: response.paperSize,
@@ -138,12 +212,14 @@ export default function PlotterRequest() {
             {/* 왼쪽: 신청 정보 입력 */}
             <div className="w-full lg:w-[764px] bg-white rounded-[30px] p-8 shadow-lg">
               <PlotterFormFields
-                studentNo={studentNo}
-                name={name}
+                studentNo={user?.username || ""}
+                name={user?.name || ""}
                 unit={unit}
+                units={units}
                 onUnitChange={setUnit}
-                phone={phone}
+                phone={phoneNumber}
                 purpose={purpose}
+                purposes={purposes}
                 onPurposeChange={setPurpose}
                 paperSize={paperSize}
                 onPaperSizeChange={setPaperSize}

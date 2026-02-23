@@ -48,13 +48,19 @@ export default function Register() {
   const lastVerifyKeyRef = useRef<string>("");
 
   useEffect(() => {
-    // TODO: GET /units 같은 API로 교체
-    const mock: Unit[] = [
-      { id: 1, name: "학생복지위원회" },
-      { id: 2, name: "총학생회" },
-      { id: 3, name: "동아리연합회" },
-    ];
-    setUnits(mock);
+    const fetchMetadata = async () => {
+      try {
+        const metadata = await getCommonMetadata();
+        if (metadata.departments) {
+          setUnits(metadata.departments);
+        }
+      } catch (error) {
+        console.error("메타데이터 로드 실패:", error);
+        // 에러 시 빈 배열 유지
+      }
+    };
+
+    fetchMetadata();
   }, []);
 
   const selectedUnitName = useMemo(() => {

@@ -27,7 +27,15 @@ export default function PlotterComplete() {
   const phone = state?.phone || "010-1234-5678";
   const purpose = state?.purpose || "대자보";
   const quantity = state?.quantity || 1;
-  const expectedDate = state?.expectedDate || "2026-01-10";
+  const rawExpectedDate = state?.expectedDate || "2026-01-10";
+  
+  // 날짜 포맷팅: ISO 형식에서 YYYY-MM-DD만 추출
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    return dateString.split('T')[0];
+  };
+  
+  const expectedDate = formatDate(rawExpectedDate);
 
   return (
     <>
@@ -46,7 +54,7 @@ export default function PlotterComplete() {
               예약이 완료되었습니다!
             </h1>
             <p className="text-[30px] text-[#410f07] leading-relaxed">
-              수령 예정일 이후에 학생복지위원회실에<br />
+              수령 가능일부터 학생복지위원회실에<br />
               방문하여 출력물을 수령해주시기 바랍니다.
             </p>
           </div>
