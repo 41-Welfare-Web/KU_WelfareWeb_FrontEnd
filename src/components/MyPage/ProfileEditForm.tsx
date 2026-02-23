@@ -4,8 +4,8 @@ interface ProfileEditFormProps {
   userId: string;
   initialDepartment?: string;
   onUpdate?: (data: {
-    password: string;
-    passwordConfirm: string;
+    currentPassword: string;
+    newPassword?: string;
     department: string;
   }) => void;
   onDelete?: (password: string) => void;
@@ -19,12 +19,28 @@ export default function ProfileEditForm({
   onDelete,
   className = "",
 }: ProfileEditFormProps) {
-  const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
   const [department, setDepartment] = useState(initialDepartment);
 
+  // 비밀번호 유효성 검사
+  const validatePassword = (password: string): boolean => {
+    // 최소 8자 이상, 영문자, 숫자, 특수문자(@$!%*#?&) 각 1개 이상
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+    return passwordRegex.test(password);
+  };
+
   const handlePasswordCheck = () => {
-    if (password === passwordConfirm) {
+    if (!newPassword && !newPasswordConfirm) {
+      alert("새 비밀번호를 입력해주세요.");
+      return;
+    }
+    if (!validatePassword(newPassword)) {
+      alert("비밀번호는 최소 8자 이상이며, 영문자, 숫자, 특수문자(@$!%*#?&)를 각각 1개 이상 포함해야 합니다.");
+      return;
+    }
+    if (newPassword === newPasswordConfirm) {
       alert("비밀번호가 일치합니다.");
     } else {
       alert("비밀번호가 일치하지 않습니다.");
@@ -32,31 +48,45 @@ export default function ProfileEditForm({
   };
 
   const handleProfileUpdate = () => {
-    if (!password) {
-      alert("비밀번호를 입력해주세요.");
-      return;
-    }
-    if (password !== passwordConfirm) {
-      alert("비밀번호가 일치하지 않습니다.");
+    // 현재 비밀번호는 필수 (본인 확인용)
+    if (!currentPassword) {
+      alert("본인 확인을 위해 현재 비밀번호를 입력해주세요.");
       return;
     }
     
+    // 새 비밀번호를 입력한 경우, 확인 필드와 일치해야 함
+    if (newPassword || newPasswordConfirm) {
+      if (newPassword !== newPasswordConfirm) {
+        alert("새 비밀번호가 일치하지 않습니다.");
+        return;
+      }
+      // 새 비밀번호 유효성 검사
+      if (newPassword && !validatePassword(newPassword)) {
+        alert("비밀번호는 최소 8자 이상이며, 영문자, 숫자, 특수문자(@$!%*#?&)를 각각 1개 이상 포함해야 합니다.");
+        return;
+      }
+    }
+    
     if (onUpdate) {
-      onUpdate({ password, passwordConfirm, department });
+      onUpdate({ 
+        currentPassword, 
+        newPassword: newPassword || undefined, 
+        department 
+      });
     } else {
       alert("개인정보가 수정되었습니다.");
     }
   };
 
   const handleAccountDelete = () => {
-    if (!password) {
-      alert("탈퇴를 위해 비밀번호를 입력해주세요.");
+    if (!currentPassword) {
+      alert("탈퇴를 위해 현재 비밀번호를 입력해주세요.");
       return;
     }
     
     if (window.confirm("정말 탈퇴하시겠습니까?")) {
       if (onDelete) {
-        onDelete(password);
+        onDelete(currentPassword);
       } else {
         alert("회원 탈퇴가 완료되었습니다.");
       }
@@ -80,26 +110,43 @@ export default function ProfileEditForm({
         />
       </div>
 
-      {/* 비밀번호 */}
+      {/* 현재 비밀번호 */}
       <div className="mb-8">
-        <label className="block text-[20px] text-black mb-3">비밀번호</label>
+        <label className="block text-[20px] text-black mb-3">현재 비밀번호 (필수)</label>
         <input
           type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[10px] text-[#afafaf] placeholder:text-[#afafaf]"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          placeholder="본인 확인을 위해 현재 비밀번호를 입력하세요"
+          className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-black placeholder:text-[#afafaf]"
         />
       </div>
 
-      {/* 비밀번호 확인 */}
+      {/* 새 비밀번호 */}
       <div className="mb-8">
-        <label className="block text-[20px] text-black mb-3">비밀번호 확인</label>
+        <label className="block text-[20px] text-black mb-3">새 비밀번호 (선택)</label>
+        <input
+          type="password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          placeholder="변경하지 않으려면 비워두세요"
+          className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-black placeholder:text-[#afafaf]"
+        />
+        <p className="mt-2 text-[14px] text-[#868686]">
+          * 최소 8자 이상, 영문자, 숫자, 특수문자(@$!%*#?&) 각 1개 이상 포함
+        </p>
+      </div>
+
+      {/* 새 비밀번호 확인 */}
+      <div className="mb-8">
+        <label className="block text-[20px] text-black mb-3">새 비밀번호 확인</label>
         <div className="flex gap-3">
           <input
             type="password"
-            value={passwordConfirm}
-            onChange={(e) => setPasswordConfirm(e.target.value)}
-            className="flex-1 h-[67px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-[#afafaf] placeholder:text-[#afafaf]"
+            value={newPasswordConfirm}
+            onChange={(e) => setNewPasswordConfirm(e.target.value)}
+            placeholder="새 비밀번호를 다시 입력하세요"
+            className="flex-1 h-[67px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-black placeholder:text-[#afafaf]"
           />
           <button
             onClick={handlePasswordCheck}

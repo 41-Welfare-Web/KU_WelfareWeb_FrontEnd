@@ -36,6 +36,15 @@ const statusConfig = {
 export default function PlotterStatusBadge({ status, className = "" }: PlotterStatusBadgeProps) {
   const config = statusConfig[status];
 
+  if (!config) {
+    console.warn(`Unknown plotter status: ${status}`);
+    return (
+      <div className={`flex items-center justify-center w-[97px] h-[33px] rounded-[11px] bg-gray-200 ${className}`}>
+        <p className="text-[15px] font-medium text-gray-600">알 수 없음</p>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`flex items-center justify-center w-[97px] h-[33px] rounded-[11px] ${config.bgColor} ${className}`}
