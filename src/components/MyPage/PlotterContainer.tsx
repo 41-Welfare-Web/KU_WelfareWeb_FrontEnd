@@ -1,4 +1,4 @@
-import StatusBadge from '../ui/StatusBadge';
+import PlotterStatusBadge from '../ui/PlotterStatusBadge';
 import calendarIcon from '../../assets/mypage/calendar.svg';
 
 interface PlotterContainerProps {
@@ -24,7 +24,7 @@ const PlotterContainer = ({
     >
       {/* 상태 배지 및 예약 정보 */}
       <div className="absolute left-[24px] top-[14px] flex items-center gap-[16px]">
-        <StatusBadge status={status} />
+        <PlotterStatusBadge status={status} />
         <div className="flex flex-col gap-[1px]">
           <p className="text-[13px] font-light text-[#919191]">
             {reservationNumber}

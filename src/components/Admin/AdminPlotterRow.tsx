@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import StatusBadge from '../ui/StatusBadge';
+import PlotterStatusBadge from '../ui/PlotterStatusBadge';
 
 interface AdminPlotterRowProps {
   orderCode: string;
@@ -104,7 +104,7 @@ export default function AdminPlotterRow({
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           className="w-full hover:opacity-80 transition"
         >
-          <StatusBadge status={badgeStatus} />
+          <PlotterStatusBadge status={badgeStatus} />
         </button>
 
         {/* 상태 선택 드롭다운 */}
@@ -121,7 +121,7 @@ export default function AdminPlotterRow({
                   onClick={() => handleStatusClick(statusOption)}
                   className="w-full px-3 py-2 hover:bg-gray-50 transition flex items-center justify-center"
                 >
-                  <StatusBadge status={displayStatus} />
+                  <PlotterStatusBadge status={displayStatus} />
                 </button>
               );
             })}

@@ -1,7 +1,7 @@
-type BadgeStatus = "waiting" | "confirmed" | "printing" | "completed" | "rejected";
+type PlotterBadgeStatus = "waiting" | "confirmed" | "printing" | "completed" | "rejected";
 
-interface StatusBadgeProps {
-  status: BadgeStatus;
+interface PlotterStatusBadgeProps {
+  status: PlotterBadgeStatus;
   className?: string;
 }
 
@@ -33,7 +33,7 @@ const statusConfig = {
   },
 };
 
-export default function StatusBadge({ status, className = "" }: StatusBadgeProps) {
+export default function PlotterStatusBadge({ status, className = "" }: PlotterStatusBadgeProps) {
   const config = statusConfig[status];
 
   return (
