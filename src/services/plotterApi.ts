@@ -13,17 +13,25 @@ export interface PlotterOrderRequest {
 
 export interface PlotterOrderResponse {
   id: number;
-  userId: string;
+  user?: {
+    name: string;
+    studentId: string;
+  };
   purpose: string;
   paperSize: string;
   pageCount: number;
+  pickupDate: string;
+  status: string;
+  createdAt: string;
+}
+
+// POST 응답용 (더 많은 정보 포함)
+export interface PlotterOrderDetailResponse extends PlotterOrderResponse {
+  userId: string;
   isPaidService: boolean;
   price: number;
   fileUrl: string;
   originalFilename: string;
-  pickupDate: string;
-  status: string;
-  createdAt: string;
 }
 
 export interface ApiError {
@@ -37,7 +45,7 @@ export interface ApiError {
  */
 export async function createPlotterOrder(
   data: PlotterOrderRequest
-): Promise<PlotterOrderResponse> {
+): Promise<PlotterOrderDetailResponse> {
   const formData = new FormData();
   
   formData.append("purpose", data.purpose);
@@ -174,9 +182,9 @@ export async function createDummyPlotterOrders(count: number = 5): Promise<Plott
     try {
       const result = await createPlotterOrder(orderData);
       results.push(result);
-      console.log(`✅ 더미 주문 ${i + 1}/${count} 생성 완료:`, result.id);
+      console.log(` 더미 주문 ${i + 1}/${count} 생성 완료:`, result.id);
     } catch (error) {
-      console.error(`❌ 더미 주문 ${i + 1}/${count} 생성 실패:`, error);
+      console.error(` 더미 주문 ${i + 1}/${count} 생성 실패:`, error);
     }
 
     // API 과부하 방지를 위한 짧은 딜레이
