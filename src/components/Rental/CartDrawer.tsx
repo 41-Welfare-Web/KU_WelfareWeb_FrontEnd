@@ -43,7 +43,7 @@ export default function CartDrawer({
 
       {/* panel */}
       <div
-        className={`absolute right-0 top-0 h-full w-[280px] max-w-[90vw] transform bg-white shadow-[-10px_0_24px_rgba(0,0,0,0.18)] transition-transform ${
+        className={`absolute right-0 top-0 h-full w-[70vw] min-w-[260px] max-w-[420px] transform bg-white shadow-[-10px_0_24px_rgba(0,0,0,0.18)] transition-transform ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
         role="dialog"

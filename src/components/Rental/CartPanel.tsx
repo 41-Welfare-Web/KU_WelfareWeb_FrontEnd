@@ -16,7 +16,7 @@ type Props = {
 };
 
 export default function CartPanel({ items, onGoCheckout }: Props) {
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const isDesktop = useMediaQuery("(min-width: 1280px)");
   const [open, setOpen] = useState(false);
 
   if (isDesktop) {

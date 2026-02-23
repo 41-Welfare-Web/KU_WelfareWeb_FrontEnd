@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import Header from "../../components/Header";
 import Filter, { type Category } from "../../components/Rental/Filter";
 import ItemCard from "../../components/Rental/ItemCard";
-import searchImg from "../../assets/rental/search.svg";
-import CartSidebar from "../../components/Rental/CartSidebar";
-import CartDrawer from "../../components/Rental/CartDrawer";
 import CartPanel from "../../components/Rental/CartPanel";
+import Footer from "../../components/Footer";
+
+import searchImg from "../../assets/rental/search.svg";
 import exampleImg from "../../assets/rental/exampleImg.svg";
 
 const API_BASE_URL =
@@ -125,7 +125,7 @@ export default function RentalList() {
           {/* 메인 */}
           <main className="flex-1 min-w-0 overflow-y-auto">
             {/* 타이틀 */}
-            <div className="px-6 pt-12 md:ml-16 md:mt-5 md:px-0">
+            <div className="px-6 pt-12 md:mt-5 md:px-0">
               <p
                 className="text-2xl md:text-[36px] font-bold"
                 style={{ textShadow: "0 3px 4px rgba(0,0,0,0.25)" }}
@@ -140,17 +140,15 @@ export default function RentalList() {
               </p>
             </div>
 
-            <div className="flex flex-row justify-between items-center">
-              {/* 필터 컴포넌트 */}
+            <div className="my-6 px-6 md:px-0 flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
               <Filter
                 categories={categories}
                 selectedCategoryId={selectedCategoryId}
                 onChange={setSelectedCategoryId}
               />
 
-              {/* 검색 */}
-              <div className="px-6 md:mr-16 md:px-0 mt-4">
-                <div className="w-full max-w-[420px] bg-white rounded-[11px] px-4 py-3 flex items-center gap-2 border border-black/10">
+              <div className="w-full md:w-auto">
+                <div className="w-full md:w-[420px] bg-white rounded-[11px] px-4 py-2.5 flex items-center gap-2 border border-black/10">
                   <img src={searchImg} alt="검색" />
                   <input
                     value={search}
@@ -163,7 +161,7 @@ export default function RentalList() {
             </div>
 
             {/* 물품 목록 */}
-            <section className="px-6 md:ml-16 md:px-0 mt-6 pb-24">
+            <section className="px-6 md:px-0 mt-6 pb-24">
               {itemsError && (
                 <div className="mb-4 rounded-xl bg-white/70 border border-red-300 p-4 text-sm">
                   {itemsError}
@@ -177,15 +175,11 @@ export default function RentalList() {
             </section>
           </main>
 
-          {/* PC 장바구니: md 이상에서만 노출 */}
-          <div className="hidden shrink-0 md:block pt-24 pr-6">
-            <CartSidebar items={cartItems} onGoCheckout={goCheckout} />
-          </div>
+          <CartPanel items={cartItems} onGoCheckout={goCheckout} />
         </div>
-
-        {/* 모바일 장바구니: 플로팅 버튼 + Drawer */}
-        <CartPanel items={cartItems} onGoCheckout={goCheckout} />
       </div>
+
+      <Footer />
     </>
   );
 }
