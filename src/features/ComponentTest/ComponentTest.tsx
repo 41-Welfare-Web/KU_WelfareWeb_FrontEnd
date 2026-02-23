@@ -8,7 +8,7 @@ import FileUploadBox from "../../components/ui/FileUploadBox";
 import PaymentProofBox from "../../components/ui/PaymentProofBox";
 import PlotterFormFields from "../../components/Plotter/PlotterFormFields";
 import PlotterRequestSummary from "../../components/Plotter/PlotterRequestSummary";
-import StatusBadge from "../../components/ui/StatusBadge";
+import PlotterStatusBadge from "../../components/ui/PlotterStatusBadge";
 
 // 마이페이지 관련 컴포넌트
 import ProfileEditForm from "../../components/MyPage/ProfileEditForm";
@@ -53,15 +53,15 @@ export default function ComponentTest() {
                 플로터 관련 컴포넌트
               </h2>
 
-              {/* StatusBadge - 플로터 상태 */}
-              <div className="bg-white rounded-[20px] p-6 shadow-md">
-                <h3 className="text-[24px] font-bold text-[#410f07] mb-4">StatusBadge - 플로터 상태</h3>
-                <div className="flex flex-wrap gap-4">
-                  <StatusBadge status="waiting" />
-                  <StatusBadge status="confirmed" />
-                  <StatusBadge status="printing" />
-                  <StatusBadge status="completed" />
-                  <StatusBadge status="rejected" />
+              {/* PlotterStatusBadge - 플로터 상태 */}
+              <div className="bg-white p-6 rounded-[20px] shadow-sm">
+                <h3 className="text-[24px] font-bold text-[#410f07] mb-4">PlotterStatusBadge - 플로터 상태</h3>
+                <div className="flex gap-4">
+                  <PlotterStatusBadge status="waiting" />
+                  <PlotterStatusBadge status="confirmed" />
+                  <PlotterStatusBadge status="printing" />
+                  <PlotterStatusBadge status="completed" />
+                  <PlotterStatusBadge status="rejected" />
                 </div>
               </div>
 

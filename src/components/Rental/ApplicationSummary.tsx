@@ -32,7 +32,7 @@ export default function ApplicationSummary({
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-[20px] text-[#606060]">수령 예정일</span>
+          <span className="text-[20px] text-[#606060]">수령 가능일</span>
           <span className="text-[20px] text-[#f72] font-medium">{expectedDate}</span>
         </div>
 
