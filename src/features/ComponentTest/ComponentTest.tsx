@@ -8,7 +8,7 @@ import FileUploadBox from "../../components/ui/FileUploadBox";
 import PaymentProofBox from "../../components/ui/PaymentProofBox";
 import PlotterFormFields from "../../components/Plotter/PlotterFormFields";
 import PlotterRequestSummary from "../../components/Plotter/PlotterRequestSummary";
-import PlotterStatusBadge from "../../components/ui/PlotterStatusBadge";
+import PlotterStatusBadge from "../../components/Plotter/PlotterStatusBadge";
 
 // 마이페이지 관련 컴포넌트
 import ProfileEditForm from "../../components/MyPage/ProfileEditForm";

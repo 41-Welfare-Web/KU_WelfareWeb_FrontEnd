@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import PlotterStatusBadge from '../ui/PlotterStatusBadge';
+import PlotterStatusBadge from '../Plotter/PlotterStatusBadge';
 
 interface AdminPlotterRowProps {
   orderCode: string;
