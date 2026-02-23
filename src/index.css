@@ -89,3 +89,12 @@ select {
 .ios-scroll {
   -webkit-overflow-scrolling: touch;
 }
+
+/* 인쇄 장수 input 화살표 크기 조정 */
+.quantity-input::-webkit-inner-spin-button,
+.quantity-input::-webkit-outer-spin-button {
+  opacity: 1;
+  width: 30px;
+  height: 40px;
+  cursor: pointer;
+}

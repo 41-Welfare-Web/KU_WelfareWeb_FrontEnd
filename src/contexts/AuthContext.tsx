@@ -58,8 +58,10 @@ function readAuthFromStorage(): AuthState {
   const accessToken = localStorage.getItem(STORAGE_KEYS.accessToken);
   const refreshToken = localStorage.getItem(STORAGE_KEYS.refreshToken);
   const user = readUserFromStorage();
+  const isLoggedIn = !!accessToken && !!user;
+
   return {
-    isLoggedIn: !!accessToken,
+    isLoggedIn,
     user,
     accessToken,
     refreshToken,

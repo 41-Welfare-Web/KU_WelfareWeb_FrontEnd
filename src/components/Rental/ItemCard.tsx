@@ -1,5 +1,5 @@
-import type { Item } from "../RentalList";
-import exampleImg from "../../../assets/rental/exampleImg.svg";
+import type { Item } from "../../features/Rental/RentalList";
+import exampleImg from "../../assets/rental/exampleImg.svg";
 
 type Props = {
   item: Item;

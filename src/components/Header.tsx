@@ -99,7 +99,11 @@ export default function Header() {
             중앙대여사업
           </button>
 
-          <button type="button" className={menuClass("/plotter")}>
+          <button
+            type="button"
+            onClick={() => navigate("/plotter")}
+            className={menuClass("/plotter")}
+          >
             플로터인쇄사업
           </button>
 
@@ -125,14 +129,14 @@ export default function Header() {
 
               {userMenuOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-[160px] overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.12)]"
+                  className="absolute right-0 mt-2 w-40 overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.12)]"
                   onMouseLeave={() => setUserMenuOpen(false)}
                 >
                   {[
                     { label: "마이페이지", path: "/mypage" },
-                    { label: "대여 현황", path: "/mypage/rental" },
-                    { label: "플로터 현황", path: "/mypage/plotter" },
-                    { label: "정보 수정", path: "/mypage/edit" },
+                    { label: "대여 현황", path: "/mypage?tab=rental" },
+                    { label: "플로터 현황", path: "/mypage?tab=plotter" },
+                    { label: "정보 수정", path: "/mypage?tab=profile" },
                   ].map((item) => (
                     <div key={item.path}>
                       <button
@@ -175,7 +179,7 @@ export default function Header() {
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-[160px] overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.12)]">
+                <div className="absolute right-0 mt-2 w-40 overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.12)]">
                   <button
                     type="button"
                     onClick={() => go("/mypage")}
@@ -186,7 +190,7 @@ export default function Header() {
                   <div className="h-px bg-black/10" />
                   <button
                     type="button"
-                    onClick={() => go("/mypage/rental")}
+                    onClick={() => go("/mypage?tab=rental")}
                     className="w-full px-4 py-3 text-left text-[16px] font-semibold text-[#410F07] hover:text-[#FE6949] transition-colors"
                   >
                     대여 현황
@@ -194,7 +198,7 @@ export default function Header() {
                   <div className="h-px bg-black/10" />
                   <button
                     type="button"
-                    onClick={() => go("/mypage/plotter")}
+                    onClick={() => go("/mypage?tab=plotter")}
                     className="w-full px-4 py-3 text-left text-[16px] font-semibold text-[#410F07] hover:text-[#FE6949] transition-colors"
                   >
                     플로터 현황
@@ -202,7 +206,7 @@ export default function Header() {
                   <div className="h-px bg-black/10" />
                   <button
                     type="button"
-                    onClick={() => go("/mypage/edit")}
+                    onClick={() => go("/mypage?tab=profile")}
                     className="w-full px-4 py-3 text-left text-[16px] font-semibold text-[#410F07] hover:text-[#FE6949] transition-colors"
                   >
                     정보 수정
@@ -252,6 +256,7 @@ export default function Header() {
               </button>
               <button
                 type="button"
+                onClick={() => navigate("/plotter")}
                 className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold"
               >
                 플로터인쇄사업

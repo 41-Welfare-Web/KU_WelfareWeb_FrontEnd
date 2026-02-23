@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import filter from "../../../assets/rental/filter.svg";
+import filter from "../../assets/rental/filter.svg";
 
 export type Category = {
   id: number;
