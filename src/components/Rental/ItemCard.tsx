@@ -1,4 +1,4 @@
-import type { Item } from "../../features/Rental/RentalList";
+import type { Item } from "../../api/rental/types";
 import exampleImg from "../../assets/rental/exampleImg.svg";
 
 type Props = {
