@@ -1,6 +1,15 @@
 import RentalStatusBadge from './RentalStatusBadge';
 import calendarIcon from '../../assets/mypage/calendar.svg';
 
+const formatDate = (dateString: string): string => {
+  if (!dateString) return '';
+  // ISO 형식이면 날짜 부분만 추출
+  if (dateString.includes('T')) {
+    return dateString.split('T')[0];
+  }
+  return dateString;
+};
+
 interface RentalContainerProps {
   status: 'reserved' | 'renting' | 'returned' | 'defective' | 'canceled';
   reservationNumber: string;
@@ -20,7 +29,6 @@ const RentalContainer = ({
   reservationNumber,
   applicationDate,
   title,
-  itemCount,
   startDate,
   endDate,
   totalCount,
@@ -30,7 +38,7 @@ const RentalContainer = ({
 }: RentalContainerProps) => {
   return (
     <div
-      className={`relative bg-white border border-[#b9b9b9] rounded-[21px] w-[1091px] h-[149px] ${className}`}
+      className={`relative bg-white border border-[#b9b9b9] rounded-[21px] w-full h-[149px] ${className}`}
     >
       {/* 상태 배지 및 예약 정보 */}
       <div className="absolute left-[24px] top-[14px] flex items-center gap-[16px]">
@@ -40,7 +48,7 @@ const RentalContainer = ({
             {reservationNumber}
           </p>
           <p className="text-[13px] font-light text-[#919191]">
-            신청일 {applicationDate}
+            신청일 {formatDate(applicationDate)}
           </p>
         </div>
       </div>
@@ -54,15 +62,15 @@ const RentalContainer = ({
             letterSpacing: '-0.64px',
           }}
         >
-          {title} 외 {itemCount}건
+          {title || '대여 항목'}
         </h3>
       </div>
 
-      {/* 캘린더 아이콘과 날짜 정보 */}
+      {/* 캠린더 아이콘과 날짜 정보 */}
       <div className="absolute left-[24px] top-[110px] flex items-center gap-[13px]">
         <img src={calendarIcon} alt="calendar" width="16" height="16" />
         <p className="text-[15px] font-medium text-[#5b5b5b]">
-          {startDate} ~ {endDate}   |   총 {totalCount}개
+          {startDate && endDate ? `${formatDate(startDate)} ~ ${formatDate(endDate)}` : '날짜 미정'}   |   총 {totalCount}개
         </p>
       </div>
 

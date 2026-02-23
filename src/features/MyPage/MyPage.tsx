@@ -93,17 +93,21 @@ export default function MyPage() {
         setIsLoadingRentals(true);
         try {
           const response = await getRentals({ pageSize: 100 });
+          console.log("대여 내역 API 응답:", response);
           // API 응답을 화면에 맞게 변환
-          const mappedRentals: Reservation[] = response.rentals.map(rental => ({
-            id: rental.id.toString(),
-            title: rental.itemSummary,
-            status: rental.status.toLowerCase() as ReservationStatus,
-            code: `RENT-${rental.id}`,
-            applicationDate: rental.createdAt.split("T")[0],
-            startDate: rental.startDate,
-            endDate: rental.endDate,
-            totalCount: 1,
-          }));
+          const mappedRentals: Reservation[] = response.rentals.map(rental => {
+            console.log("대여 항목:", rental);
+            return {
+              id: rental.id.toString(),
+              title: rental.itemSummary || '대여 항목',
+              status: rental.status.toLowerCase() as ReservationStatus,
+              code: `RENT-${rental.id}`,
+              applicationDate: rental.createdAt ? rental.createdAt.split("T")[0] : '',
+              startDate: rental.startDate || '',
+              endDate: rental.endDate || '',
+              totalCount: 1,
+            };
+          });
           setReservations(mappedRentals);
         } catch (error) {
           console.error("대여 내역 조회 실패:", error);
@@ -115,6 +119,19 @@ export default function MyPage() {
     }
   }, [activeTab, isLoadingUser]);
 
+  // API 상태를 UI 상태로 매핑
+  const mapPlotterStatus = (apiStatus: string): PlotterStatus => {
+    const statusMap: Record<string, PlotterStatus> = {
+      'PENDING': 'waiting',
+      'CONFIRMED': 'confirmed',
+      'PRINTING': 'printing',
+      'PRINTED': 'printing',
+      'COMPLETED': 'completed',
+      'REJECTED': 'rejected',
+    };
+    return statusMap[apiStatus] || 'waiting';
+  };
+
   // 플로터 내역 조회
   useEffect(() => {
     if (activeTab === "plotter" && !isLoadingUser) {
@@ -122,15 +139,19 @@ export default function MyPage() {
         setIsLoadingPlotter(true);
         try {
           const response = await getPlotterOrders({ pageSize: 100 });
+          console.log("플로터 내역 API 응답:", response);
           // API 응답을 화면에 맞게 변환
-          const mappedOrders: PlotterReservation[] = response.orders.map(order => ({
-            id: order.id.toString(),
-            title: order.purpose,
-            status: order.status.toLowerCase() as PlotterStatus,
-            code: `PLOT-${order.id}`,
-            applicationDate: order.createdAt.split("T")[0],
-            printDate: order.pickupDate,
-          }));
+          const mappedOrders: PlotterReservation[] = response.orders.map(order => {
+            console.log("플로터 주문:", order);
+            return {
+              id: order.id.toString(),
+              title: order.purpose || '플로터 주문',
+              status: mapPlotterStatus(order.status),
+              code: `PLOT-${order.id}`,
+              applicationDate: order.createdAt || '',
+              printDate: order.pickupDate || '',
+            };
+          });
           setPlotterReservations(mappedOrders);
         } catch (error) {
           console.error("플로터 내역 조회 실패:", error);
@@ -241,11 +262,15 @@ export default function MyPage() {
               {/* 탭 컨텐츠 */}
               <div className="px-11 py-8 bg-white min-h-[400px] flex flex-col items-center">
                 {activeTab === "rental" && (
-                  <div className="space-y-5">
+                  <div className="space-y-5 w-full">
                     {isLoadingRentals ? (
-                      <p className="text-[20px] text-[#606060]">대여 내역을 불러오는 중...</p>
+                      <div className="flex justify-center items-center py-20">
+                        <p className="text-[20px] text-[#606060]">대여 내역을 불러오는 중...</p>
+                      </div>
                     ) : reservations.length === 0 ? (
-                      <p className="text-[20px] text-[#606060]">대여 내역이 없습니다.</p>
+                      <div className="flex justify-center items-center py-20">
+                        <p className="text-[20px] text-[#606060]">대여 내역이 없습니다.</p>
+                      </div>
                     ) : (
                       reservations.map((reservation) => (
                         <RentalContainer
@@ -267,11 +292,15 @@ export default function MyPage() {
                 )}
 
                 {activeTab === "plotter" && (
-                  <div className="space-y-5">
+                  <div className="space-y-5 w-full">
                     {isLoadingPlotter ? (
-                      <p className="text-[20px] text-[#606060]">플로터 내역을 불러오는 중...</p>
+                      <div className="flex justify-center items-center py-20">
+                        <p className="text-[20px] text-[#606060]">플로터 내역을 불러오는 중...</p>
+                      </div>
                     ) : plotterReservations.length === 0 ? (
-                      <p className="text-[20px] text-[#606060]">플로터 주문 내역이 없습니다.</p>
+                      <div className="flex justify-center items-center py-20">
+                        <p className="text-[20px] text-[#606060]">플로터 주문 내역이 없습니다.</p>
+                      </div>
                     ) : (
                       plotterReservations.map((reservation) => (
                         <PlotterContainer
