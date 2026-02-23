@@ -14,6 +14,9 @@ import SortDropdown from "../../components/Rental/SortDropdown";
 import CategoryFilter from "../../components/Rental/CategoryFilter";
 import { getItems, getCategories } from "../../api/rental/rentalApi";
 
+// 물품 세부사항
+import ItemDetailModal from "../../components/Rental/ItemDetailModal";
+
 export default function RentalList() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
@@ -27,6 +30,14 @@ export default function RentalList() {
 
   const [sortBy, setSortBy] = useState<SortBy | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+
+  // 물품 세부사항
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailItemId, setDetailItemId] = useState<number | null>(null);
+  const openDetail = (id: number) => {
+    setDetailItemId(id);
+    setDetailOpen(true);
+  };
 
   // 장바구니 UI (서버 연동 전)
   const [cartItems] = useState<
@@ -144,7 +155,11 @@ export default function RentalList() {
               )}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
                 {items.map((item) => (
-                  <ItemCard key={item.id} item={item} />
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    onClick={() => openDetail(item.id)}
+                  />
                 ))}
               </div>
             </section>
@@ -152,6 +167,17 @@ export default function RentalList() {
 
           <CartPanel items={cartItems} onGoCheckout={goCheckout} />
         </div>
+
+        <ItemDetailModal
+          open={detailOpen}
+          itemId={detailItemId}
+          onClose={() => setDetailOpen(false)}
+          onAddToCart={(item) => {
+            // TODO: cartItems set 로직 연결
+            console.log("add to cart:", item);
+            setDetailOpen(false);
+          }}
+        />
       </div>
 
       <Footer />

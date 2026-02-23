@@ -3,7 +3,7 @@ import exampleImg from "../../assets/rental/exampleImg.svg";
 
 type Props = {
   item: Item;
-  onClick?: (item: Item) => void;
+  onClick?: () => void;
 };
 
 export default function ItemCard({ item, onClick }: Props) {
@@ -12,7 +12,7 @@ export default function ItemCard({ item, onClick }: Props) {
   return (
     <button
       type="button"
-      onClick={() => onClick?.(item)}
+      onClick={onClick}
       className="text-left w-full rounded-[11px] border border-[#D72002] bg-white overflow-hidden shadow-md transition hover:-translate-y-[2px]"
     >
       <div className="aspect-[4/3] w-full bg-white">
