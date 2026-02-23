@@ -25,13 +25,13 @@ export default function Filter({
   }, [categories, selectedCategoryId]);
 
   return (
-    <div className="mt-8 md:ml-16">
+    <div className="min-w-0">
       {/* PC */}
-      <div className="hidden md:flex px-6 md:px-0 items-center gap-3 overflow-x-auto scrollbar-hide text-sm font-medium">
+      <div className="hidden md:flex items-center gap-3 overflow-x-auto scrollbar-hide">
         {/* 필터 버튼 */}
         <button
           type="button"
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black whitespace-nowrap"
+          className="h-[44px] flex items-center gap-2 px-4 rounded-full bg-white text-black whitespace-nowrap"
         >
           <img src={filter} alt="필터" />
           필터
@@ -41,7 +41,7 @@ export default function Filter({
         <button
           type="button"
           onClick={() => onChange(null)}
-          className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition
+          className={`h-[44px] px-5 rounded-full text-sm font-medium whitespace-nowrap transition
             ${
               selectedCategoryId === null
                 ? "bg-[#FE6949] text-white"
@@ -57,7 +57,7 @@ export default function Filter({
             type="button"
             key={category.id}
             onClick={() => onChange(category.id)}
-            className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition
+            className={`h-[44px] px-5 rounded-full text-sm font-medium whitespace-nowrap transition
               ${
                 selectedCategoryId === category.id
                   ? "bg-[#FE6949] text-white"
@@ -70,20 +70,20 @@ export default function Filter({
       </div>
 
       {/* 모바일 */}
-      <div className="md:hidden px-6">
+      <div className="md:hidden">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black whitespace-nowrap"
+            className="h-[44px] flex items-center gap-2 px-4 rounded-full bg-white text-black whitespace-nowrap"
           >
             <img src={filter} alt="필터" />
             필터
             <span className="ml-1">{mobileOpen ? "▲" : "▼"}</span>
           </button>
 
-          {/* 현재 선택 라벨 (UX용) */}
-          <div className="px-5 py-2 rounded-full bg-[#FE6949] text-white text-sm font-medium whitespace-nowrap">
+          {/* 현재 선택 라벨 */}
+          <div className="h-[44px] px-5 rounded-full bg-[#FE6949] text-white text-sm font-medium whitespace-nowrap flex items-center">
             {selectedName}
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function Filter({
                   onChange(null);
                   setMobileOpen(false);
                 }}
-                className={`px-5 py-2 rounded-full whitespace-nowrap transition
+                className={`h-[44px] px-5 rounded-full whitespace-nowrap transition
                   ${
                     selectedCategoryId === null
                       ? "bg-[#FE6949] text-white"
@@ -115,7 +115,7 @@ export default function Filter({
                     onChange(category.id);
                     setMobileOpen(false);
                   }}
-                  className={`px-5 py-2 rounded-full whitespace-nowrap transition
+                  className={`h-[44px] px-5 rounded-full whitespace-nowrap transition
                     ${
                       selectedCategoryId === category.id
                         ? "bg-[#FE6949] text-white"
