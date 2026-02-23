@@ -193,14 +193,14 @@ export default function MyPage() {
   };
 
   const handleProfileUpdate = async (data: {
-    password: string;
-    passwordConfirm: string;
+    currentPassword: string;
+    newPassword?: string;
     department: string;
   }) => {
     try {
       const updatedProfile = await updateMyProfile({
-        currentPassword: data.password,
-        newPassword: data.passwordConfirm !== data.password ? data.passwordConfirm : undefined,
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
         department: data.department,
       });
       setUserProfile({
