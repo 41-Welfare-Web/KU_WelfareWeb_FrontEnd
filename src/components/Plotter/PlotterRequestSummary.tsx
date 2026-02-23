@@ -38,12 +38,12 @@ export default function PlotterRequestSummary({
         <p className="text-[25px] font-bold text-black whitespace-nowrap">{quantity}부</p>
       </div>
       
-      {/* 수령 예정일 - 좌측 */}
+      {/* 수령 가능일 - 좌측 */}
       <div className="absolute left-[39px] top-[95.5px] transform -translate-y-1/2">
-        <p className="text-[25px] font-medium text-black whitespace-nowrap">수령 예정일</p>
+        <p className="text-[25px] font-medium text-black whitespace-nowrap">수령 가능일</p>
       </div>
       
-      {/* 수령 예정일 - 우측 */}
+      {/* 수령 가능일 - 우측 */}
       <div className="absolute right-[39px] top-[95.5px] transform -translate-y-1/2">
         <p className="text-[25px] font-bold text-black whitespace-nowrap">{expectedDate}</p>
       </div>

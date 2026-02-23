@@ -4,9 +4,11 @@ interface PlotterFormFieldsProps {
   studentNo: string;
   name: string;
   unit: string;
+  units?: { id: number; name: string }[];
   onUnitChange: (value: string) => void;
   phone: string;
   purpose: string;
+  purposes?: { id: number; name: string }[];
   onPurposeChange: (value: string) => void;
   paperSize: string;
   onPaperSizeChange: (value: string) => void;
@@ -19,9 +21,11 @@ export default function PlotterFormFields({
   studentNo,
   name,
   unit,
+  units = [],
   onUnitChange,
   phone,
   purpose,
+  purposes = [],
   onPurposeChange,
   paperSize,
   onPaperSizeChange,
@@ -71,9 +75,19 @@ export default function PlotterFormFields({
             backgroundPosition: 'right 20px center' 
           }}
         >
-          <option>학생복지위원회</option>
-          <option>총학생회</option>
-          <option>동아리연합회</option>
+          {units.length > 0 ? (
+            units.map((u) => (
+              <option key={u.id} value={u.name}>
+                {u.name}
+              </option>
+            ))
+          ) : (
+            <>
+              <option>학생복지위원회</option>
+              <option>총학생회</option>
+              <option>동아리연합회</option>
+            </>
+          )}
         </select>
       </div>
 
@@ -91,16 +105,34 @@ export default function PlotterFormFields({
       {/* 목적 */}
       <div className="mb-6">
         <label className="block text-[20px] font-medium text-black mb-2">목적</label>
-        <input
-          type="text"
+        <select
           value={purpose}
           onChange={(e) => onPurposeChange(e.target.value)}
-          className="w-full h-[71px] px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[20px]"
-        />
+          className="w-full h-[71px] px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[20px] appearance-none cursor-pointer"
+          style={{ 
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E")`, 
+            backgroundRepeat: 'no-repeat', 
+            backgroundPosition: 'right 20px center' 
+          }}
+        >
+          {purposes.length > 0 ? (
+            purposes.map((p) => (
+              <option key={p.id} value={p.name}>
+                {p.name}
+              </option>
+            ))
+          ) : (
+            <>
+              <option>대자보 출력</option>
+              <option>포스터 제작</option>
+              <option>현수막 제작</option>
+            </>
+          )}
+        </select>
       </div>
 
       {/* 용지 크기 & 인쇄 장수 */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex justify-between mb-6">
         <div className="w-[311px]">
           <label className="block text-[20px] font-medium text-black mb-2">용지 크기</label>
           <select
@@ -119,9 +151,9 @@ export default function PlotterFormFields({
             <option value="A3(297 x 420mm)">A3(297 x 420mm)</option>
           </select>
         </div>
-        <div className="w-[268px]">
+        <div className="w-full]">
           <label className="block text-[20px] font-medium text-black mb-2">인쇄 장수</label>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-5">
             <input
               type="number"
               min="1"
