@@ -69,21 +69,21 @@ export default function AdminPlotterRow({
   return (
     <div className="w-full h-[52px] bg-white border-b border-[#e5e5e5] flex items-center px-8 gap-4">
       {/* 주문 코드 */}
-      <span className="text-[16px] font-medium text-black w-[100px]">
+      <span className="text-[16px] font-medium text-black w-[120px]">
         {orderCode}
       </span>
 
       {/* 신청자 */}
-      <span className="text-[16px] font-medium text-black w-[80px]">
+      <span className="text-[16px] font-medium text-black w-[100px]">
         {userName}
       </span>
 
-      {/* 동아리 */}
-      <span className="text-[16px] font-medium text-black w-[120px]">
+      {/* 소속 */}
+      <span className="text-[16px] font-medium text-black w-[150px]">
         {club}
       </span>
 
-      {/* 출력 용도 */}
+      {/* 파일명 */}
       <span className="text-[16px] font-medium text-black flex-1">
         {purpose}
       </span>
@@ -93,8 +93,8 @@ export default function AdminPlotterRow({
         {paperSizeAndCount}
       </span>
 
-      {/* 신청일 */}
-      <span className="text-[16px] font-medium text-black w-[100px]">
+      {/* 날짜 */}
+      <span className="text-[16px] font-medium text-black w-[120px]">
         {formatDate(orderDate)}
       </span>
 

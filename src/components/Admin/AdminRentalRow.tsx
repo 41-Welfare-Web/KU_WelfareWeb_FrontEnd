@@ -70,17 +70,17 @@ export default function AdminRentalRow({
       className={`w-full h-[52px] bg-white border-b border-[#e5e5e5] flex items-center px-8 gap-4 ${className}`}
     >
       {/* 대여 코드 */}
-      <span className="text-[16px] font-medium text-black w-[100px]">
+      <span className="text-[16px] font-medium text-black w-[120px]">
         {rentalCode}
       </span>
 
       {/* 이름 */}
-      <span className="text-[16px] font-medium text-black w-[80px]">
+      <span className="text-[16px] font-medium text-black w-[100px]">
         {userName}
       </span>
 
-      {/* 단위 */}
-      <span className="text-[16px] font-medium text-black w-[120px]">
+      {/* 소속 */}
+      <span className="text-[16px] font-medium text-black w-[150px]">
         {department}
       </span>
 
@@ -90,12 +90,12 @@ export default function AdminRentalRow({
       </span>
 
       {/* 대여 시작일 */}
-      <span className="text-[16px] font-medium text-black w-[100px]">
+      <span className="text-[16px] font-medium text-black w-[120px]">
         {formatDate(startDate)}
       </span>
 
       {/* 대여 종료일 */}
-      <span className="text-[16px] font-medium text-black w-[100px]">
+      <span className="text-[16px] font-medium text-black w-[120px]">
         {formatDate(endDate)}
       </span>
 
