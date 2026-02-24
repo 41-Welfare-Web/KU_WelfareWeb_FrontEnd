@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import PlotterStatusBadge from '../Plotter/PlotterStatusBadge';
+import editIcon from '../../assets/admin/pencil.svg';
 
 interface AdminPlotterRowProps {
   orderCode: string;
@@ -9,7 +10,9 @@ interface AdminPlotterRowProps {
   paperSizeAndCount: string;
   orderDate: string;
   status: 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed';
+  note?: string;
   onStatusChange?: (newStatus: 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed') => void;
+  onNoteChange?: (note: string) => void;
 }
 
 export default function AdminPlotterRow({
@@ -20,10 +23,15 @@ export default function AdminPlotterRow({
   paperSizeAndCount,
   orderDate,
   status,
-  onStatusChange
+  note = '',
+  onStatusChange,
+  onNoteChange
 }: AdminPlotterRowProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [noteValue, setNoteValue] = useState(note);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // status 변환: pending -> waiting, printed -> printing으로 매핑
   const badgeStatus = 
@@ -66,40 +74,58 @@ export default function AdminPlotterRow({
     setIsDropdownOpen(false);
   };
 
+  const handleEditClick = () => {
+    setIsEditing(true);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  const handleNoteBlur = () => {
+    setIsEditing(false);
+    if (onNoteChange && noteValue !== note) {
+      onNoteChange(noteValue);
+    }
+  };
+
+  const handleNoteKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleNoteBlur();
+    }
+  };
+
   return (
     <div className="w-full h-[52px] bg-white border-b border-[#e5e5e5] flex items-center px-8 gap-4">
       {/* 주문 코드 */}
-      <span className="text-[16px] font-medium text-black w-[100px]">
+      <span className="text-[16px] font-medium text-black w-[90px] text-center">
         {orderCode}
       </span>
 
       {/* 신청자 */}
-      <span className="text-[16px] font-medium text-black w-[80px]">
+      <span className="text-[16px] font-medium text-black w-[100px] text-center">
         {userName}
       </span>
 
-      {/* 동아리 */}
-      <span className="text-[16px] font-medium text-black w-[120px]">
+      {/* 소속 */}
+      <span className="text-[16px] font-medium text-black w-[160px] text-center">
         {club}
       </span>
 
-      {/* 출력 용도 */}
-      <span className="text-[16px] font-medium text-black flex-1">
+      {/* 파일명 */}
+      <span className="text-[16px] font-medium text-black flex-1 text-center">
         {purpose}
       </span>
 
       {/* 용지 규격 및 매수 */}
-      <span className="text-[16px] font-medium text-black w-[120px]">
+      <span className="text-[16px] font-medium text-black w-[110px] text-center">
         {paperSizeAndCount}
       </span>
 
-      {/* 신청일 */}
-      <span className="text-[16px] font-medium text-black w-[100px]">
+      {/* 날짜 */}
+      <span className="text-[16px] font-medium text-black w-[120px] text-center">
         {formatDate(orderDate)}
       </span>
 
       {/* 상태 배지 - 클릭 가능 */}
-      <div className="relative w-[97px]" ref={dropdownRef}>
+      <div className="relative w-[100px]" ref={dropdownRef}>
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           className="w-full hover:opacity-80 transition"
@@ -127,6 +153,28 @@ export default function AdminPlotterRow({
             })}
           </div>
         )}
+      </div>
+
+      {/* 비고 입력 필드 */}
+      <div className="w-[120px] flex items-center gap-4">
+        <input
+          ref={inputRef}
+          type="text"
+          value={noteValue}
+          onChange={(e) => setNoteValue(e.target.value)}
+          onBlur={handleNoteBlur}
+          onKeyDown={handleNoteKeyDown}
+          disabled={!isEditing}
+          className="w-[100px] h-[32px] px-2 text-[14px] font-medium text-black border border-gray-300 rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none focus:border-blue-500"
+        />
+        {/* 펜슬 아이콘 */}
+        <button
+          onClick={handleEditClick}
+          className="w-4 h-4 hover:opacity-70 transition-opacity flex-shrink-0"
+          aria-label="비고 수정"
+        >
+          <img src={editIcon} alt="수정" className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );

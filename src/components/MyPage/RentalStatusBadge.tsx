@@ -32,7 +32,11 @@ const RentalStatusBadge = ({ status, className = '' }: RentalStatusBadgeProps) =
     },
   };
 
-  const config = statusConfig[status];
+  const config = statusConfig[status] || {
+    text: '알 수 없음',
+    bgColor: '#eee',
+    textColor: '#888',
+  };
 
   return (
     <div

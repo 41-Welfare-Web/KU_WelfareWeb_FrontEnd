@@ -1,26 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AdminRentalRow from '../../components/Admin/AdminRentalRow';
 import AdminPlotterRow from '../../components/Admin/AdminPlotterRow';
-import filterIcon from '../../assets/admin/filter.svg';
-import searchIcon from '../../assets/admin/glass.svg';
+import AdminFilterBar from '../../components/Admin/AdminFilterBar';
+import AdminPlotterFilterBar from '../../components/Admin/AdminPlotterFilterBar';
+import AdminItemsFilterBar from '../../components/Admin/AdminItemsFilterBar';
+import PlotterRejectHandler from '../../components/Admin/PlotterRejectHandler';
+import type { PlotterRejectHandlerRef } from '../../components/Admin/PlotterRejectHandler';
 import downloadIcon from '../../assets/admin/download.svg';
+import pencilIcon from '../../assets/admin/pencil.svg';
+import trashIcon from '../../assets/admin/trash.svg';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
-type TabType = 'rental' | 'plotter';
+type TabType = 'rental' | 'plotter' | 'items';
 
 interface RentalData {
   id: number;
   user: {
     name: string;
     studentId: string;
+    department?: string;
   };
   startDate: string;
   endDate: string;
-  status: 'RESERVED' | 'RENTED' | 'RETURNED' | 'OVERDUE' | 'CANCELED';
+  status: 'RESERVED' | 'RENTED' | 'RETURNED' | 'OVERDUE' | 'CANCELED' | 'DEFECTIVE';
   itemSummary: string;
   createdAt: string;
 }
@@ -30,6 +36,7 @@ interface PlotterData {
   user: {
     name: string;
     studentId: string;
+    department?: string;
   };
   purpose: string;
   paperSize: string;
@@ -39,22 +46,61 @@ interface PlotterData {
   createdAt: string;
 }
 
-export default function AdminDashboard() {
+// 대여 상태 매핑 (API <-> 컴포넌트)
+const RENTAL_STATUS_MAP: Record<string, string> = {
+  '예약': 'RESERVED',
+  '대여 중': 'RENTED',
+  '정상 반납': 'RETURNED',
+  '불량 반납': 'DEFECTIVE',
+  '예약 취소': 'CANCELED',
+};
+const RENTAL_STATUS_MAP_REVERSE: Record<
+  'RESERVED' | 'RENTED' | 'RETURNED' | 'OVERDUE' | 'CANCELED' | 'DEFECTIVE',
+  'reserved' | 'renting' | 'returned' | 'overdue' | 'canceled' | 'defective'
+> = {
+  RESERVED: 'reserved',
+  RENTED: 'renting',
+  RETURNED: 'returned',
+  OVERDUE: 'overdue',
+  CANCELED: 'canceled',
+  DEFECTIVE: 'defective',
+};
+// 플로터 상태 매핑 (API <-> 컴포넌트)
+const PLOTTER_STATUS_MAP: Record<string, string> = {
+  '예약 대기': 'PENDING',
+  '예약 확정': 'CONFIRMED',
+  '인쇄 완료': 'PRINTED',
+  '예약 반려': 'REJECTED',
+  '수령 완료': 'COMPLETED',
+};
+const PLOTTER_STATUS_MAP_REVERSE: Record<
+  'PENDING' | 'CONFIRMED' | 'PRINTED' | 'REJECTED' | 'COMPLETED',
+  'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'
+> = {
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  PRINTED: 'printed',
+  REJECTED: 'rejected',
+  COMPLETED: 'completed',
+};
+
+function AdminDashboard() {
+  const rejectHandlerRef = useRef<PlotterRejectHandlerRef>(null);
   const [activeTab, setActiveTab] = useState<TabType>('rental');
-  const [rentalStatusFilter, setRentalStatusFilter] = useState('전체 상태');
+  const [rentalStatusFilter, setRentalStatusFilter] = useState('전체 보기');
   const [plotterStatusFilter, setPlotterStatusFilter] = useState('전체 상태');
   const [rentalSearchQuery, setRentalSearchQuery] = useState('');
   const [plotterSearchQuery, setPlotterSearchQuery] = useState('');
-  const [rentalFilterOpen, setRentalFilterOpen] = useState(false);
-  const [plotterFilterOpen, setPlotterFilterOpen] = useState(false);
-  
+  const [rentalStartDate, setRentalStartDate] = useState('');
+  const [rentalEndDate, setRentalEndDate] = useState('');
+  const [itemsCategoryFilter, setItemsCategoryFilter] = useState('전체');
+  const [itemsSearchQuery, setItemsSearchQuery] = useState('');
   const [rentalData, setRentalData] = useState<RentalData[]>([]);
   const [plotterData, setPlotterData] = useState<PlotterData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 대여 목록 조회
-  const fetchRentals = async () => {
+  const fetchRentals = async (customStartDate?: string, customEndDate?: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -64,18 +110,12 @@ export default function AdminDashboard() {
         page: 1,
         pageSize: 100
       };
-      
-      // 상태 필터 적용
-      if (rentalStatusFilter !== '전체 상태') {
-        const statusMap: Record<string, string> = {
-          '예약': 'RESERVED',
-          '대여 중': 'RENTED',
-          '정상 반납': 'RETURNED',
-          '불량 반납': 'DEFECTIVE',
-          '예약 취소': 'CANCELED'
-        };
-        params.status = statusMap[rentalStatusFilter];
-      }
+      // 상태 필터는 프론트에서만 처리
+      // 날짜 필터 적용
+      const start = customStartDate !== undefined ? customStartDate : rentalStartDate;
+      const end = customEndDate !== undefined ? customEndDate : rentalEndDate;
+      if (start) params.startDate = start;
+      if (end) params.endDate = end;
 
       const response = await axios.get(`${API_BASE_URL}/api/rentals`, {
         params,
@@ -83,7 +123,6 @@ export default function AdminDashboard() {
           Authorization: `Bearer ${token}`
         }
       });
-      
       setRentalData(response.data.rentals || []);
     } catch (err: any) {
       console.error('대여 목록 조회 실패:', err);
@@ -93,7 +132,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // 플로터 목록 조회
   const fetchPlotterOrders = async () => {
     try {
       setLoading(true);
@@ -105,17 +143,8 @@ export default function AdminDashboard() {
         pageSize: 100
       };
       
-      // 상태 필터 적용
-      if (plotterStatusFilter !== '전체 상태') {
-        const statusMap: Record<string, string> = {
-          '예약 대기': 'PENDING',
-          '예약 확정': 'CONFIRMED',
-          '인쇄 완료': 'PRINTED',
-          '예약 반려': 'REJECTED',
-          '수령 완료': 'COMPLETED'
-        };
-        params.status = statusMap[plotterStatusFilter];
-      }
+
+      // 상태 필터는 프론트에서만 처리
 
       const response = await axios.get(`${API_BASE_URL}/api/plotter/orders`, {
         params,
@@ -133,16 +162,14 @@ export default function AdminDashboard() {
     }
   };
 
-  // 탭 변경 시 데이터 로드
   useEffect(() => {
     if (activeTab === 'rental') {
       fetchRentals();
     } else {
       fetchPlotterOrders();
     }
-  }, [activeTab, rentalStatusFilter, plotterStatusFilter]);
+  }, [activeTab, rentalStatusFilter]);
 
-  // 대여 상태 변경
   const handleRentalStatusChange = async (rentalId: number, newStatus: string) => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -163,13 +190,29 @@ export default function AdminDashboard() {
     }
   };
 
-  // 플로터 상태 변경
-  const handlePlotterStatusChange = async (orderId: number, newStatus: string) => {
+  const handlePlotterStatusChange = async (orderId: number, newStatus: string, rejectReason?: string) => {
+    // 반려(REJECTED) 상태로 변경 시 사유가 없거나 공백일 때만 모달 오픈
+    if (newStatus === 'REJECTED' && (!rejectReason || !rejectReason.trim())) {
+      if (rejectHandlerRef.current) {
+        rejectHandlerRef.current.requestReject(orderId, newStatus);
+      }
+      return;
+    }
+    // rejectReason이 있으면 무조건 API 호출
     try {
+      console.log('[API 호출]', {
+        orderId,
+        newStatus,
+        rejectReason
+      });
       const token = localStorage.getItem('accessToken');
+      const payload: any = { status: newStatus };
+      if (newStatus === 'REJECTED' && rejectReason && rejectReason.trim()) {
+        payload.rejectionReason = rejectReason.trim();
+      }
       await axios.put(
         `${API_BASE_URL}/api/plotter/orders/${orderId}/status`,
-        { status: newStatus },
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -184,56 +227,124 @@ export default function AdminDashboard() {
     }
   };
 
-  // TODO: 나중에 사용할 상태 설정
-  // const rentalStatusConfig = {
-  //   RESERVED: { label: '예약', bgColor: 'bg-[#FDD297]', textColor: 'text-[#F54A00]' },
-  //   RENTED: { label: '대여 중', bgColor: 'bg-[#A9FFCA]', textColor: 'text-[#1B811F]' },
-  //   RETURNED: { label: '정상 반납', bgColor: 'bg-[#BEBEBE]', textColor: 'text-[#5B5B5B]' },
-  //   OVERDUE: { label: '연체', bgColor: 'bg-[#FFA2A2]', textColor: 'text-[#FF0000]' },
-  //   CANCELED: { label: '예약 취소', bgColor: 'bg-[#F5FFAA]', textColor: 'text-[#FFDA00]' }
-  // };
-
-  // const plotterStatusConfig = {
-  //   PENDING: { label: '예약 대기', bgColor: 'bg-[#FDD297]', textColor: 'text-[#F54A00]' },
-  //   CONFIRMED: { label: '예약 확정', bgColor: 'bg-[#97F2FD]', textColor: 'text-[#155DFC]' },
-  //   PRINTED: { label: '인쇄 완료', bgColor: 'bg-[#A9FFCA]', textColor: 'text-[#1B811F]' },
-  //   REJECTED: { label: '예약 반려', bgColor: 'bg-[#FFA2A2]', textColor: 'text-[#FF0000]' },
-  //   COMPLETED: { label: '수령 완료', bgColor: 'bg-[#DDDDDD]', textColor: 'text-[#4A5565]' }
-  // };
-
-  // const handleRentalEdit = (rentalId: number) => {
-  //   // TODO: 상태 변경 모달 띄우기
-  //   const newStatus = prompt('변경할 상태를 입력하세요 (RESERVED, RENTED, RETURNED, OVERDUE, CANCELED):');
-  //   if (newStatus) {
-  //     handleRentalStatusChange(rentalId, newStatus.toUpperCase());
-  //   }
-  // };
-
-  // const handlePlotterEdit = (orderId: number) => {
-  //   // TODO: 상태 변경 모달 띄우기
-  //   const newStatus = prompt('변경할 상태를 입력하세요 (PENDING, CONFIRMED, PRINTED, REJECTED, COMPLETED):');
-  //   if (newStatus) {
-  //     handlePlotterStatusChange(orderId, newStatus.toUpperCase());
-  //   }
-  // };
-
   const handleRentalSearch = () => {
-    // TODO: 검색 기능 구현
-    console.log('Search rental:', rentalSearchQuery);
-    fetchRentals();
+    fetchRentals(rentalStartDate, rentalEndDate);
   };
 
   const handlePlotterSearch = () => {
-    // TODO: 검색 기능 구현
-    console.log('Search plotter:', plotterSearchQuery);
     fetchPlotterOrders();
   };
 
   const handleDownload = () => {
-    // TODO: CSV 다운로드 구현
-    console.log('Download data for tab:', activeTab);
-    alert('데이터 다운로드: ' + (activeTab === 'rental' ? '대여 관리' : '플로터 관리'));
+    const data = activeTab === 'rental' ? rentalData : plotterData;
+    if (data.length === 0) {
+      alert('다운로드할 데이터가 없습니다.');
+      return;
+    }
+
+    let csvContent = '';
+    
+    if (activeTab === 'rental') {
+      // 대여 데이터 CSV 헤더
+      csvContent = '예약번호,이름,학번,신청일,예약 기간,상태,물품명\n';
+      rentalData.forEach(item => {
+        const row = [
+          `RENT-${item.id}`,
+          item.user.name,
+          item.user.studentId,
+          item.createdAt.split('T')[0],
+          `${item.startDate} ~ ${item.endDate}`,
+          item.status,
+          item.itemSummary.replace(/,/g, ' ')
+        ].join(',');
+        csvContent += row + '\n';
+      });
+    } else {
+      // 플로터 데이터 CSV 헤더
+      csvContent = '주문번호,이름,학번,신청일,목적,용지 크기,장수,수령일,상태\n';
+      plotterData.forEach(item => {
+        const row = [
+          `PLOT-${item.id}`,
+          item.user.name,
+          item.user.studentId,
+          item.createdAt.split('T')[0],
+          item.purpose.replace(/,/g, ' '),
+          item.paperSize,
+          item.pageCount,
+          item.pickupDate || '-',
+          item.status
+        ].join(',');
+        csvContent += row + '\n';
+      });
+    }
+
+    // BOM 추가 (한글 깨짐 방지)
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${activeTab === 'rental' ? '대여관리' : '플로터관리'}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
+
+  const filteredRentalData = rentalData.filter(item => {
+    // 상태 필터링
+    let statusMatch = true;
+    if (rentalStatusFilter !== '전체 보기') {
+      if (rentalStatusFilter === '불량 반납') {
+        statusMatch = item.status === 'DEFECTIVE' || item.status === 'OVERDUE';
+      } else {
+        statusMatch = item.status === RENTAL_STATUS_MAP[rentalStatusFilter];
+      }
+    }
+
+    // 날짜 필터
+    let dateMatch = true;
+    if (rentalStartDate) {
+      const itemStart = item.startDate.slice(0, 10);
+      dateMatch = dateMatch && (itemStart >= rentalStartDate);
+    }
+    if (rentalEndDate) {
+      const itemEnd = item.endDate.slice(0, 10);
+      dateMatch = dateMatch && (itemEnd <= rentalEndDate);
+    }
+
+    // 검색어 필터
+    if (!rentalSearchQuery.trim()) return statusMatch && dateMatch;
+    const query = rentalSearchQuery.toLowerCase();
+    const searchMatch = (
+      item.user.name.toLowerCase().includes(query) ||
+      item.user.studentId.includes(query) ||
+      item.itemSummary.toLowerCase().includes(query) ||
+      `RENT-${item.id}`.toLowerCase().includes(query)
+    );
+    return statusMatch && dateMatch && searchMatch;
+  });
+
+
+  const filteredPlotterData = plotterData.filter(item => {
+    // 상태 필터링
+    let statusMatch = true;
+    if (plotterStatusFilter !== '전체 상태') {
+      statusMatch = item.status === PLOTTER_STATUS_MAP[plotterStatusFilter];
+    }
+
+    // 검색어 필터링
+    if (!plotterSearchQuery.trim()) return statusMatch;
+    const query = plotterSearchQuery.toLowerCase();
+    const searchMatch = (
+      item.user.name.toLowerCase().includes(query) ||
+      item.user.studentId.includes(query) ||
+      item.purpose.toLowerCase().includes(query) ||
+      `PLOT-${item.id}`.toLowerCase().includes(query)
+    );
+    return statusMatch && searchMatch;
+  });
 
   return (
     <>
@@ -241,21 +352,34 @@ export default function AdminDashboard() {
       
       <div className="w-full bg-gradient-to-b from-[#ffdcc5] to-white min-h-screen pb-20">
         <div className="max-w-[1440px] mx-auto px-8 pt-8">
-          {/* 상단 영역: 타이틀과 다운로드 버튼 */}
+          {/* 상단 영역: 타이틀과 버튼들 */}
           <div className="flex justify-between items-start mb-6">
             <div className="relative inline-block">
               <h1 className="text-[48px] font-bold text-[#410f07] mb-2">관리자 대시보드</h1>
               <div className="absolute left-0 bottom-0 w-[300px] h-[4px] bg-[#410f07]"></div>
             </div>
             
-            {/* 다운로드 버튼 */}
-            <button
-              onClick={handleDownload}
-              className="flex items-center gap-2 bg-white border border-[#C3C3C3] rounded-[10px] h-[40px] px-4 hover:bg-gray-50 transition-colors"
-            >
-              <img src={downloadIcon} alt="다운로드" className="w-5 h-5" />
-              <span className="font-['Gmarket_Sans'] font-medium text-[15px]">다운로드</span>
-            </button>
+            {/* 버튼 그룹 */}
+            <div className="flex gap-3">
+              {/* 신규 물품 등록 버튼 */}
+              {activeTab === 'items' && (
+                <button
+                  onClick={() => alert('신규 물품 등록 기능 준비 중')}
+                  className="flex items-center gap-2 bg-[#f72] border border-white rounded-[13px] h-[40px] px-4 hover:opacity-90 transition-opacity"
+                >
+                  <span className="font-['Gmarket_Sans'] font-medium text-[20px] text-white">신규 물품 등록</span>
+                </button>
+              )}
+              
+              {/* 엑셀 다운로드 버튼 */}
+              <button
+                onClick={handleDownload}
+                className="flex items-center gap-2 bg-white border border-[#a4a4a4] rounded-[13px] h-[40px] px-4 hover:bg-gray-50 transition-colors"
+              >
+                <img src={downloadIcon} alt="다운로드" className="w-5 h-5" />
+                <span className="font-['Gmarket_Sans'] font-medium text-[20px]">엑셀 다운로드</span>
+              </button>
+            </div>
           </div>
 
           {/* 탭 네비게이션 */}
@@ -282,76 +406,49 @@ export default function AdminDashboard() {
                 <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#FE6949]"></div>
               )}
             </button>
+            <button
+              onClick={() => setActiveTab('items')}
+              className={`pb-2 font-['HanbatGothic'] font-medium text-[24px] relative ${
+                activeTab === 'items' ? 'text-[#FE6949]' : 'text-[#8E8E8E]'
+              }`}
+            >
+              물품 목록 관리
+              {activeTab === 'items' && (
+                <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#FE6949]"></div>
+              )}
+            </button>
           </div>
 
           {/* 대여 관리 탭 내용 */}
           {activeTab === 'rental' && (
             <div>
-              {/* 필터 및 검색 바 */}
-              <div className="bg-white border border-[#C3C3C3] rounded-[10px] h-[77px] flex items-center px-4 gap-4 mb-6">
-                {/* 필터 아이콘 */}
-                <img src={filterIcon} alt="필터" className="w-8 h-8" />
-                
-                {/* 상태 필터 드롭다운 */}
-                <div className="relative">
-                  <button
-                    onClick={() => setRentalFilterOpen(!rentalFilterOpen)}
-                    className="bg-white border border-[#A6A6A6] rounded-[10px] h-[31px] px-3 flex items-center gap-2 min-w-[98px]"
-                  >
-                    <span className="font-['Gmarket_Sans'] font-medium text-[15px]">{rentalStatusFilter}</span>
-                    <span className="text-gray-400">▼</span>
-                  </button>
-                  {rentalFilterOpen && (
-                    <div className="absolute top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 min-w-[120px]">
-                      {['전체 상태', '예약', '대여 중', '정상 반납', '불량 반납', '예약 취소'].map((status) => (
-                        <button
-                          key={status}
-                          onClick={() => {
-                            setRentalStatusFilter(status);
-                            setRentalFilterOpen(false);
-                          }}
-                          className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-[15px]"
-                        >
-                          {status}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* 검색창 */}
-                <div className="flex-1 bg-[#D9D9D9] rounded-[10px] h-[40px] flex items-center px-3 gap-2">
-                  <img src={searchIcon} alt="검색" className="w-7 h-7" />
-                  <input
-                    type="text"
-                    placeholder="이름, 학과, 물품 검색"
-                    value={rentalSearchQuery}
-                    onChange={(e) => setRentalSearchQuery(e.target.value)}
-                    className="flex-1 bg-transparent outline-none font-['HanbatGothic'] font-medium text-[20px] text-[#8E8E8E] placeholder:text-[#8E8E8E]"
-                  />
-                </div>
-
-                {/* 검색 버튼 */}
-                <button
-                  onClick={handleRentalSearch}
-                  className="bg-black text-white rounded-[10px] h-[40px] px-6 font-['HanbatGothic'] font-medium text-[20px]"
-                >
-                  검색
-                </button>
-              </div>
+              {/* 필터 바 */}
+              <AdminFilterBar
+                statusOptions={['전체 보기', '예약', '대여 중', '정상 반납', '불량 반납', '예약 취소']}
+                selectedStatus={rentalStatusFilter}
+                onStatusChange={setRentalStatusFilter}
+                startDate={rentalStartDate}
+                endDate={rentalEndDate}
+                onStartDateChange={setRentalStartDate}
+                onEndDateChange={setRentalEndDate}
+                searchQuery={rentalSearchQuery}
+                onSearchQueryChange={setRentalSearchQuery}
+                onSearch={handleRentalSearch}
+                searchPlaceholder="이름, 학과, 물품 검색"
+              />
 
               {/* 테이블 */}
-              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible">
+              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible mt-6">
                 {/* 테이블 헤더 */}
-                <div className="bg-[#EDEDED] border-b border-[#C2C2C2] h-[77px] flex items-center px-8 font-['HanbatGothic'] font-medium text-[20px] text-black">
-                  <div className="w-[120px]">신청번호</div>
-                  <div className="w-[100px]">신청자</div>
-                  <div className="w-[150px]">학번</div>
-                  <div className="w-[200px]">대여 품목</div>
-                  <div className="w-[120px]">대여 날짜</div>
-                  <div className="w-[120px]">반납 날짜</div>
-                  <div className="w-[100px]">상태</div>
-                  <div className="flex-1">관리</div>
+                <div className="bg-[#EDEDED] border-b border-[#C2C2C2] h-[52px] flex items-center px-8 gap-4 font-['HanbatGothic'] font-medium text-[16px] text-black">
+                  <div className="w-[90px] text-center">신청번호</div>
+                  <div className="w-[100px] text-center">신청자</div>
+                  <div className="w-[150px] text-center">소속</div>
+                  <div className="flex-1 text-center">대여 품목</div>
+                  <div className="w-[120px] text-center">대여 날짜</div>
+                  <div className="w-[120px] text-center">반납 날짜</div>
+                  <div className="w-[100px] text-center">상태</div>
+                  <div className="w-[120px] text-center">비고</div>
                 </div>
 
                 {/* 로딩 및 에러 표시 */}
@@ -369,42 +466,29 @@ export default function AdminDashboard() {
                 {/* 테이블 바디 */}
                 {!loading && !error && (
                   <div>
-                    {rentalData.length === 0 ? (
+                    {filteredRentalData.length === 0 ? (
                       <div className="h-[200px] flex items-center justify-center">
-                        <span className="text-gray-500">대여 내역이 없습니다.</span>
+                        <span className="text-gray-500">{rentalSearchQuery ? '검색 결과가 없습니다.' : '대여 내역이 없습니다.'}</span>
                       </div>
                     ) : (
-                      rentalData.map((rental) => {
+                      filteredRentalData.map((rental) => {
                         // status 매핑: RENTED -> renting
-                        const statusMap: Record<string, "reserved" | "renting" | "returned" | "overdue" | "canceled"> = {
-                          'RESERVED': 'reserved',
-                          'RENTED': 'renting',
-                          'RETURNED': 'returned',
-                          'OVERDUE': 'overdue',
-                          'CANCELED': 'canceled'
-                        };
-                        
-                        // 역매핑: component status -> API status
-                        const reverseStatusMap: Record<"reserved" | "renting" | "returned" | "overdue" | "canceled", string> = {
-                          'reserved': 'RESERVED',
-                          'renting': 'RENTED',
-                          'returned': 'RETURNED',
-                          'overdue': 'OVERDUE',
-                          'canceled': 'CANCELED'
-                        };
-                        
                         return (
                           <AdminRentalRow
                             key={rental.id}
                             rentalCode={`R-${rental.id}`}
                             userName={rental.user.name}
-                            department={rental.user.studentId}
+                            department={rental.user.department || rental.user.studentId}
                             itemName={rental.itemSummary}
                             startDate={rental.startDate}
                             endDate={rental.endDate}
-                            status={statusMap[rental.status] || 'reserved'}
+                            status={RENTAL_STATUS_MAP_REVERSE[rental.status] as 'reserved' | 'renting' | 'returned' | 'overdue' | 'canceled' | 'defective'}
                             onStatusChange={(newStatus) => {
-                              handleRentalStatusChange(rental.id, reverseStatusMap[newStatus]);
+                              handleRentalStatusChange(
+                                rental.id,
+                                (Object.keys(RENTAL_STATUS_MAP_REVERSE) as Array<keyof typeof RENTAL_STATUS_MAP_REVERSE>)
+                                  .find(k => RENTAL_STATUS_MAP_REVERSE[k] === newStatus) || 'RESERVED'
+                              );
                             }}
                           />
                         );
@@ -419,72 +503,29 @@ export default function AdminDashboard() {
           {/* 플로터 관리 탭 내용 */}
           {activeTab === 'plotter' && (
             <div>
-              {/* 필터 및 검색 바 */}
-              <div className="bg-white border border-[#C3C3C3] rounded-[10px] h-[77px] flex items-center px-4 gap-4 mb-6">
-                {/* 필터 아이콘 */}
-                <img src={filterIcon} alt="필터" className="w-8 h-8" />
-                
-                {/* 상태 필터 드롭다운 */}
-                <div className="relative">
-                  <button
-                    onClick={() => setPlotterFilterOpen(!plotterFilterOpen)}
-                    className="bg-white border border-[#A6A6A6] rounded-[10px] h-[31px] px-3 flex items-center gap-2 min-w-[98px]"
-                  >
-                    <span className="font-['Gmarket_Sans'] font-medium text-[15px]">{plotterStatusFilter}</span>
-                    <span className="text-gray-400">▼</span>
-                  </button>
-                  {plotterFilterOpen && (
-                    <div className="absolute top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 min-w-[120px]">
-                      {['전체 상태', '예약 대기', '예약 확정', '인쇄 완료', '예약 반려', '수령 완료'].map((status) => (
-                        <button
-                          key={status}
-                          onClick={() => {
-                            setPlotterStatusFilter(status);
-                            setPlotterFilterOpen(false);
-                          }}
-                          className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-[15px]"
-                        >
-                          {status}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* 검색창 */}
-                <div className="flex-1 bg-[#D9D9D9] rounded-[10px] h-[40px] flex items-center px-3 gap-2">
-                  <img src={searchIcon} alt="검색" className="w-7 h-7" />
-                  <input
-                    type="text"
-                    placeholder="이름, 학과, 물품 검색"
-                    value={plotterSearchQuery}
-                    onChange={(e) => setPlotterSearchQuery(e.target.value)}
-                    className="flex-1 bg-transparent outline-none font-['HanbatGothic'] font-medium text-[20px] text-[#8E8E8E] placeholder:text-[#8E8E8E]"
-                  />
-                </div>
-
-                {/* 검색 버튼 */}
-                <button
-                  onClick={handlePlotterSearch}
-                  className="bg-black text-white rounded-[10px] h-[40px] px-6 font-['HanbatGothic'] font-medium text-[20px]"
-                >
-                  검색
-                </button>
-              </div>
+              {/* 필터 바 */}
+              <AdminPlotterFilterBar
+                statusOptions={['전체 상태', '예약 대기', '예약 확정', '인쇄 완료', '예약 반려', '수령 완료']}
+                selectedStatus={plotterStatusFilter}
+                onStatusChange={setPlotterStatusFilter}
+                searchQuery={plotterSearchQuery}
+                onSearchQueryChange={setPlotterSearchQuery}
+                onSearch={handlePlotterSearch}
+                searchPlaceholder="이름, 학과, 물품 검색"
+              />
 
               {/* 테이블 */}
-              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible">
+              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible mt-6">
                 {/* 테이블 헤더 */}
-                <div className="bg-[#EDEDED] border-b border-[#C2C2C2] h-[77px] flex items-center px-8 font-['HanbatGothic'] font-medium text-[20px] text-black">
-                  <div className="w-[120px]">신청번호</div>
-                  <div className="w-[100px]">신청자</div>
-                  <div className="w-[140px]">학번</div>
-                  <div className="w-[160px]">인쇄 목적</div>
-                  <div className="w-[100px]">용지 크기</div>
-                  <div className="w-[80px]">장수</div>
-                  <div className="w-[120px]">수령일</div>
-                  <div className="w-[100px]">상태</div>
-                  <div className="flex-1 text-center">관리</div>
+                <div className="bg-[#EDEDED] border-b border-[#C2C2C2] h-[52px] flex items-center px-8 gap-4 font-['HanbatGothic'] font-medium text-[16px] text-black">
+                  <div className="w-[90px] text-center">신청번호</div>
+                  <div className="w-[100px] text-center">신청자</div>
+                  <div className="w-[160px] text-center">소속</div>
+                  <div className="flex-1 text-center">파일명</div>
+                  <div className="w-[110px] text-center">용지/장수</div>
+                  <div className="w-[120px] text-center">날짜</div>
+                  <div className="w-[100px] text-center">상태</div>
+                  <div className="w-[120px] text-center">비고</div>
                 </div>
 
                 {/* 로딩 및 에러 표시 */}
@@ -502,42 +543,29 @@ export default function AdminDashboard() {
                 {/* 테이블 바디 */}
                 {!loading && !error && (
                   <div>
-                    {plotterData.length === 0 ? (
+                    {filteredPlotterData.length === 0 ? (
                       <div className="h-[200px] flex items-center justify-center">
-                        <span className="text-gray-500">플로터 주문 내역이 없습니다.</span>
+                        <span className="text-gray-500">{plotterSearchQuery ? '검색 결과가 없습니다.' : '플로터 주문 내역이 없습니다.'}</span>
                       </div>
                     ) : (
-                      plotterData.map((plotter) => {
+                      filteredPlotterData.map((plotter) => {
                         // status 매핑: PRINTED -> printing, PENDING -> pending
-                        const statusMap: Record<string, 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'> = {
-                          'PENDING': 'pending',
-                          'CONFIRMED': 'confirmed',
-                          'PRINTED': 'printed',
-                          'REJECTED': 'rejected',
-                          'COMPLETED': 'completed'
-                        };
-                        
-                        // 역매핑: component status -> API status
-                        const reverseStatusMap: Record<'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed', string> = {
-                          'pending': 'PENDING',
-                          'confirmed': 'CONFIRMED',
-                          'printed': 'PRINTED',
-                          'rejected': 'REJECTED',
-                          'completed': 'COMPLETED'
-                        };
-                        
                         return (
                           <AdminPlotterRow
                             key={plotter.id}
                             orderCode={`P-${plotter.id}`}
                             userName={plotter.user.name}
-                            club={plotter.user.studentId}
+                            club={plotter.user.department || plotter.user.studentId}
                             purpose={plotter.purpose}
                             paperSizeAndCount={`${plotter.paperSize} / ${plotter.pageCount}장`}
                             orderDate={plotter.pickupDate}
-                            status={statusMap[plotter.status] || 'pending'}
+                            status={PLOTTER_STATUS_MAP_REVERSE[plotter.status] as 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'}
                             onStatusChange={(newStatus) => {
-                              handlePlotterStatusChange(plotter.id, reverseStatusMap[newStatus]);
+                              handlePlotterStatusChange(
+                                plotter.id,
+                                (Object.keys(PLOTTER_STATUS_MAP_REVERSE) as Array<keyof typeof PLOTTER_STATUS_MAP_REVERSE>)
+                                  .find(k => PLOTTER_STATUS_MAP_REVERSE[k] === newStatus) || 'PENDING'
+                              );
                             }}
                           />
                         );
@@ -548,10 +576,89 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
+
+          {/* 물품 목록 관리 탭 내용 */}
+          {activeTab === 'items' && (
+            <div>
+              {/* 카테고리 필터 바 */}
+              <AdminItemsFilterBar
+                categories={['전체', '전자기기', '축제용품', '음향기기', '공구', '체육용품']}
+                selectedCategory={itemsCategoryFilter}
+                onCategoryChange={setItemsCategoryFilter}
+                searchQuery={itemsSearchQuery}
+                onSearchQueryChange={setItemsSearchQuery}
+                onSearch={() => console.log('물품 검색:', itemsSearchQuery)}
+                searchPlaceholder="물품 검색"
+              />
+
+              {/* 물품 카드 그리드 */}
+              <div className="grid grid-cols-4 gap-x-[53px] gap-y-[30px]">
+                {/* 예시 물품 카드들 */}
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+                  <div
+                    key={item}
+                    className="bg-white border border-[#d72002] rounded-[11px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.2)] overflow-clip relative w-[224px] h-[280px]"
+                  >
+                    {/* 이미지 영역 */}
+                    <div className="w-full h-[193px] bg-gradient-to-br from-blue-400 to-blue-600 relative">
+                      <div className="absolute inset-0 bg-[rgba(0,0,0,0.05)]" />
+                    </div>
+
+                    {/* 상단 버튼들 */}
+                    <div className="absolute top-[7px] right-[7px] flex gap-[9px] z-10">
+                      <button className="bg-white border border-black rounded-[5px] w-[23px] h-[23px] flex items-center justify-center hover:bg-gray-100 transition-colors">
+                        <img src={pencilIcon} alt="수정" className="w-[19px] h-[19px]" />
+                      </button>
+                      <button className="bg-white border border-black rounded-[5px] w-[23px] h-[23px] flex items-center justify-center hover:bg-gray-100 transition-colors">
+                        <img src={trashIcon} alt="삭제" className="w-[19px] h-[19px]" />
+                      </button>
+                    </div>
+
+                    {/* 정보 영역 */}
+                    <div className="absolute top-[203px] left-[11px] right-[11px]">
+                      <p className="font-['Signika'] font-medium text-[13px] text-[#fe6949] leading-normal mb-0">
+                        축제용품
+                      </p>
+                    </div>
+
+                    <div className="absolute top-[203px] right-[11px]">
+                      <div className="bg-[#d9d9d9] rounded-[10px] h-[24px] px-2 flex items-center">
+                        <span className="font-['Signika'] font-medium text-[11px] text-black tracking-[0.33px]">수량 10개</span>
+                      </div>
+                    </div>
+
+                    <h3 className="absolute top-[227px] left-[11px] font-['Noto_Sans'] font-semibold text-[20px] text-[#410f07] leading-normal tracking-[-0.4px]">
+                      행사용 천막
+                    </h3>
+
+                    <p className="absolute top-[249px] left-[11px] right-[11px] font-['Gmarket_Sans'] font-light text-[12px] text-[#410f07] leading-normal">
+                      야외 행사 및 축제 부스 운영 시 필요한 접이식 천막입니다.
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* 빈 상태 메시지 (물품이 없을 때) */}
+              {false && (
+                <div className="h-[400px] flex items-center justify-center">
+                  <span className="text-gray-500 text-lg">등록된 물품이 없습니다.</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       <Footer />
+      <PlotterRejectHandler
+        ref={rejectHandlerRef}
+        onSubmit={(orderId, newStatus, reason) => {
+          // 반려 사유 입력 후 바로 상태변경 API 호출
+          handlePlotterStatusChange(orderId, newStatus, reason);
+        }}
+      />
     </>
   );
 }
+
+export default AdminDashboard;
