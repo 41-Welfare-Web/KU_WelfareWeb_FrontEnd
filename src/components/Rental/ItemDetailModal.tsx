@@ -5,7 +5,6 @@ import ItemCalendar from "./ItemCalendar";
 import type { ItemDetail } from "../../api/rental/types";
 import { getItemDetail } from "../../api/rental/rentalApi";
 import guide from "../../assets/rental/guide.svg";
-import { addToCart, updateCartItem } from "../../api/rental/cart/cartApi";
 
 type Props = {
   open: boolean;
@@ -45,7 +44,7 @@ export default function ItemDetailModal({
   }>({ startDate: null, endDate: null, quantity: 1 });
 
   // 담기 버튼 로딩(중복 클릭 방지)
-  const [adding, setAdding] = useState(false);
+  const [adding] = useState(false);
 
   // ESC 닫기
   useEffect(() => {
