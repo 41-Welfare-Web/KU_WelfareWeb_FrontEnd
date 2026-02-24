@@ -109,6 +109,17 @@ export default function Header() {
             플로터인쇄사업
           </button>
 
+          {/* ========================= */}
+          {/* admin 사이트 QA 위한 코드 */}
+          <button
+            type="button"
+            onClick={() => navigate("/admin")}
+            className={menuClass("/admin")}
+          >
+            admin
+          </button>
+          {/* ========================= */}
+
           {!isLoggedIn ? (
             <button
               type="button"
