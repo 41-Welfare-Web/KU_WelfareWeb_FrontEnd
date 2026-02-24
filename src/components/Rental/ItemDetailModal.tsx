@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import ItemCalendarPlaceholder from "./ItemCalendar";
 import type { ItemDetail } from "../../api/rental/types";
 import { getItemDetail } from "../../api/rental/rentalApi";
@@ -17,6 +19,9 @@ export default function ItemDetailModal({
   onClose,
   onAddToCart,
 }: Props) {
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ItemDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -203,7 +208,15 @@ export default function ItemDetailModal({
 
                     <button
                       type="button"
-                      onClick={() => onAddToCart?.(data)}
+                      onClick={() => {
+                        if (!isLoggedIn) {
+                          alert("로그인이 필요한 서비스입니다.");
+                          onClose();
+                          navigate("/login");
+                          return;
+                        }
+                        onAddToCart?.(data);
+                      }}
                       className="mt-4 w-full rounded-xl bg-[#FE6949] py-3 text-[15px] font-semibold text-white"
                     >
                       장바구니에 담기

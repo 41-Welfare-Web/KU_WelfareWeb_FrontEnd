@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import cart from "../../assets/rental/cart.svg";
 import cancel from "../../assets/rental/cancel.svg";
 
@@ -21,7 +23,8 @@ export default function CartContent({
   headerRight,
 }: Props) {
   const totalCount = items.reduce((sum, it) => sum + it.count, 0);
-
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
   return (
     <div className="w-full h-full flex flex-col">
       <div className="flex items-center justify-between px-4 pt-4 shrink-0">
@@ -35,8 +38,12 @@ export default function CartContent({
       </div>
 
       <div className="px-4 pt-3 flex-1 overflow-y-auto">
-        {items.length === 0 ? (
-          <div className="rounded-xl border border-black/10 bg-white p-4 text-[13px] text-black/60">
+        {!isLoggedIn ? (
+          <div className="rounded-xl border border-black/10 bg-white p-4 text-[15px] text-black/60">
+            로그인이 필요한 서비스입니다.
+          </div>
+        ) : items.length === 0 ? (
+          <div className="rounded-xl border border-black/10 bg-white p-4 text-[15px] text-black/60">
             장바구니가 비어있어요.
           </div>
         ) : (
@@ -76,16 +83,24 @@ export default function CartContent({
       <div className="px-4 pt-6 pb-4 shrink-0">
         <div className="flex items-center justify-between text-[18px] text-[#410F07]">
           <span className="font-semibold">총 수량</span>
-          <span className="font-semibold text-[#FE6949]">{totalCount}개</span>
+          <span className="font-semibold text-[#FE6949]">
+            {isLoggedIn ? totalCount : 0}개
+          </span>
         </div>
 
         <button
           type="button"
-          onClick={onGoCheckout}
-          disabled={items.length === 0}
+          onClick={() => {
+            if (!isLoggedIn) {
+              navigate("/login");
+              return;
+            }
+            onGoCheckout();
+          }}
+          disabled={isLoggedIn && items.length === 0}
           className="mt-3 w-full rounded-lg bg-[#FE6949] px-4 py-3 text-[15px] font-semibold text-white disabled:opacity-40"
         >
-          대여 신청하러 가기
+          {isLoggedIn ? "대여 신청하러 가기" : "로그인 하러 가기"}
         </button>
       </div>
     </div>
