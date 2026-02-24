@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -7,6 +7,8 @@ import AdminPlotterRow from '../../components/Admin/AdminPlotterRow';
 import AdminFilterBar from '../../components/Admin/AdminFilterBar';
 import AdminPlotterFilterBar from '../../components/Admin/AdminPlotterFilterBar';
 import AdminItemsFilterBar from '../../components/Admin/AdminItemsFilterBar';
+import PlotterRejectHandler from '../../components/Admin/PlotterRejectHandler';
+import type { PlotterRejectHandlerRef } from '../../components/Admin/PlotterRejectHandler';
 import downloadIcon from '../../assets/admin/download.svg';
 import pencilIcon from '../../assets/admin/pencil.svg';
 import trashIcon from '../../assets/admin/trash.svg';
@@ -44,27 +46,22 @@ interface PlotterData {
   createdAt: string;
 }
 
-export default function AdminDashboard() {
+function AdminDashboard() {
+  const rejectHandlerRef = useRef<PlotterRejectHandlerRef>(null);
   const [activeTab, setActiveTab] = useState<TabType>('rental');
   const [rentalStatusFilter, setRentalStatusFilter] = useState('전체 보기');
   const [plotterStatusFilter, setPlotterStatusFilter] = useState('전체 상태');
   const [rentalSearchQuery, setRentalSearchQuery] = useState('');
   const [plotterSearchQuery, setPlotterSearchQuery] = useState('');
-  
-  // 대여 탭 날짜 필터
   const [rentalStartDate, setRentalStartDate] = useState('');
   const [rentalEndDate, setRentalEndDate] = useState('');
-  
-  // 물품 관리 탭 필터
   const [itemsCategoryFilter, setItemsCategoryFilter] = useState('전체');
   const [itemsSearchQuery, setItemsSearchQuery] = useState('');
-  
   const [rentalData, setRentalData] = useState<RentalData[]>([]);
   const [plotterData, setPlotterData] = useState<PlotterData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 대여 목록 조회
   const fetchRentals = async () => {
     try {
       setLoading(true);
@@ -104,7 +101,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // 플로터 목록 조회
   const fetchPlotterOrders = async () => {
     try {
       setLoading(true);
@@ -144,7 +140,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // 탭 변경 시 데이터 로드
   useEffect(() => {
     if (activeTab === 'rental') {
       fetchRentals();
@@ -153,7 +148,6 @@ export default function AdminDashboard() {
     }
   }, [activeTab, rentalStatusFilter, plotterStatusFilter]);
 
-  // 대여 상태 변경
   const handleRentalStatusChange = async (rentalId: number, newStatus: string) => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -174,13 +168,29 @@ export default function AdminDashboard() {
     }
   };
 
-  // 플로터 상태 변경
-  const handlePlotterStatusChange = async (orderId: number, newStatus: string) => {
+  const handlePlotterStatusChange = async (orderId: number, newStatus: string, rejectReason?: string) => {
+    // 반려(REJECTED) 상태로 변경 시 사유가 없거나 공백일 때만 모달 오픈
+    if (newStatus === 'REJECTED' && (!rejectReason || !rejectReason.trim())) {
+      if (rejectHandlerRef.current) {
+        rejectHandlerRef.current.requestReject(orderId, newStatus);
+      }
+      return;
+    }
+    // rejectReason이 있으면 무조건 API 호출
     try {
+      console.log('[API 호출]', {
+        orderId,
+        newStatus,
+        rejectReason
+      });
       const token = localStorage.getItem('accessToken');
+      const payload: any = { status: newStatus };
+      if (newStatus === 'REJECTED' && rejectReason && rejectReason.trim()) {
+        payload.rejectionReason = rejectReason.trim();
+      }
       await axios.put(
         `${API_BASE_URL}/api/plotter/orders/${orderId}/status`,
-        { status: newStatus },
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -195,7 +205,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // 검색 기능 (클라이언트 사이드 필터링)
   const handleRentalSearch = () => {
     fetchRentals();
   };
@@ -204,7 +213,6 @@ export default function AdminDashboard() {
     fetchPlotterOrders();
   };
 
-  // CSV 다운로드 기능
   const handleDownload = () => {
     const data = activeTab === 'rental' ? rentalData : plotterData;
     if (data.length === 0) {
@@ -262,7 +270,6 @@ export default function AdminDashboard() {
     document.body.removeChild(link);
   };
 
-  // 검색어로 필터링된 데이터
   const filteredRentalData = rentalData.filter(item => {
     if (!rentalSearchQuery.trim()) return true;
     const query = rentalSearchQuery.toLowerCase();
@@ -534,6 +541,14 @@ export default function AdminDashboard() {
                             }}
                           />
                         );
+                            {/* 반려 사유 입력 핸들러 */}
+                            <PlotterRejectHandler
+                              ref={rejectHandlerRef}
+                              onSubmit={(orderId, newStatus, reason) => {
+                                // 반려 사유 입력 후 바로 상태변경 API 호출
+                                handlePlotterStatusChange(orderId, newStatus, reason);
+                              }}
+                            />
                       })
                     )}
                   </div>
@@ -615,6 +630,15 @@ export default function AdminDashboard() {
       </div>
 
       <Footer />
+      <PlotterRejectHandler
+        ref={rejectHandlerRef}
+        onSubmit={(orderId, newStatus, reason) => {
+          // 반려 사유 입력 후 바로 상태변경 API 호출
+          handlePlotterStatusChange(orderId, newStatus, reason);
+        }}
+      />
     </>
   );
 }
+
+export default AdminDashboard;
