@@ -9,9 +9,9 @@ interface AdminRentalRowProps {
   itemName: string;
   startDate: string;
   endDate: string;
-  status: "reserved" | "renting" | "returned" | "overdue" | "canceled";
+  status: "reserved" | "renting" | "returned" | "overdue" | "canceled" | "defective";
   note?: string;
-  onStatusChange?: (newStatus: "reserved" | "renting" | "returned" | "overdue" | "canceled") => void;
+  onStatusChange?: (newStatus: "reserved" | "renting" | "returned" | "overdue" | "canceled" | "defective") => void;
   onNoteChange?: (note: string) => void;
   className?: string;
 }

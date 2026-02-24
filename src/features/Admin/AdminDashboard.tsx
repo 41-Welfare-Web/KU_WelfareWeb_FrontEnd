@@ -26,7 +26,7 @@ interface RentalData {
   };
   startDate: string;
   endDate: string;
-  status: 'RESERVED' | 'RENTED' | 'RETURNED' | 'OVERDUE' | 'CANCELED';
+  status: 'RESERVED' | 'RENTED' | 'RETURNED' | 'OVERDUE' | 'CANCELED' | 'DEFECTIVE';
   itemSummary: string;
   createdAt: string;
 }
@@ -45,6 +45,44 @@ interface PlotterData {
   status: 'PENDING' | 'CONFIRMED' | 'PRINTED' | 'REJECTED' | 'COMPLETED';
   createdAt: string;
 }
+
+// 대여 상태 매핑 (API <-> 컴포넌트)
+const RENTAL_STATUS_MAP: Record<string, string> = {
+  '예약': 'RESERVED',
+  '대여 중': 'RENTED',
+  '정상 반납': 'RETURNED',
+  '불량 반납': 'DEFECTIVE',
+  '예약 취소': 'CANCELED',
+};
+const RENTAL_STATUS_MAP_REVERSE: Record<
+  'RESERVED' | 'RENTED' | 'RETURNED' | 'OVERDUE' | 'CANCELED' | 'DEFECTIVE',
+  'reserved' | 'renting' | 'returned' | 'overdue' | 'canceled' | 'defective'
+> = {
+  RESERVED: 'reserved',
+  RENTED: 'renting',
+  RETURNED: 'returned',
+  OVERDUE: 'overdue',
+  CANCELED: 'canceled',
+  DEFECTIVE: 'defective',
+};
+// 플로터 상태 매핑 (API <-> 컴포넌트)
+const PLOTTER_STATUS_MAP: Record<string, string> = {
+  '예약 대기': 'PENDING',
+  '예약 확정': 'CONFIRMED',
+  '인쇄 완료': 'PRINTED',
+  '예약 반려': 'REJECTED',
+  '수령 완료': 'COMPLETED',
+};
+const PLOTTER_STATUS_MAP_REVERSE: Record<
+  'PENDING' | 'CONFIRMED' | 'PRINTED' | 'REJECTED' | 'COMPLETED',
+  'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'
+> = {
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  PRINTED: 'printed',
+  REJECTED: 'rejected',
+  COMPLETED: 'completed',
+};
 
 function AdminDashboard() {
   const rejectHandlerRef = useRef<PlotterRejectHandlerRef>(null);
@@ -258,14 +296,11 @@ function AdminDashboard() {
     // 상태 필터링
     let statusMatch = true;
     if (rentalStatusFilter !== '전체 보기') {
-      const statusMap = {
-        '예약': 'RESERVED',
-        '대여 중': 'RENTED',
-        '정상 반납': 'RETURNED',
-        '불량 반납': 'DEFECTIVE',
-        '예약 취소': 'CANCELED',
-      };
-      statusMatch = item.status === statusMap[rentalStatusFilter];
+      if (rentalStatusFilter === '불량 반납') {
+        statusMatch = item.status === 'DEFECTIVE' || item.status === 'OVERDUE';
+      } else {
+        statusMatch = item.status === RENTAL_STATUS_MAP[rentalStatusFilter];
+      }
     }
 
     // 날짜 필터
@@ -296,14 +331,7 @@ function AdminDashboard() {
     // 상태 필터링
     let statusMatch = true;
     if (plotterStatusFilter !== '전체 상태') {
-      const statusMap = {
-        '예약 대기': 'PENDING',
-        '예약 확정': 'CONFIRMED',
-        '인쇄 완료': 'PRINTED',
-        '예약 반려': 'REJECTED',
-        '수령 완료': 'COMPLETED',
-      };
-      statusMatch = item.status === statusMap[plotterStatusFilter];
+      statusMatch = item.status === PLOTTER_STATUS_MAP[plotterStatusFilter];
     }
 
     // 검색어 필터링
@@ -445,23 +473,6 @@ function AdminDashboard() {
                     ) : (
                       filteredRentalData.map((rental) => {
                         // status 매핑: RENTED -> renting
-                        const statusMap: Record<string, "reserved" | "renting" | "returned" | "overdue" | "canceled"> = {
-                          'RESERVED': 'reserved',
-                          'RENTED': 'renting',
-                          'RETURNED': 'returned',
-                          'OVERDUE': 'overdue',
-                          'CANCELED': 'canceled'
-                        };
-                        
-                        // 역매핑: component status -> API status
-                        const reverseStatusMap: Record<"reserved" | "renting" | "returned" | "overdue" | "canceled", string> = {
-                          'reserved': 'RESERVED',
-                          'renting': 'RENTED',
-                          'returned': 'RETURNED',
-                          'overdue': 'OVERDUE',
-                          'canceled': 'CANCELED'
-                        };
-                        
                         return (
                           <AdminRentalRow
                             key={rental.id}
@@ -471,9 +482,13 @@ function AdminDashboard() {
                             itemName={rental.itemSummary}
                             startDate={rental.startDate}
                             endDate={rental.endDate}
-                            status={statusMap[rental.status] || 'reserved'}
+                            status={RENTAL_STATUS_MAP_REVERSE[rental.status] as 'reserved' | 'renting' | 'returned' | 'overdue' | 'canceled' | 'defective'}
                             onStatusChange={(newStatus) => {
-                              handleRentalStatusChange(rental.id, reverseStatusMap[newStatus]);
+                              handleRentalStatusChange(
+                                rental.id,
+                                (Object.keys(RENTAL_STATUS_MAP_REVERSE) as Array<keyof typeof RENTAL_STATUS_MAP_REVERSE>)
+                                  .find(k => RENTAL_STATUS_MAP_REVERSE[k] === newStatus) || 'RESERVED'
+                              );
                             }}
                           />
                         );
@@ -535,23 +550,6 @@ function AdminDashboard() {
                     ) : (
                       filteredPlotterData.map((plotter) => {
                         // status 매핑: PRINTED -> printing, PENDING -> pending
-                        const statusMap: Record<string, 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'> = {
-                          'PENDING': 'pending',
-                          'CONFIRMED': 'confirmed',
-                          'PRINTED': 'printed',
-                          'REJECTED': 'rejected',
-                          'COMPLETED': 'completed'
-                        };
-                        
-                        // 역매핑: component status -> API status
-                        const reverseStatusMap: Record<'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed', string> = {
-                          'pending': 'PENDING',
-                          'confirmed': 'CONFIRMED',
-                          'printed': 'PRINTED',
-                          'rejected': 'REJECTED',
-                          'completed': 'COMPLETED'
-                        };
-                        
                         return (
                           <AdminPlotterRow
                             key={plotter.id}
@@ -561,9 +559,13 @@ function AdminDashboard() {
                             purpose={plotter.purpose}
                             paperSizeAndCount={`${plotter.paperSize} / ${plotter.pageCount}장`}
                             orderDate={plotter.pickupDate}
-                            status={statusMap[plotter.status] || 'pending'}
+                            status={PLOTTER_STATUS_MAP_REVERSE[plotter.status] as 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'}
                             onStatusChange={(newStatus) => {
-                              handlePlotterStatusChange(plotter.id, reverseStatusMap[newStatus]);
+                              handlePlotterStatusChange(
+                                plotter.id,
+                                (Object.keys(PLOTTER_STATUS_MAP_REVERSE) as Array<keyof typeof PLOTTER_STATUS_MAP_REVERSE>)
+                                  .find(k => PLOTTER_STATUS_MAP_REVERSE[k] === newStatus) || 'PENDING'
+                              );
                             }}
                           />
                         );
