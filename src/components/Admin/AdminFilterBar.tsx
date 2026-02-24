@@ -1,5 +1,5 @@
 import searchIcon from '../../assets/admin/glass.svg';
-import calendarIcon from '../../assets/admin/calandar.svg';
+import calendarIcon from '../../assets/admin/calendar.svg';
 
 interface AdminFilterBarProps {
   // 상태 필터
@@ -34,7 +34,7 @@ export default function AdminFilterBar({
   searchPlaceholder = "이름, 학과, 물품 검색"
 }: AdminFilterBarProps) {
   return (
-    <div className="relative bg-white border border-[#c3c3c3] rounded-[10px] h-[117px] px-[37px] py-[19px]">
+    <div className="relative w-full bg-white border border-[#c3c3c3] rounded-[10px] h-[117px] px-[37px] py-[19px]">
       {/* 상단: 상태 필터 버튼들 */}
       <div className="flex gap-[11px] mb-[14px]">
         {statusOptions.map((status) => (

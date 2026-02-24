@@ -7,6 +7,7 @@ export interface RentalItem {
   user: {
     name: string;
     studentId: string;
+    department?: string;
   };
   startDate: string;
   endDate: string;

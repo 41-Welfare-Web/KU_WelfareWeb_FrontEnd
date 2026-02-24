@@ -35,9 +35,9 @@ const AdminPlotterFilterBar: React.FC<AdminPlotterFilterBarProps> = ({
   };
 
   return (
-    <div className="relative w-[1089px] h-[77px]">
+    <div className="relative w-full h-[77px]">
       {/* Background container */}
-      <div className="absolute bg-white border border-[#c3c3c3] border-solid h-[77px] left-0 rounded-[10px] top-0 w-[1089px]" />
+      <div className="absolute bg-white border border-[#c3c3c3] border-solid h-[77px] left-0 rounded-[10px] top-0 w-full" />
       
       {/* Filter icon */}
       <div className="absolute left-[16px] w-[32px] h-[32px] top-[23px]">
