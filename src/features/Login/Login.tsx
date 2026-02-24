@@ -2,27 +2,13 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import Header from "./components/Header";
-
-const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ??
-  "https://rentalweb-production.up.railway.app";
-
-type LoginResponse = {
-  user: {
-    id: string;
-    username: string;
-    name: string;
-    role: "USER" | "ADMIN" | string;
-  };
-  accessToken: string;
-  refreshToken: string;
-};
+import { loginApi } from "../../api/login/loginApi";
 
 export default function Login() {
   const navigate = useNavigate();
   const auth = useAuth();
 
-  const [username, setUsername] = useState(""); // 학번(로그인 아이디)
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -38,30 +24,10 @@ export default function Login() {
     try {
       setLoading(true);
 
-      const res = await fetch(`${BASE_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username.trim(), password }),
+      const result = await loginApi({
+        username: username.trim(),
+        password,
       });
-
-      // 응답이 JSON일 거라 가정하되, 실패도 대비
-      const text = await res.text();
-      let data: any = null;
-      try {
-        data = text ? JSON.parse(text) : null;
-      } catch {
-        data = text;
-      }
-
-      if (!res.ok) {
-        const msg =
-          typeof data === "string"
-            ? data
-            : (data?.message ?? `로그인 실패 (HTTP ${res.status})`);
-        throw new Error(msg);
-      }
-
-      const result = data as LoginResponse;
 
       auth.login({
         user: result.user,
