@@ -1,27 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "./components/Header";
-import { getCommonMetadata } from "../../services/commonApi";
+import Header from "../../components/Login/Header";
+import { getDepartments } from "../../api/signup/signupApi";
+import {
+  requestSignupVerification,
+  verifySignupCodeApi,
+  registerApi,
+} from "../../api/signup/signupApi";
 
 type Unit = { id: number; name: string };
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ??
-  "https://rentalweb-production.up.railway.app";
-
-type ApiErrorBody = {
-  errorCode?: string;
-  message?: string;
-};
-
-async function readErrorMessage(res: Response) {
-  try {
-    const data = (await res.json()) as ApiErrorBody;
-    return data?.message || data?.errorCode || "요청에 실패했어요.";
-  } catch {
-    return "요청에 실패했어요.";
-  }
-}
 
 export default function Register() {
   const navigate = useNavigate();
@@ -51,10 +38,8 @@ export default function Register() {
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const metadata = await getCommonMetadata();
-        if (metadata.departments) {
-          setUnits(metadata.departments);
-        }
+        const departments = await getDepartments();
+        setUnits(departments);
       } catch (error) {
         console.error("메타데이터 로드 실패:", error);
         // 에러 시 빈 배열 유지
@@ -87,7 +72,6 @@ export default function Register() {
     lastVerifyKeyRef.current = key;
 
     void verifySignupCode(pn, code);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [verificationCode]);
 
   const onSendVerification = async () => {
@@ -103,30 +87,15 @@ export default function Register() {
       setLoading(true);
       setIsVerified(false);
       setServerIssuedCode("");
-      setVerificationCode(""); // 재요청 시 입력 코드 초기화
+      setVerificationCode("");
 
-      const res = await fetch(
-        `${API_BASE_URL}/api/auth/request-signup-verification`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phoneNumber }),
-        },
-      );
+      const data = await requestSignupVerification({ phoneNumber });
 
-      if (!res.ok) {
-        const msg = await readErrorMessage(res);
-        setErrorMsg(msg);
-        return;
-      }
-
-      const data = (await res.json()) as { message: string; code: string };
-      // 개발 편의: 서버가 code 내려줌 (UI 바꾸지 않으려 표시 안 함)
       setServerIssuedCode(data.code || "");
-      // 필요하면 콘솔로만 확인
-      // console.log("signup verification code:", data.code);
-    } catch {
-      setErrorMsg("인증번호 발송에 실패했어요. 다시 시도해 주세요.");
+    } catch (e: any) {
+      setErrorMsg(
+        e?.message ?? "인증번호 발송에 실패했어요. 다시 시도해 주세요.",
+      );
     } finally {
       setLoading(false);
     }
@@ -138,28 +107,16 @@ export default function Register() {
     try {
       setVerifying(true);
 
-      const res = await fetch(`${API_BASE_URL}/api/auth/verify-signup-code`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phoneNumber,
-          verificationCode: code,
-        }),
+      const data = await verifySignupCodeApi({
+        phoneNumber,
+        verificationCode: code,
       });
 
-      if (!res.ok) {
-        const msg = await readErrorMessage(res);
-        setIsVerified(false);
-        setErrorMsg(msg); // 예: INVALID_CODE
-        return;
-      }
-
-      const data = (await res.json()) as { success: boolean; message: string };
       setIsVerified(Boolean(data.success));
       if (!data.success) setErrorMsg(data.message || "인증에 실패했어요.");
-    } catch {
+    } catch (e: any) {
       setIsVerified(false);
-      setErrorMsg("인증 확인 중 오류가 발생했어요.");
+      setErrorMsg(e?.message ?? "인증 확인 중 오류가 발생했어요.");
     } finally {
       setVerifying(false);
     }
@@ -168,7 +125,6 @@ export default function Register() {
   const onSignUp = async () => {
     setErrorMsg("");
 
-    // API 명세 필수값 검증 (UI는 그대로, 로직만)
     if (!username.trim()) return setErrorMsg("아이디를 입력해 주세요.");
     if (!password.trim()) return setErrorMsg("비밀번호를 입력해 주세요.");
     if (!name.trim()) return setErrorMsg("이름을 입력해 주세요.");
@@ -182,43 +138,41 @@ export default function Register() {
     try {
       setLoading(true);
 
-      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: username.trim(),
-          password,
-          name: name.trim(),
-          studentId: studentNo.trim(),
-          phoneNumber: phone.trim(),
-          department: selectedUnitName, // 명세: department = 소속 단위(문자열)
-          verificationCode: verificationCode.trim(),
-        }),
+      const data = await registerApi({
+        username: username.trim(),
+        password,
+        name: name.trim(),
+        studentId: studentNo.trim(),
+        phoneNumber: phone.trim(),
+        department: selectedUnitName,
+        verificationCode: verificationCode.trim(),
       });
 
-      if (!res.ok) {
-        const msg = await readErrorMessage(res);
-        setErrorMsg(msg);
-        return;
-      }
-
-      const data = (await res.json()) as {
-        user: { id: string; username: string; name: string; role: string };
-        accessToken: string;
-        refreshToken: string;
-      };
-
-      // 토큰 저장 (프로젝트 방식에 맞게 바꿔도 됨)
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
 
       navigate("/login");
-    } catch {
-      setErrorMsg("회원가입에 실패했어요. 입력값을 확인해 주세요.");
+    } catch (e: any) {
+      setErrorMsg(
+        e?.message ?? "회원가입에 실패했어요. 입력값을 확인해 주세요.",
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  // 전화번호 자동 하이픈 함수
+  function formatPhoneNumber(value: string) {
+    const numbers = value.replace(/\D/g, "");
+
+    if (numbers.length <= 3) return numbers;
+    if (numbers.length <= 7)
+      return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+    return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(
+      7,
+      11,
+    )}`;
+  }
 
   return (
     <>
@@ -349,17 +303,19 @@ export default function Register() {
                 <div className="flex gap-3">
                   <input
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) =>
+                      setPhone(formatPhoneNumber(e.target.value))
+                    }
                     type="tel"
                     inputMode="numeric"
-                    placeholder="01012345678"
+                    placeholder="010-1234-5678"
                     className="flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                   />
                   <button
                     type="button"
                     onClick={onSendVerification}
                     disabled={loading}
-                    className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-black text-white text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-60"
+                    className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-60"
                   >
                     인증
                   </button>
