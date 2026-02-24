@@ -151,22 +151,22 @@ export default function AvailabilityCalendar({
   };
 
   return (
-    <div className="w-full rounded-2xl bg-white shadow-[0_10px_24px_rgba(0,0,0,0.10)] border border-black/10 p-4 md:p-5">
+    <div className="w-full rounded-2xl bg-[#F5F5F5] shadow-[0_10px_24px_rgba(0,0,0,0.10)] border border-black/10 p-4 md:p-5">
       <div className="flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={goPrev}
-          className="h-10 w-10 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-white hover:bg-black/10 flex items-center justify-center"
           aria-label="이전 달"
         >
           ‹
         </button>
 
         <div className="flex items-center gap-2">
-          <div className="px-3 py-2 rounded-xl bg-black/5 font-semibold">
+          <div className="px-3 py-2 rounded-xl bg-white font-semibold">
             {viewMonth + 1}월
           </div>
-          <div className="px-3 py-2 rounded-xl bg-black/5 font-semibold">
+          <div className="px-3 py-2 rounded-xl bg-white font-semibold">
             {viewYear}
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function AvailabilityCalendar({
         <button
           type="button"
           onClick={goNext}
-          className="h-10 w-10 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-white hover:bg-black/10 flex items-center justify-center"
           aria-label="다음 달"
         >
           ›
@@ -237,7 +237,7 @@ export default function AvailabilityCalendar({
                 </div>
 
                 {inMonth && available != null && (
-                  <div className="text-[8px] font-semibold px-2 py-1 rounded-full">
+                  <div className="whitespace-nowrap text-[8px] font-semibold px-2 py-1 rounded-full">
                     {available}개
                   </div>
                 )}
@@ -253,16 +253,10 @@ export default function AvailabilityCalendar({
             <div className="text-[13px] text-black/60">대여일</div>
             <div className="mt-1 text-[18px] font-bold">{startDate ?? "—"}</div>
           </div>
-          <div className="text-center">
+          <div className="text-center border-l border-black">
             <div className="text-[13px] text-black/60">반납일</div>
             <div className="mt-1 text-[18px] font-bold">{endDate ?? "—"}</div>
           </div>
-        </div>
-
-        <div className="mt-3 text-[12px] text-black/50 text-center">
-          요청 수량{" "}
-          <span className="font-semibold text-black/80">{requestedQty}</span>개
-          기준
         </div>
       </div>
     </div>

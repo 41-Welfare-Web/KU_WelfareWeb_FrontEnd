@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import CartSidebar from "./CartSidebar";
 import CartDrawer from "./CartDrawer";
@@ -19,6 +20,7 @@ type Props = {
 export default function CartPanel({ items, onGoCheckout }: Props) {
   const isDesktop = useMediaQuery("(min-width: 1280px)");
   const [open, setOpen] = useState(false);
+  const { isLoggedIn } = useAuth();
 
   if (isDesktop) {
     return <CartSidebar items={items} onGoCheckout={onGoCheckout} />;
@@ -48,7 +50,7 @@ export default function CartPanel({ items, onGoCheckout }: Props) {
               text-white text-[12px] font-bold
             "
           >
-            {totalCount}
+            {isLoggedIn ? totalCount : 0}
           </span>
         )}
       </button>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Calendar from "./Calendar";
+import calendar from "../../assets/rental/calendar.svg";
 
 type Props = {
   itemId: number;
@@ -52,15 +53,10 @@ export default function ItemCalendarPlaceholder({
   };
 
   return (
-    <div
-      className={[
-        "rounded-2xl border border-black/10 bg-white p-4",
-        className ?? "",
-      ].join(" ")}
-    >
+    <div className={["rounded-2xl bg-white p-4", className ?? ""].join(" ")}>
       {/* 타이틀 */}
-      <div className="flex items-center gap-2 text-[14px] font-semibold text-[#410F07]">
-        <span>🗓️</span>
+      <div className="flex items-center gap-2 text-[20px] text-[#410F07]">
+        <img src={calendar} alt="캘린더" />
         <span>월간 재고 현황</span>
       </div>
 
@@ -76,7 +72,7 @@ export default function ItemCalendarPlaceholder({
 
       {/* 수량 선택 */}
       <div className="mt-5 flex items-center justify-between">
-        <div className="text-[13px] text-black/60">대여 수량</div>
+        <div className="text-[18px] text-[#410F07]">대여 수량</div>
         <div className="flex items-center gap-2">
           <button
             type="button"

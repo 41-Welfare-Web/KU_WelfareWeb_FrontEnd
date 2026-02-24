@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import ItemCalendarPlaceholder from "./ItemCalendar";
 import type { ItemDetail } from "../../api/rental/types";
 import { getItemDetail } from "../../api/rental/rentalApi";
+import guide from "../../assets/rental/guide.svg";
 
 type Props = {
   open: boolean;
@@ -16,6 +19,9 @@ export default function ItemDetailModal({
   onClose,
   onAddToCart,
 }: Props) {
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ItemDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -140,28 +146,9 @@ export default function ItemDetailModal({
               )}
 
               {data && (
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                  {/* left */}
-                  <div className="min-w-0 lg:col-span-2">
-                    <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-black/5 flex items-center justify-center">
-                      {data.imageUrl ? (
-                        <img
-                          src={data.imageUrl}
-                          alt={data.name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="text-sm text-black/50">이미지 없음</div>
-                      )}
-                    </div>
-
-                    <div className="mt-4 rounded-2xl bg-black/5 p-4 text-sm text-black/60">
-                      사용법 가이드 영상 / 이미지 슬라이더 자리
-                    </div>
-                  </div>
-
-                  {/* right */}
-                  <div className="min-w-0 lg:col-span-3">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 pt-5">
+                  {/* 제목 */}
+                  <div className="min-w-0 order-1 lg:order-none lg:col-start-3 lg:col-span-3">
                     <div className="text-[13px] font-semibold text-[#FE6949]">
                       {data.category?.name}
                     </div>
@@ -174,20 +161,42 @@ export default function ItemDetailModal({
                         {data.description}
                       </div>
                     )}
+                  </div>
 
-                    {/* <div className="mt-4 flex flex-wrap gap-2 text-[12px] text-black/60">
-                      <span className="rounded-full bg-black/5 px-3 py-1">
-                        코드: {data.itemCode}
-                      </span>
-                      <span className="rounded-full bg-black/5 px-3 py-1">
-                        대여횟수: {data.rentalCount}
-                      </span>
-                      <span className="rounded-full bg-black/5 px-3 py-1">
-                        재고: {data.currentStock}/{data.totalQuantity}
-                      </span>
-                    </div> */}
+                  {/* 왼쪽: 사진&영상 */}
+                  <div className="min-w-0 order-2 lg:order-none lg:col-start-1 lg:col-span-2 lg:row-start-1 lg:row-span-2">
+                    <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-black/5 flex items-center justify-center">
+                      {data.imageUrl ? (
+                        <img
+                          src={data.imageUrl}
+                          alt={data.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-sm text-black/50">이미지 없음</div>
+                      )}
+                    </div>
 
-                    <div className="mt-5">
+                    <div className="flex justify-center items-center rounded-[10px] bg-black text-white text-[12px] mt-4 w-20 h-6">
+                      총 {data.totalQuantity}개 보유
+                    </div>
+
+                    <div className="mt-2">
+                      <div className="flex flex-row gap-2">
+                        <img src={guide} alt="가이드 영상" />
+                        <span className="text-[#410F07] text-[20px]">
+                          사용법 가이드 영상
+                        </span>
+                      </div>
+                      <div className="mt-4 rounded-2xl bg-black/5 p-4 text-sm text-black/60">
+                        사용법 가이드 영상
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 캘린더 */}
+                  <div className="min-w-0 order-3 lg:order-none lg:col-start-3 lg:col-span-3">
+                    <div className="mt-2">
                       <ItemCalendarPlaceholder
                         itemId={data.id}
                         maxQuantity={data.totalQuantity}
@@ -199,7 +208,15 @@ export default function ItemDetailModal({
 
                     <button
                       type="button"
-                      onClick={() => onAddToCart?.(data)}
+                      onClick={() => {
+                        if (!isLoggedIn) {
+                          alert("로그인이 필요한 서비스입니다.");
+                          onClose();
+                          navigate("/login");
+                          return;
+                        }
+                        onAddToCart?.(data);
+                      }}
                       className="mt-4 w-full rounded-xl bg-[#FE6949] py-3 text-[15px] font-semibold text-white"
                     >
                       장바구니에 담기
@@ -209,7 +226,6 @@ export default function ItemDetailModal({
               )}
             </div>
           </div>
-          {/* ✅ /scroll 영역 */}
         </div>
       </div>
     </div>
