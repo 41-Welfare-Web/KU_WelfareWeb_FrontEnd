@@ -1,5 +1,5 @@
 
-import React, { useState, useImperativeHandle, forwardRef } from "react";
+import { useState, useImperativeHandle, forwardRef } from "react";
 import RejectReasonModal from "../ui/RejectReasonModal";
 
 export interface PlotterRejectHandlerProps {

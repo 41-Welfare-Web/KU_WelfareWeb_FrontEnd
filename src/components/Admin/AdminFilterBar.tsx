@@ -1,5 +1,4 @@
 import searchIcon from '../../assets/admin/glass.svg';
-import calendarIcon from '../../assets/admin/calendar.svg';
 
 interface AdminFilterBarProps {
   // 상태 필터
