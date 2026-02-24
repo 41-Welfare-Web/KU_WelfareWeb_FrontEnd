@@ -22,6 +22,7 @@ import {
   addToCart,
   getMyCart,
   deleteCartItem,
+  updateCartItem,
 } from "../../api/rental/cart/cartApi";
 import { toUiCartItems } from "../../api/rental/cart/mapper";
 import type { UiCartItem } from "../../api/rental/cart/types";
@@ -215,10 +216,25 @@ export default function RentalList() {
           open={detailOpen}
           itemId={detailItemId}
           onClose={() => setDetailOpen(false)}
-          onAddToCart={async (item) => {
+          onAddToCart={async (item, picked) => {
             try {
-              await addToCart({ itemId: item.id, quantity: 1 });
-              await fetchCart(); // 담은 후 다시 조회해서 cartItems 갱신
+              // 1) POST: 장바구니 추가 (수량 포함)
+              const added = await addToCart({
+                itemId: item.id,
+                quantity: picked.quantity,
+              });
+
+              // 2) PUT: 날짜까지 저장 (둘 다 선택된 경우만)
+              if (picked.startDate && picked.endDate) {
+                await updateCartItem(added.id, {
+                  quantity: picked.quantity,
+                  startDate: picked.startDate,
+                  endDate: picked.endDate,
+                });
+              }
+
+              // 3) 다시 조회해서 패널 갱신
+              await fetchCart();
               setDetailOpen(false);
             } catch (e) {
               console.error("장바구니 담기 실패:", e);

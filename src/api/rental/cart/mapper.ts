@@ -11,7 +11,7 @@ export function toUiCartItems(data: CartGetResponse): UiCartItem[] {
     itemId: row.item?.id ?? row.itemId,
     name: row.item?.name ?? "(이름 없음)",
     categoryName: row.item?.category?.name,
-    count: row.quantity ?? 0,
+    count: row.quantity,
     imageUrl: row.item?.imageUrl ?? undefined,
     startDate: toYmdFromIso(row.startDate),
     endDate: toYmdFromIso(row.endDate),

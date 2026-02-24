@@ -60,6 +60,28 @@ export default function RentalCart() {
   const selected =
     cartItems.find((x) => x.cartId === selectedCartId) ?? cartItems[0] ?? null;
 
+  useEffect(() => {
+    // 아직 선택된 게 없고, 장바구니에 아이템이 있으면 첫 번째를 기본 선택
+    if (selectedCartId == null && cartItems.length > 0) {
+      setSelectedCartId(cartItems[0].cartId);
+      return;
+    }
+
+    // 선택된 항목이 삭제되어 목록에 없으면 첫 번째로 다시 선택
+    if (
+      selectedCartId != null &&
+      cartItems.length > 0 &&
+      !cartItems.some((it) => it.cartId === selectedCartId)
+    ) {
+      setSelectedCartId(cartItems[0].cartId);
+    }
+
+    // 장바구니가 비면 선택 해제
+    if (cartItems.length === 0 && selectedCartId != null) {
+      setSelectedCartId(null);
+    }
+  }, [cartItems, selectedCartId]);
+
   // row 상태 저장 (cartId -> "WAIT"|"OK"|"NO")
   const [statusByCartId, setStatusByCartId] = useState<
     Record<number, "WAIT" | "OK" | "NO">
@@ -127,24 +149,35 @@ export default function RentalCart() {
     const it = cartItems.find((x) => x.cartId === cartId);
     if (!it) return;
 
-    // 수량 저장(PUT)
-    await updateCartItem(cartId, {
-      quantity: nextQty,
-      startDate: it.startDate,
-      endDate: it.endDate,
-    });
+    try {
+      const updated = await updateCartItem(cartId, {
+        quantity: nextQty,
+        startDate: it.startDate,
+        endDate: it.endDate,
+      });
 
-    await fetchCart();
+      // 서버 응답이 정확하니까 이걸로 즉시 반영
+      patchLocalCart(cartId, {
+        count: updated.quantity,
+        startDate: updated.startDate?.slice(0, 10) ?? null,
+        endDate: updated.endDate?.slice(0, 10) ?? null,
+      });
 
-    // 기간이 이미 있으면 수량 변경 후 가능/불가 재판정
-    if (it.startDate && it.endDate) {
-      const ok = await checkEnough(
-        it.itemId,
-        it.startDate,
-        it.endDate,
-        nextQty,
-      );
-      setStatusByCartId((m) => ({ ...m, [cartId]: ok ? "OK" : "NO" }));
+      // 기간이 있으면 재검증
+      if (it.startDate && it.endDate) {
+        const ok = await checkEnough(
+          it.itemId,
+          it.startDate,
+          it.endDate,
+          nextQty,
+        );
+        setStatusByCartId((m) => ({ ...m, [cartId]: ok ? "OK" : "NO" }));
+      }
+    } catch (e) {
+      console.error(e);
+      alert("수량 저장에 실패했어요.");
+      // 실패 시에만 서버로 다시 동기화
+      await fetchCart();
     }
   };
 

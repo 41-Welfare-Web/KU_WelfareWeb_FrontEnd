@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Calendar from "./Calendar";
 import calendar from "../../assets/rental/calendar.svg";
 
@@ -13,7 +13,7 @@ type Props = {
   }) => void;
 };
 
-export default function ItemCalendarPlaceholder({
+export default function ItemCalendar({
   itemId,
   maxQuantity,
   className,
@@ -27,6 +27,15 @@ export default function ItemCalendarPlaceholder({
     startDate: null,
     endDate: null,
   });
+
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    onChangeRef.current?.({ ...range, quantity });
+  }, [range.startDate, range.endDate, quantity]);
 
   const increase = () => {
     setQuantity((prev) => {
