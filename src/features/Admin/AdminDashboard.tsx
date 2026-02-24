@@ -62,7 +62,7 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRentals = async () => {
+  const fetchRentals = async (customStartDate?: string, customEndDate?: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -72,7 +72,6 @@ function AdminDashboard() {
         page: 1,
         pageSize: 100
       };
-      
       // 상태 필터 적용
       if (rentalStatusFilter !== '전체 보기') {
         const statusMap: Record<string, string> = {
@@ -84,6 +83,11 @@ function AdminDashboard() {
         };
         params.status = statusMap[rentalStatusFilter];
       }
+      // 날짜 필터 적용
+      const start = customStartDate !== undefined ? customStartDate : rentalStartDate;
+      const end = customEndDate !== undefined ? customEndDate : rentalEndDate;
+      if (start) params.startDate = start;
+      if (end) params.endDate = end;
 
       const response = await axios.get(`${API_BASE_URL}/api/rentals`, {
         params,
@@ -91,7 +95,6 @@ function AdminDashboard() {
           Authorization: `Bearer ${token}`
         }
       });
-      
       setRentalData(response.data.rentals || []);
     } catch (err: any) {
       console.error('대여 목록 조회 실패:', err);
@@ -206,7 +209,7 @@ function AdminDashboard() {
   };
 
   const handleRentalSearch = () => {
-    fetchRentals();
+    fetchRentals(rentalStartDate, rentalEndDate);
   };
 
   const handlePlotterSearch = () => {
@@ -271,14 +274,26 @@ function AdminDashboard() {
   };
 
   const filteredRentalData = rentalData.filter(item => {
-    if (!rentalSearchQuery.trim()) return true;
+    // 날짜 필터
+    let dateMatch = true;
+    if (rentalStartDate) {
+      const itemStart = item.startDate.slice(0, 10);
+      dateMatch = dateMatch && (itemStart >= rentalStartDate);
+    }
+    if (rentalEndDate) {
+      const itemEnd = item.endDate.slice(0, 10);
+      dateMatch = dateMatch && (itemEnd <= rentalEndDate);
+    }
+    // 검색어 필터
+    if (!rentalSearchQuery.trim()) return dateMatch;
     const query = rentalSearchQuery.toLowerCase();
-    return (
+    const searchMatch = (
       item.user.name.toLowerCase().includes(query) ||
       item.user.studentId.includes(query) ||
       item.itemSummary.toLowerCase().includes(query) ||
       `RENT-${item.id}`.toLowerCase().includes(query)
     );
+    return dateMatch && searchMatch;
   });
 
   const filteredPlotterData = plotterData.filter(item => {

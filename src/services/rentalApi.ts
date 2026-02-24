@@ -40,12 +40,16 @@ export async function getRentals(params?: {
   status?: string;
   page?: number;
   pageSize?: number;
+  startDate?: string;
+  endDate?: string;
 }): Promise<RentalsResponse> {
   const queryParams = new URLSearchParams();
   if (params?.userId) queryParams.set("userId", params.userId);
   if (params?.status) queryParams.set("status", params.status);
   if (params?.page) queryParams.set("page", params.page.toString());
   if (params?.pageSize) queryParams.set("pageSize", params.pageSize.toString());
+  if (params?.startDate) queryParams.set("startDate", params.startDate);
+  if (params?.endDate) queryParams.set("endDate", params.endDate);
 
   const queryString = queryParams.toString();
   const url = `${API_BASE_URL}/api/rentals${queryString ? `?${queryString}` : ""}`;
