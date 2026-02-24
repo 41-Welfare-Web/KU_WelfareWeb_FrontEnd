@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import { type Category } from "../../api/rental/types";
 import ItemCard from "../../components/Rental/ItemCard";
@@ -6,7 +7,6 @@ import CartPanel from "../../components/Rental/CartPanel";
 import Footer from "../../components/Footer";
 
 import searchImg from "../../assets/rental/search.svg";
-import exampleImg from "../../assets/rental/exampleImg.svg";
 import type { Item } from "../../api/rental/types";
 
 import type { SortBy, SortOrder } from "../../api/rental/types";
@@ -17,7 +17,19 @@ import { getItems, getCategories } from "../../api/rental/rentalApi";
 // 물품 세부사항
 import ItemDetailModal from "../../components/Rental/ItemDetailModal";
 
+// 장바구니
+import {
+  addToCart,
+  getMyCart,
+  deleteCartItem,
+  updateCartItem,
+} from "../../api/rental/cart/cartApi";
+import { toUiCartItems } from "../../api/rental/cart/mapper";
+import type { UiCartItem } from "../../api/rental/cart/types";
+
 export default function RentalList() {
+  const navigate = useNavigate();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
     null,
@@ -39,11 +51,40 @@ export default function RentalList() {
     setDetailOpen(true);
   };
 
-  // 장바구니 UI (서버 연동 전)
-  const [cartItems] = useState<
-    { id: number; name: string; count: number; imageUrl?: string }[]
-  >([{ id: 1, name: "행사용 천막", count: 1, imageUrl: exampleImg }]);
+  // 장바구니
+  const [cartItems, setCartItems] = useState<UiCartItem[]>([]);
+  const [, setCartLoading] = useState(false);
 
+  const fetchCart = async () => {
+    const data = await getMyCart();
+    setCartItems(toUiCartItems(data));
+  };
+
+  const handleRemoveCartItem = async (cartId: number) => {
+    try {
+      await deleteCartItem(cartId);
+      await fetchCart();
+    } catch (e) {
+      console.error("장바구니 삭제 실패:", e);
+      alert("장바구니에서 삭제에 실패했어요.");
+    }
+  };
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        setCartLoading(true);
+        await fetchCart();
+      } catch (e) {
+        console.error("장바구니 불러오기 실패:", e);
+      } finally {
+        setCartLoading(false);
+      }
+    };
+    run();
+  }, []);
+
+  // 카테고리(분류) 목록 조회
   useEffect(() => {
     const run = async () => {
       try {
@@ -79,8 +120,7 @@ export default function RentalList() {
   }, [category_ids, search, sortBy, sortOrder]);
 
   const goCheckout = () => {
-    // TODO: navigate("/rental/apply") 이런 식으로 연결
-    alert("대여 신청 페이지로 이동!");
+    navigate("/rental/cart");
   };
 
   return (
@@ -165,17 +205,41 @@ export default function RentalList() {
             </section>
           </main>
 
-          <CartPanel items={cartItems} onGoCheckout={goCheckout} />
+          <CartPanel
+            items={cartItems}
+            onGoCheckout={goCheckout}
+            onRemove={handleRemoveCartItem}
+          />
         </div>
 
         <ItemDetailModal
           open={detailOpen}
           itemId={detailItemId}
           onClose={() => setDetailOpen(false)}
-          onAddToCart={(item) => {
-            // TODO: cartItems set 로직 연결
-            console.log("add to cart:", item);
-            setDetailOpen(false);
+          onAddToCart={async (item, picked) => {
+            try {
+              // 1) POST: 장바구니 추가 (수량 포함)
+              const added = await addToCart({
+                itemId: item.id,
+                quantity: picked.quantity,
+              });
+
+              // 2) PUT: 날짜까지 저장 (둘 다 선택된 경우만)
+              if (picked.startDate && picked.endDate) {
+                await updateCartItem(added.id, {
+                  quantity: picked.quantity,
+                  startDate: picked.startDate,
+                  endDate: picked.endDate,
+                });
+              }
+
+              // 3) 다시 조회해서 패널 갱신
+              await fetchCart();
+              setDetailOpen(false);
+            } catch (e) {
+              console.error("장바구니 담기 실패:", e);
+              alert("장바구니 담기에 실패했어요.");
+            }
           }}
         />
       </div>

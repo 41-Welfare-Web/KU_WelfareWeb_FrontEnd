@@ -5,12 +5,14 @@ type Props = {
   open: boolean;
   onClose: () => void;
   items: {
-    id: string | number;
+    cartId: number;
+    itemId: number;
     name: string;
     count: number;
     imageUrl?: string;
   }[];
   onGoCheckout: () => void;
+  onRemove?: (cartId: number) => void;
 };
 
 export default function CartDrawer({
@@ -18,6 +20,7 @@ export default function CartDrawer({
   onClose,
   items,
   onGoCheckout,
+  onRemove,
 }: Props) {
   useEffect(() => {
     if (!open) return;
@@ -52,6 +55,7 @@ export default function CartDrawer({
         <CartContent
           items={items}
           onGoCheckout={onGoCheckout}
+          onRemove={onRemove}
           headerRight={
             <button
               type="button"

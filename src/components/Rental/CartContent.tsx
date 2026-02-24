@@ -5,7 +5,8 @@ import cart from "../../assets/rental/cart.svg";
 import cancel from "../../assets/rental/cancel.svg";
 
 type CartItem = {
-  id: string | number;
+  cartId: number;
+  itemId: number;
   name: string;
   count: number;
   imageUrl?: string;
@@ -15,12 +16,14 @@ type Props = {
   items: CartItem[];
   onGoCheckout: () => void;
   headerRight?: ReactNode;
+  onRemove?: (cartId: number) => void;
 };
 
 export default function CartContent({
   items,
   onGoCheckout,
   headerRight,
+  onRemove,
 }: Props) {
   const totalCount = items.reduce((sum, it) => sum + it.count, 0);
   const { isLoggedIn } = useAuth();
@@ -50,7 +53,7 @@ export default function CartContent({
           <div className="space-y-3">
             {items.map((it) => (
               <div
-                key={it.id}
+                key={it.cartId}
                 className="flex items-center gap-3 rounded-xl border border-black/10 bg-white p-3 shadow-[0_2px_2px_rgba(0,0,0,0.25)]"
               >
                 <div className="h-10 w-10 overflow-hidden rounded-full bg-[#F5F5F5] border border-[#F72]">
@@ -68,7 +71,11 @@ export default function CartContent({
                     <div className="text-[18px] font-semibold text-[#410F07]">
                       {it.name}
                     </div>
-                    <button type="button" className="mr-1">
+                    <button
+                      type="button"
+                      className="mr-1"
+                      onClick={() => onRemove?.(it.cartId)}
+                    >
                       <img className="w-3 h-3" src={cancel} alt="취소" />
                     </button>
                   </div>

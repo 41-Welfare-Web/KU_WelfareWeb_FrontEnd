@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import ItemCalendarPlaceholder from "./ItemCalendar";
+import ItemCalendar from "./ItemCalendar";
 import type { ItemDetail } from "../../api/rental/types";
 import { getItemDetail } from "../../api/rental/rentalApi";
 import guide from "../../assets/rental/guide.svg";
@@ -10,7 +10,14 @@ type Props = {
   open: boolean;
   itemId: number | null;
   onClose: () => void;
-  onAddToCart?: (item: ItemDetail) => void;
+  onAddToCart?: (
+    item: ItemDetail,
+    picked: {
+      startDate: string | null;
+      endDate: string | null;
+      quantity: number;
+    },
+  ) => void;
 };
 
 export default function ItemDetailModal({
@@ -28,6 +35,16 @@ export default function ItemDetailModal({
 
   const boxRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  // 캘린더에서 고른 값 저장
+  const [picked, setPicked] = useState<{
+    startDate: string | null;
+    endDate: string | null;
+    quantity: number;
+  }>({ startDate: null, endDate: null, quantity: 1 });
+
+  // 담기 버튼 로딩(중복 클릭 방지)
+  const [adding] = useState(false);
 
   // ESC 닫기
   useEffect(() => {
@@ -64,6 +81,12 @@ export default function ItemDetailModal({
       document.body.style.overflow = prev;
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    // 모달 열릴 때 선택값 초기화
+    setPicked({ startDate: null, endDate: null, quantity: 1 });
+  }, [open, itemId]);
 
   // 상세 로드
   useEffect(() => {
@@ -197,11 +220,11 @@ export default function ItemDetailModal({
                   {/* 캘린더 */}
                   <div className="min-w-0 order-3 lg:order-none lg:col-start-3 lg:col-span-3">
                     <div className="mt-2">
-                      <ItemCalendarPlaceholder
+                      <ItemCalendar
                         itemId={data.id}
                         maxQuantity={data.totalQuantity}
                         onChange={({ startDate, endDate, quantity }) => {
-                          console.log(startDate, endDate, quantity);
+                          setPicked({ startDate, endDate, quantity });
                         }}
                       />
                     </div>
@@ -215,11 +238,12 @@ export default function ItemDetailModal({
                           navigate("/login");
                           return;
                         }
-                        onAddToCart?.(data);
+                        onAddToCart?.(data, picked);
                       }}
-                      className="mt-4 w-full rounded-xl bg-[#FE6949] py-3 text-[15px] font-semibold text-white"
+                      disabled={adding}
+                      className="mt-4 w-full rounded-xl bg-[#FE6949] py-3 text-[15px] font-semibold text-white disabled:opacity-50"
                     >
-                      장바구니에 담기
+                      {adding ? "담는 중..." : "장바구니에 담기"}
                     </button>
                   </div>
                 </div>

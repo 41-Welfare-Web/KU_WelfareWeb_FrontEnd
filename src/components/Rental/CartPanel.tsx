@@ -6,7 +6,8 @@ import CartDrawer from "./CartDrawer";
 import popCart from "../../assets/rental/popCart.svg";
 
 type CartItem = {
-  id: string | number;
+  cartId: number;
+  itemId: number;
   name: string;
   count: number;
   imageUrl?: string;
@@ -15,15 +16,22 @@ type CartItem = {
 type Props = {
   items: CartItem[];
   onGoCheckout: () => void;
+  onRemove?: (cartId: number) => void;
 };
 
-export default function CartPanel({ items, onGoCheckout }: Props) {
+export default function CartPanel({ items, onGoCheckout, onRemove }: Props) {
   const isDesktop = useMediaQuery("(min-width: 1280px)");
   const [open, setOpen] = useState(false);
   const { isLoggedIn } = useAuth();
 
   if (isDesktop) {
-    return <CartSidebar items={items} onGoCheckout={onGoCheckout} />;
+    return (
+      <CartSidebar
+        items={items}
+        onGoCheckout={onGoCheckout}
+        onRemove={onRemove}
+      />
+    );
   }
 
   const totalCount = items.reduce((sum, item) => sum + item.count, 0);
@@ -63,6 +71,7 @@ export default function CartPanel({ items, onGoCheckout }: Props) {
           setOpen(false);
           onGoCheckout();
         }}
+        onRemove={onRemove}
       />
     </>
   );

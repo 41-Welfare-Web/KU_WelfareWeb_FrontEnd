@@ -10,6 +10,7 @@ import AdminDashboard from "../features/Admin/AdminDashboard";
 import ComponentTest from "../features/ComponentTest/ComponentTest";
 import TestDataPage from "../features/Test/TestDataPage";
 import FindAccount from "../features/Login/FindAccount";
+import RentalCart from "../features/Rental/RentalCart";
 
 export default function AppRouter() {
   return (
@@ -20,9 +21,13 @@ export default function AppRouter() {
       <Route path="/find-account" element={<FindAccount />} />
 
       <Route path="/rental" element={<RentalList />} />
+      <Route path="/rental/cart" element={<RentalCart />} />
+
       <Route path="/plotter" element={<PlotterRequest />} />
       <Route path="/plotter/complete" element={<PlotterComplete />} />
+
       <Route path="/mypage" element={<MyPage />} />
+
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/test" element={<ComponentTest />} />
       <Route path="/test-data" element={<TestDataPage />} />
