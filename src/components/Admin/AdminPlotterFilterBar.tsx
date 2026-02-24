@@ -35,20 +35,17 @@ const AdminPlotterFilterBar: React.FC<AdminPlotterFilterBarProps> = ({
   };
 
   return (
-    <div className="relative w-full h-[77px]">
-      {/* Background container */}
-      <div className="absolute bg-white border border-[#c3c3c3] border-solid h-[77px] left-0 rounded-[10px] top-0 w-full" />
-      
+    <div className="relative w-full h-[77px] flex items-center gap-2 px-6 bg-white border border-[#c3c3c3] rounded-[10px]">
       {/* Filter icon */}
-      <div className="absolute left-[16px] w-[32px] h-[32px] top-[23px]">
-        <img alt="filter" className="absolute block max-w-none w-full h-full" src={filterIcon} />
+      <div className="w-[20px] h-[20px] flex items-center justify-center">
+        <img alt="filter" className="w-[20px] h-[20px]" src={filterIcon} />
       </div>
-      
+
       {/* Status dropdown */}
-      <div className="absolute h-[31px] left-[55px] top-[22px] w-[98px]">
+      <div className="relative h-[31px] w-[98px] flex items-center">
         <button
           onClick={() => setShowDropdown(!showDropdown)}
-          className="absolute bg-white border border-[#a6a6a6] border-solid h-[31px] left-0 rounded-[10px] top-0 w-[98px] flex items-center justify-between px-[9px] cursor-pointer hover:bg-gray-50"
+          className="bg-white border border-[#a6a6a6] border-solid h-[31px] w-[98px] flex items-center justify-between px-[9px] rounded-[10px] cursor-pointer hover:bg-gray-50"
         >
           <span className="font-['Gmarket_Sans'] font-medium text-[15px] text-black">
             {selectedStatus || '전체 상태'}
@@ -77,31 +74,24 @@ const AdminPlotterFilterBar: React.FC<AdminPlotterFilterBarProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Search input area */}
-      <div className="absolute h-[40px] left-[169px] top-[19px] w-[823px]">
-        <div className="absolute bg-[#d9d9d9] h-[40px] left-0 rounded-[10px] top-0 w-[823px]" />
-        
-        {/* Search icon */}
-        <div className="absolute left-[9px] w-[28px] h-[28px] top-[7px]">
-          <img alt="search" className="absolute block max-w-none w-full h-full" src={searchIcon} />
-        </div>
-        
-        {/* Search input */}
+      <div className="flex items-center bg-[#d9d9d9] rounded-[10px] h-[40px] px-3 flex-1 min-w-0 ml-2">
+        <img alt="search" className="block w-[20px] h-[20px] mr-2" src={searchIcon} />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchQueryChange(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder={searchPlaceholder}
-          className="absolute left-[44px] top-0 h-[40px] w-[770px] bg-transparent border-none outline-none font-['HanbatGothic'] font-medium text-[20px] text-black placeholder:text-[#8e8e8e] tracking-[0.6px]"
+          className="flex-1 bg-transparent border-none outline-none font-['HanbatGothic'] font-medium text-[20px] text-black placeholder:text-[#8e8e8e] tracking-[0.6px] min-w-0"
         />
       </div>
-      
+
       {/* Search button */}
       <button
         onClick={onSearch}
-        className="absolute h-[40px] left-[1006px] top-[19px] w-[69px] bg-black rounded-[10px] flex items-center justify-center cursor-pointer hover:bg-gray-800 transition-colors"
+        className="h-[40px] w-[69px] bg-black rounded-[10px] flex items-center justify-center cursor-pointer hover:bg-gray-800 transition-colors"
       >
         <span className="font-['HanbatGothic'] font-medium text-[20px] text-white tracking-[0.6px]">
           검색

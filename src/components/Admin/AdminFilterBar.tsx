@@ -70,7 +70,7 @@ export default function AdminFilterBar({
           </div>
 
           {/* 구분자 */}
-          <span className="text-[30px] font-['Inter'] font-bold text-black">~</span>
+          <span className="text-[30px] font-['Inter '] font-bold text-black">~</span>
 
           {/* 종료일 */}
           <div className="relative">
