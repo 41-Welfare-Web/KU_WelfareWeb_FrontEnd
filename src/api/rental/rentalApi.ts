@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "../client";
-import type { Category, Item, ItemsQuery } from "./types";
+import type { Category, Item, ItemsQuery, ItemDetail } from "./types";
 
 function buildQuery(params: ItemsQuery) {
   const sp = new URLSearchParams();
@@ -27,4 +27,9 @@ export async function getItems(params: ItemsQuery): Promise<Item[]> {
   const qs = buildQuery(params);
   const res = await fetch(`${API_BASE_URL}/api/items${qs}`);
   return parseJson<Item[]>(res);
+}
+
+export async function getItemDetail(itemId: number): Promise<ItemDetail> {
+  const res = await fetch(`${API_BASE_URL}/api/items/${itemId}`);
+  return parseJson<ItemDetail>(res);
 }
