@@ -72,17 +72,7 @@ function AdminDashboard() {
         page: 1,
         pageSize: 100
       };
-      // 상태 필터 적용
-      if (rentalStatusFilter !== '전체 보기') {
-        const statusMap: Record<string, string> = {
-          '예약': 'RESERVED',
-          '대여 중': 'RENTED',
-          '정상 반납': 'RETURNED',
-          '불량 반납': 'DEFECTIVE',
-          '예약 취소': 'CANCELED'
-        };
-        params.status = statusMap[rentalStatusFilter];
-      }
+      // 상태 필터는 프론트에서만 처리
       // 날짜 필터 적용
       const start = customStartDate !== undefined ? customStartDate : rentalStartDate;
       const end = customEndDate !== undefined ? customEndDate : rentalEndDate;
@@ -115,17 +105,8 @@ function AdminDashboard() {
         pageSize: 100
       };
       
-      // 상태 필터 적용
-      if (plotterStatusFilter !== '전체 상태') {
-        const statusMap: Record<string, string> = {
-          '예약 대기': 'PENDING',
-          '예약 확정': 'CONFIRMED',
-          '인쇄 완료': 'PRINTED',
-          '예약 반려': 'REJECTED',
-          '수령 완료': 'COMPLETED'
-        };
-        params.status = statusMap[plotterStatusFilter];
-      }
+
+      // 상태 필터는 프론트에서만 처리
 
       const response = await axios.get(`${API_BASE_URL}/api/plotter/orders`, {
         params,
@@ -149,7 +130,7 @@ function AdminDashboard() {
     } else {
       fetchPlotterOrders();
     }
-  }, [activeTab, rentalStatusFilter, plotterStatusFilter]);
+  }, [activeTab, rentalStatusFilter]);
 
   const handleRentalStatusChange = async (rentalId: number, newStatus: string) => {
     try {
@@ -274,6 +255,19 @@ function AdminDashboard() {
   };
 
   const filteredRentalData = rentalData.filter(item => {
+    // 상태 필터링
+    let statusMatch = true;
+    if (rentalStatusFilter !== '전체 보기') {
+      const statusMap = {
+        '예약': 'RESERVED',
+        '대여 중': 'RENTED',
+        '정상 반납': 'RETURNED',
+        '불량 반납': 'DEFECTIVE',
+        '예약 취소': 'CANCELED',
+      };
+      statusMatch = item.status === statusMap[rentalStatusFilter];
+    }
+
     // 날짜 필터
     let dateMatch = true;
     if (rentalStartDate) {
@@ -284,8 +278,9 @@ function AdminDashboard() {
       const itemEnd = item.endDate.slice(0, 10);
       dateMatch = dateMatch && (itemEnd <= rentalEndDate);
     }
+
     // 검색어 필터
-    if (!rentalSearchQuery.trim()) return dateMatch;
+    if (!rentalSearchQuery.trim()) return statusMatch && dateMatch;
     const query = rentalSearchQuery.toLowerCase();
     const searchMatch = (
       item.user.name.toLowerCase().includes(query) ||
@@ -293,18 +288,34 @@ function AdminDashboard() {
       item.itemSummary.toLowerCase().includes(query) ||
       `RENT-${item.id}`.toLowerCase().includes(query)
     );
-    return dateMatch && searchMatch;
+    return statusMatch && dateMatch && searchMatch;
   });
 
+
   const filteredPlotterData = plotterData.filter(item => {
-    if (!plotterSearchQuery.trim()) return true;
+    // 상태 필터링
+    let statusMatch = true;
+    if (plotterStatusFilter !== '전체 상태') {
+      const statusMap = {
+        '예약 대기': 'PENDING',
+        '예약 확정': 'CONFIRMED',
+        '인쇄 완료': 'PRINTED',
+        '예약 반려': 'REJECTED',
+        '수령 완료': 'COMPLETED',
+      };
+      statusMatch = item.status === statusMap[plotterStatusFilter];
+    }
+
+    // 검색어 필터링
+    if (!plotterSearchQuery.trim()) return statusMatch;
     const query = plotterSearchQuery.toLowerCase();
-    return (
+    const searchMatch = (
       item.user.name.toLowerCase().includes(query) ||
       item.user.studentId.includes(query) ||
       item.purpose.toLowerCase().includes(query) ||
       `PLOT-${item.id}`.toLowerCase().includes(query)
     );
+    return statusMatch && searchMatch;
   });
 
   return (
