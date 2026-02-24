@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/all/logo.svg";
 import my from "../assets/all/my.svg";
 import { useAuth } from "../contexts/AuthContext";
+import menu from "../assets/all/menu.svg";
+import person from "../assets/all/person.svg";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -226,59 +228,106 @@ export default function Header() {
 
           <button
             type="button"
-            className="rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-[#410F07]"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-label="메뉴 열기"
           >
-            메뉴
+            <img src={menu} alt="메뉴" />
           </button>
         </div>
       </div>
 
-      {/* Mobile Dropdown */}
+      {/* Mobile Side Menu */}
       {open && (
-        <div className="md:hidden">
-          <div className="px-4 pb-4">
-            <div className="flex flex-col gap-2 rounded-xl border bg-white p-3 text-[#410F07]">
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* 배경 오버레이 */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setOpen(false)}
+          />
+
+          {/* 사이드 패널 */}
+          <div className="absolute right-0 top-0 h-full w-[85%] max-w-[320px] bg-white shadow-xl flex flex-col">
+            {/* 상단 헤더 */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#BCBCBC]">
+              <h2 className="text-lg font-bold text-[#410F07]">메뉴</h2>
               <button
-                type="button"
-                className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold"
+                onClick={() => setOpen(false)}
+                className="text-xl font-bold"
               >
-                학생복지위원회
+                ✕
               </button>
-              <button
-                type="button"
-                onClick={() => navigate("/rental")}
-                className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold"
-              >
-                중앙대여사업
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/plotter")}
-                className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold"
-              >
-                플로터인쇄사업
-              </button>
+            </div>
+
+            {/* 로그인 / 프로필 영역 */}
+            <div className="px-5 py-6">
               {!isLoggedIn ? (
                 <button
-                  type="button"
-                  onClick={() => go("/login")}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold"
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/login");
+                  }}
+                  className="w-full rounded-xl bg-[#FFEAD3] px-4 py-4 text-left"
                 >
-                  로그인
+                  <p className="font-semibold text-[#410F07]">로그인</p>
+                  <p className="text-sm text-[#6B6B6B]">
+                    서비스를 이용하려면 로그인하세요
+                  </p>
                 </button>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => go("/mypage")}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold"
-                >
-                  마이페이지
-                </button>
+                <div className="flex items-center gap-2 w-full rounded-xl bg-[#FFEAD3] px-4 py-4">
+                  <div className="w-7 h-7 flex justify-center items-center rounded-full bg-white">
+                    <img src={person} alt="프로필" />
+                  </div>
+                  <p className="font-semibold text-[#410F07]">{user?.name}님</p>
+                </div>
               )}
             </div>
+
+            {/* 메뉴 리스트 */}
+            <div className="flex flex-col px-5 text-[#191919] font-semibold">
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/");
+                }}
+                className="py-4 border-b border-[#C0C0C0] text-left"
+              >
+                홈
+              </button>
+
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/rental");
+                }}
+                className="py-4 border-b border-[#C0C0C0] text-left"
+              >
+                물품 대여
+              </button>
+
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/plotter");
+                }}
+                className="py-4 border-b border-[#C0C0C0] text-left"
+              >
+                플로터 인쇄
+              </button>
+            </div>
+
+            {/* 하단 로그아웃 */}
+            {isLoggedIn && (
+              <div className="mt-auto px-5 py-6">
+                <button
+                  onClick={onLogout}
+                  className="w-full rounded-xl bg-gray-200 py-3 font-semibold"
+                >
+                  로그아웃
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

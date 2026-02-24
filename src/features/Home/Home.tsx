@@ -8,6 +8,8 @@ import lost from "../../assets/home/lost.svg";
 import board from "../../assets/home/board.svg";
 import meeting from "../../assets/home/meeting.svg";
 
+import { useNavigate } from "react-router-dom";
+
 type ServiceItem = {
   title: string;
   desc: string;
@@ -16,46 +18,50 @@ type ServiceItem = {
   onClick?: () => void;
 };
 
-const SERVICES: ServiceItem[] = [
-  {
-    title: "중앙대여사업",
-    desc: "단위에 필요한 물품을 대여할 수 있습니다",
-    icon: rental,
-    align: "leftIcon",
-  },
-  {
-    title: "플로터인쇄사업",
-    desc: "대형 크기의 출력물을 인쇄할 수 있습니다",
-    icon: print,
-    align: "rightIcon",
-  },
-  {
-    title: "제휴 / 통합 구매",
-    desc: "학생들을 위한 제휴와 통합구매를 통해\n저렴하게 이용할 수 있습니다",
-    icon: cart,
-    align: "leftIcon",
-  },
-  {
-    title: "분실물(학관 식당)",
-    desc: "잃어버린 물품들을 찾을 수 있습니다",
-    icon: lost,
-    align: "rightIcon",
-  },
-  {
-    title: "활동게시판",
-    desc: "서비스 준비 중...",
-    icon: board,
-    align: "leftIcon",
-  },
-  {
-    title: "소모임 지원",
-    desc: "서비스 준비 중...",
-    icon: meeting,
-    align: "rightIcon",
-  },
-];
-
 export default function Home() {
+  const navigate = useNavigate();
+
+  const SERVICES: ServiceItem[] = [
+    {
+      title: "중앙대여사업",
+      desc: "단위에 필요한 물품을 대여할 수 있습니다",
+      icon: rental,
+      align: "leftIcon",
+      onClick: () => navigate("/rental"),
+    },
+    {
+      title: "플로터인쇄사업",
+      desc: "대형 크기의 출력물을 인쇄할 수 있습니다",
+      icon: print,
+      align: "rightIcon",
+      onClick: () => navigate("/plotter"),
+    },
+    {
+      title: "제휴 / 통합 구매",
+      desc: "학생들을 위한 제휴와 통합구매를 통해\n저렴하게 이용할 수 있습니다",
+      icon: cart,
+      align: "leftIcon",
+    },
+    {
+      title: "분실물(학관 식당)",
+      desc: "잃어버린 물품들을 찾을 수 있습니다",
+      icon: lost,
+      align: "rightIcon",
+    },
+    {
+      title: "활동게시판",
+      desc: "서비스 준비 중...",
+      icon: board,
+      align: "leftIcon",
+    },
+    {
+      title: "소모임 지원",
+      desc: "서비스 준비 중...",
+      icon: meeting,
+      align: "rightIcon",
+    },
+  ];
+
   return (
     <>
       <Header />
