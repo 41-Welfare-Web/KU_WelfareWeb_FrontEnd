@@ -2,6 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
 import Header from "../../components/Login/Header";
 import FindAccountTabs from "../../components/Login/FindAccountTabs";
+import {
+  findUsername,
+  requestPasswordReset,
+} from "../../api/findAccount/findAccountApi";
+import { verifySignupCodeApi } from "../../api/signup/signupApi";
 
 type TabKey = "findId" | "resetPw";
 
@@ -9,6 +14,8 @@ export default function FindAccount() {
   const navigate = useNavigate();
 
   const [tab, setTab] = useState<TabKey>("findId");
+  const [finding, setFinding] = useState(false);
+  const [findMsg, setFindMsg] = useState<string | null>(null);
 
   // 아이디 찾기 폼
   const [name, setName] = useState("");
@@ -19,6 +26,11 @@ export default function FindAccount() {
   const [pwPhone, setPwPhone] = useState("");
   const [code, setCode] = useState("");
 
+  const [resetRequested, setResetRequested] = useState(false);
+  const [newPw, setNewPw] = useState("");
+  const [newPw2, setNewPw2] = useState("");
+  const [pwOk, setPwOk] = useState(false);
+
   // UI만: 전송/인증 상태 흉내
   const [sent, setSent] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -27,25 +39,84 @@ export default function FindAccount() {
     return tab === "findId" ? "아이디 찾기" : "비밀번호 초기화";
   }, [tab]);
 
-  const onPrimary = () => {
+  // 아이디 찾기
+  const onPrimary = async () => {
     if (tab === "findId") {
-      alert("아이디 찾기 요청 (UI만 구현)");
+      if (!name.trim()) {
+        alert("이름을 입력해주세요.");
+        return;
+      }
+      if (!phone.trim()) {
+        alert("전화번호를 입력해주세요.");
+        return;
+      }
+
+      try {
+        setFinding(true);
+        setFindMsg(null);
+
+        const data = await findUsername({
+          name: name.trim(),
+          phoneNumber: phone.replace(/\D/g, ""),
+        });
+
+        setFindMsg(data.message);
+      } catch (err: any) {
+        setFindMsg(err.message);
+      } finally {
+        setFinding(false);
+      }
+
       return;
     }
+
     alert("비밀번호 초기화 요청 (UI만 구현)");
   };
 
-  const onSend = () => {
-    // UI만
-    setSent(true);
-    setVerified(false);
-    alert("인증번호 발송 (UI만 구현)");
+  // 인증번호 발송
+  const onSend = async () => {
+    if (!username.trim()) return alert("아이디를 입력해주세요.");
+    if (!pwPhone.trim()) return alert("전화번호를 입력해주세요.");
+
+    try {
+      setFinding(true);
+
+      await requestPasswordReset({
+        username: username.trim(),
+        phoneNumber: pwPhone.replace(/\D/g, ""),
+      });
+
+      setSent(true);
+      setVerified(false);
+      alert("인증번호를 발송했어요.");
+    } catch (e: any) {
+      alert(e?.message ?? "요청에 실패했어요.");
+    } finally {
+      setFinding(false);
+    }
   };
 
-  const onVerify = () => {
-    // UI만
-    setVerified(true);
-    alert("인증 완료 (UI만 구현)");
+  // 인증번호 검증
+  const onVerify = async () => {
+    if (!sent) return;
+    if (!code.trim()) return alert("인증번호를 입력해주세요.");
+
+    try {
+      setFinding(true);
+
+      await verifySignupCodeApi({
+        phoneNumber: pwPhone.replace(/\D/g, ""),
+        verificationCode: code.trim(),
+      });
+
+      setVerified(true);
+      setResetRequested(true);
+    } catch (e: any) {
+      setVerified(false);
+      alert(e?.message ?? "인증에 실패했어요.");
+    } finally {
+      setFinding(false);
+    }
   };
 
   // 전화번호 자동 하이픈 함수
@@ -61,6 +132,28 @@ export default function FindAccount() {
     )}`;
   }
 
+  const onChangeTab = (next: TabKey) => {
+    setTab(next);
+
+    // 초기화
+    setFinding(false);
+    setFindMsg(null);
+
+    setSent(false);
+    setVerified(false);
+
+    setResetRequested(false);
+    setNewPw("");
+    setNewPw2("");
+    setPwOk(false);
+
+    setUsername("");
+    setPwPhone("");
+    setCode("");
+    setSent(false);
+    setVerified(false);
+  };
+
   return (
     <>
       <Header />
@@ -69,7 +162,7 @@ export default function FindAccount() {
         <section className="w-full max-w-[520px] rounded-[18px] border border-[#FF7A57] bg-white shadow-[0_10px_24px_rgba(0,0,0,0.10)]">
           <div className="px-5 sm:px-8 py-8 sm:py-10">
             {/* 탭바 */}
-            <FindAccountTabs value={tab} onChange={setTab} />
+            <FindAccountTabs value={tab} onChange={onChangeTab} />
 
             {/* 폼 */}
             <form
@@ -80,40 +173,128 @@ export default function FindAccount() {
               }}
             >
               {tab === "findId" ? (
+                // 요청 완료
+                findMsg ? (
+                  <div className="mt-8 flex flex-col items-center text-center">
+                    <p className="mt-14 text-[15px] sm:text-[16px] text-[#191919] font-medium leading-[1.6]">
+                      요청이 접수되었습니다. <br />
+                      가입된 정보와 일치하는 경우, SMS로 아이디를 발송해
+                      드립니다.
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() => navigate("/login")}
+                      className="mt-12 w-full h-12 sm:h-14 rounded-[10px] bg-[#FD7D5D] text-white text-[18px] font-bold active:scale-[0.99] transition"
+                    >
+                      로그인으로 돌아가기
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* 이름 */}
+                    <div className="space-y-2">
+                      <label className="block text-[16px] font-semibold text-black">
+                        이름
+                      </label>
+                      <input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        type="text"
+                        className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                      />
+                    </div>
+
+                    {/* 전화번호 */}
+                    <div className="space-y-2">
+                      <label className="block text-[16px] font-semibold text-black">
+                        전화번호
+                      </label>
+                      <input
+                        value={phone}
+                        onChange={(e) =>
+                          setPhone(formatPhoneNumber(e.target.value))
+                        }
+                        type="tel"
+                        inputMode="numeric"
+                        placeholder="010-1234-5678"
+                        className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                      />
+                    </div>
+                  </>
+                )
+              ) : resetRequested ? (
                 <>
-                  {/* 이름 */}
+                  {/* 아이디(고정) */}
                   <div className="space-y-2">
                     <label className="block text-[16px] font-semibold text-black">
-                      이름
+                      아이디
                     </label>
                     <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      type="text"
+                      value={username}
+                      disabled
+                      className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none opacity-70"
+                    />
+                  </div>
+
+                  {/* 비밀번호 */}
+                  <div className="space-y-2">
+                    <label className="block text-[16px] font-semibold text-black">
+                      비밀번호
+                    </label>
+                    <input
+                      value={newPw}
+                      onChange={(e) => {
+                        setNewPw(e.target.value);
+                        setPwOk(false);
+                      }}
+                      type="password"
                       className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                     />
                   </div>
 
-                  {/* 전화번호 */}
+                  {/* 비밀번호 확인 + 확인 버튼 */}
                   <div className="space-y-2">
                     <label className="block text-[16px] font-semibold text-black">
-                      전화번호
+                      비밀번호 확인
                     </label>
-                    <input
-                      value={phone}
-                      onChange={(e) =>
-                        setPhone(formatPhoneNumber(e.target.value))
-                      }
-                      type="tel"
-                      inputMode="numeric"
-                      placeholder="010-1234-5678"
-                      className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
-                    />
+                    <div className="flex gap-3">
+                      <input
+                        value={newPw2}
+                        onChange={(e) => {
+                          setNewPw2(e.target.value);
+                          setPwOk(false);
+                        }}
+                        type="password"
+                        className="flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!newPw || !newPw2)
+                            return alert("비밀번호를 입력해 주세요.");
+                          if (newPw !== newPw2) {
+                            setPwOk(false);
+                            return alert("비밀번호가 일치하지 않아요.");
+                          }
+                          setPwOk(true);
+                        }}
+                        className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[16px] font-bold active:scale-[0.99] transition"
+                      >
+                        확인
+                      </button>
+                    </div>
+
+                    {pwOk && (
+                      <p className="text-[13px] text-[#2F9E44] font-semibold">
+                        비밀번호가 일치해요.
+                      </p>
+                    )}
                   </div>
                 </>
               ) : (
                 <>
-                  {/* 아이디 */}
+                  {/* 본인인증 */}
                   <div className="space-y-2">
                     <label className="block text-[16px] font-semibold text-black">
                       아이디
@@ -126,8 +307,6 @@ export default function FindAccount() {
                       className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                     />
                   </div>
-
-                  {/* 전화번호 + 발송 */}
                   <div className="space-y-2">
                     <label className="block text-[16px] font-semibold text-black">
                       전화번호
@@ -146,7 +325,8 @@ export default function FindAccount() {
                       <button
                         type="button"
                         onClick={onSend}
-                        className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[16px] font-bold active:scale-[0.99] transition"
+                        disabled={finding}
+                        className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-60"
                       >
                         발송
                       </button>
@@ -157,7 +337,6 @@ export default function FindAccount() {
                       </p>
                     )}
                   </div>
-
                   {/* 인증번호 + 인증 */}
                   <div className="space-y-2">
                     <div className="flex gap-3">
@@ -178,7 +357,6 @@ export default function FindAccount() {
                         인증
                       </button>
                     </div>
-
                     {verified && (
                       <p className="text-[13px] text-[#2F9E44] font-semibold">
                         인증이 완료되었어요.
@@ -189,23 +367,32 @@ export default function FindAccount() {
               )}
 
               {/* 메인 버튼 */}
-              <button
-                type="submit"
-                className="mt-2 w-full h-12 sm:h-14 rounded-[10px] bg-[#FD7D5D] text-white text-[18px] font-bold active:scale-[0.99] transition"
-              >
-                {primaryBtnText}
-              </button>
+              {!(tab === "findId" && findMsg) && (
+                <button
+                  type="submit"
+                  disabled={
+                    finding ||
+                    (tab === "resetPw" && resetRequested && !pwOk) ||
+                    (tab === "resetPw" && !resetRequested) // 요청 전엔 submit 막기(발송으로만)
+                  }
+                  className="mt-2 w-full h-12 sm:h-14 rounded-[10px] bg-[#FD7D5D] text-white text-[18px] font-bold active:scale-[0.99] transition disabled:opacity-60"
+                >
+                  {finding ? "요청 중..." : primaryBtnText}
+                </button>
+              )}
 
               {/* 로그인으로 */}
-              <div className="pt-2 flex items-center justify-center text-[16px] text-[#868686]">
-                <button
-                  type="button"
-                  onClick={() => navigate("/login")}
-                  className="hover:text-[#555]"
-                >
-                  로그인으로 돌아가기
-                </button>
-              </div>
+              {!(tab === "findId" && findMsg) && (
+                <div className="pt-2 flex items-center justify-center text-[16px] text-[#868686]">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/login")}
+                    className="hover:text-[#555]"
+                  >
+                    로그인으로 돌아가기
+                  </button>
+                </div>
+              )}
             </form>
           </div>
         </section>
