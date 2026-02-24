@@ -86,6 +86,18 @@ export default function MyPage() {
     }
   }, [tabParam]);
 
+  // API status를 UI status로 매핑
+  const mapRentalStatus = (apiStatus: string): ReservationStatus => {
+    const statusMap: Record<string, ReservationStatus> = {
+      'reserved': 'reserved',
+      'rented': 'renting',
+      'returned': 'returned',
+      'overdue': 'defective', // 연체를 불량 반납으로 매핑
+      'canceled': 'canceled',
+    };
+    return statusMap[apiStatus.toLowerCase()] || 'reserved';
+  };
+
   // 대여 내역 조회
   useEffect(() => {
     if (activeTab === "rental" && !isLoadingUser) {
@@ -100,7 +112,7 @@ export default function MyPage() {
             return {
               id: rental.id.toString(),
               title: rental.itemSummary || '대여 항목',
-              status: rental.status.toLowerCase() as ReservationStatus,
+              status: mapRentalStatus(rental.status),
               code: `RENT-${rental.id}`,
               applicationDate: rental.createdAt ? rental.createdAt.split("T")[0] : '',
               startDate: rental.startDate || '',
