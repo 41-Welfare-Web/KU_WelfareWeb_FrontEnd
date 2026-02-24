@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "./components/Header";
+import Header from "../../components/Login/Header";
 import { getDepartments } from "../../api/signup/signupApi";
 import {
   requestSignupVerification,
@@ -161,6 +161,19 @@ export default function Register() {
     }
   };
 
+  // 전화번호 자동 하이픈 함수
+  function formatPhoneNumber(value: string) {
+    const numbers = value.replace(/\D/g, "");
+
+    if (numbers.length <= 3) return numbers;
+    if (numbers.length <= 7)
+      return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+    return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(
+      7,
+      11,
+    )}`;
+  }
+
   return (
     <>
       <Header />
@@ -290,17 +303,19 @@ export default function Register() {
                 <div className="flex gap-3">
                   <input
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) =>
+                      setPhone(formatPhoneNumber(e.target.value))
+                    }
                     type="tel"
                     inputMode="numeric"
-                    placeholder="01012345678"
+                    placeholder="010-1234-5678"
                     className="flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                   />
                   <button
                     type="button"
                     onClick={onSendVerification}
                     disabled={loading}
-                    className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-black text-white text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-60"
+                    className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-60"
                   >
                     인증
                   </button>

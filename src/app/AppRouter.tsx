@@ -9,6 +9,7 @@ import MyPage from "../features/MyPage/MyPage";
 import AdminDashboard from "../features/Admin/AdminDashboard";
 import ComponentTest from "../features/ComponentTest/ComponentTest";
 import TestDataPage from "../features/Test/TestDataPage";
+import FindAccount from "../features/Login/FindAccount";
 
 export default function AppRouter() {
   return (
@@ -16,6 +17,7 @@ export default function AppRouter() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Register />} />
+      <Route path="/find-account" element={<FindAccount />} />
 
       <Route path="/rental" element={<RentalList />} />
       <Route path="/plotter" element={<PlotterRequest />} />

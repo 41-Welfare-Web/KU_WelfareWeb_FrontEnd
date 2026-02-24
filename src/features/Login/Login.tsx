@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import Header from "./components/Header";
+import Header from "../../components/Login/Header";
 import { loginApi } from "../../api/login/loginApi";
 
 export default function Login() {
@@ -105,7 +105,11 @@ export default function Login() {
 
               {/* 하단 링크 */}
               <div className="pt-2 flex items-center justify-center gap-4 text-[16px] text-[#868686]">
-                <button type="button" className="hover:text-[#555]">
+                <button
+                  type="button"
+                  onClick={() => navigate("/find-account")}
+                  className="hover:text-[#555]"
+                >
                   아이디/비밀번호 찾기
                 </button>
                 <span className="text-[#868686]">|</span>
