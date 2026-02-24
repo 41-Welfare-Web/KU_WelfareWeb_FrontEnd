@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import { type Category } from "../../api/rental/types";
 import ItemCard from "../../components/Rental/ItemCard";
@@ -6,7 +7,6 @@ import CartPanel from "../../components/Rental/CartPanel";
 import Footer from "../../components/Footer";
 
 import searchImg from "../../assets/rental/search.svg";
-import exampleImg from "../../assets/rental/exampleImg.svg";
 import type { Item } from "../../api/rental/types";
 
 import type { SortBy, SortOrder } from "../../api/rental/types";
@@ -27,6 +27,8 @@ import { toUiCartItems } from "../../api/rental/cart/mapper";
 import type { UiCartItem } from "../../api/rental/cart/types";
 
 export default function RentalList() {
+  const navigate = useNavigate();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
     null,
@@ -50,7 +52,7 @@ export default function RentalList() {
 
   // 장바구니
   const [cartItems, setCartItems] = useState<UiCartItem[]>([]);
-  const [cartLoading, setCartLoading] = useState(false);
+  const [, setCartLoading] = useState(false);
 
   const fetchCart = async () => {
     const data = await getMyCart();
@@ -117,8 +119,7 @@ export default function RentalList() {
   }, [category_ids, search, sortBy, sortOrder]);
 
   const goCheckout = () => {
-    // TODO: navigate("/rental/apply") 이런 식으로 연결
-    alert("대여 신청 페이지로 이동!");
+    navigate("/rental/cart");
   };
 
   return (

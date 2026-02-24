@@ -46,7 +46,7 @@ function addMonths(year: number, monthIndex0: number, delta: number) {
   return { year: d.getFullYear(), monthIndex0: d.getMonth() };
 }
 
-export default function AvailabilityCalendar({
+export default function Calendar({
   itemId,
   requestedQty,
   value,
@@ -74,6 +74,7 @@ export default function AvailabilityCalendar({
 
   const monthStartYmd = useMemo(() => toYmd(first), [first]);
   const monthEndYmd = useMemo(() => toYmd(last), [last]);
+  const todayYmd = useMemo(() => toYmd(new Date()), []);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -198,6 +199,7 @@ export default function AvailabilityCalendar({
         {cells.map((cell) => {
           const ymd = toYmd(cell.date);
           const inMonth = cell.inMonth;
+          const isPast = ymd < todayYmd;
 
           const av = mapByDate.get(ymd);
           const available = av?.availableQuantity ?? null;
@@ -210,13 +212,27 @@ export default function AvailabilityCalendar({
 
           let base =
             "bg-white border border-black/10 hover:bg-black/5 text-black";
-          if (!inMonth) base = "bg-transparent text-black/25";
-          else if (enough === true) base = "bg-emerald-100 text-black";
-          else if (enough === false) base = "bg-[#FFA2A2] text-[#FF0000]";
+          // 1) 달 밖
+          if (!inMonth)
+            base = "bg-transparent text-black/25 border-transparent";
 
-          let selected = "";
-          if (inRange) selected = "bg-orange-500 text-white";
-          if (isStart || isEnd) selected = "bg-orange-500 text-white";
+          // 2) 오늘 이전(달 안쪽이라도) - 예약 불가 스타일
+          if (inMonth && isPast)
+            base =
+              "bg-transparent text-black/30 border-transparent cursor-not-allowed";
+
+          // 3) 재고 표시(오늘 이후인 날짜에만)
+          if (inMonth && !isPast) {
+            if (enough === true) base = "bg-emerald-100 text-black";
+            else if (enough === false) base = "bg-[#FFA2A2] text-[#FF0000]";
+          }
+
+          // 선택 스타일은 오늘 이후인 날짜에만 적용
+          let selectedCls = "";
+          if (!isPast && inMonth) {
+            if (inRange) selectedCls = "bg-orange-500 text-white";
+            if (isStart || isEnd) selectedCls = "bg-orange-500 text-white";
+          }
 
           return (
             <button
@@ -228,7 +244,7 @@ export default function AvailabilityCalendar({
                 "rounded-xl p-2 text-left transition",
                 "min-h-[64px] md:min-h-[72px]",
                 base,
-                selected,
+                selectedCls,
               ].join(" ")}
             >
               <div className="flex flex-col items-center justify-center">

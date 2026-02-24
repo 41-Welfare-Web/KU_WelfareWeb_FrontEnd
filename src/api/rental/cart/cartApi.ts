@@ -4,6 +4,8 @@ import type {
   CartAddResponse,
   CartGetResponse,
   CartDeleteResponse,
+  CartUpdateRequest,
+  CartUpdateResponse,
 } from "./types";
 
 // 장바구니 물품 추가 (POST /api/cart)
@@ -22,6 +24,15 @@ export async function getMyCart() {
 export async function deleteCartItem(cartId: number) {
   const res = await axiosInstance.delete<CartDeleteResponse>(
     `/api/cart/${cartId}`,
+  );
+  return res.data;
+}
+
+// 장바구니 항목 수정 (PUT /api/cart/{id})
+export async function updateCartItem(cartId: number, body: CartUpdateRequest) {
+  const res = await axiosInstance.put<CartUpdateResponse>(
+    `/api/cart/${cartId}`,
+    body,
   );
   return res.data;
 }
