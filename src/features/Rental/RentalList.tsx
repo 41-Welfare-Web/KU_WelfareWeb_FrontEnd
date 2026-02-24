@@ -94,7 +94,7 @@ export default function RentalList() {
             {/* 타이틀 */}
             <div className="px-6 pt-12 md:mt-5 md:px-0">
               <p
-                className="text-2xl md:text-[36px] font-bold"
+                className="text-3xl md:text-[36px] font-bold"
                 style={{ textShadow: "0 3px 4px rgba(0,0,0,0.25)" }}
               >
                 물품 대여
