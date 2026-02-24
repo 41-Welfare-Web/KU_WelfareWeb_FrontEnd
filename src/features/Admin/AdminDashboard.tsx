@@ -541,14 +541,6 @@ function AdminDashboard() {
                             }}
                           />
                         );
-                            {/* 반려 사유 입력 핸들러 */}
-                            <PlotterRejectHandler
-                              ref={rejectHandlerRef}
-                              onSubmit={(orderId, newStatus, reason) => {
-                                // 반려 사유 입력 후 바로 상태변경 API 호출
-                                handlePlotterStatusChange(orderId, newStatus, reason);
-                              }}
-                            />
                       })
                     )}
                   </div>

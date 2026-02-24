@@ -41,11 +41,11 @@ export default function AdminFilterBar({
           <button
             key={status}
             onClick={() => onStatusChange(status)}
-            className={`h-[29px] px-[23px] py-[7px] rounded-[10px] font-['Gmarket_Sans'] font-medium text-[14px] ${
-              selectedStatus === status
-                ? 'bg-[#fe6949] text-white'
-                : 'bg-white border border-[#afafaf] text-black'
-            }`}
+              className={`h-[29px] px-[23px] py-[7px] rounded-[10px] font-['Gmarket_Sans'] font-medium text-[14px] leading-normal flex items-center justify-center ${
+                selectedStatus === status
+                  ? 'bg-[#fe6949] text-white'
+                  : 'bg-white border border-[#afafaf] text-black'
+              }`}
           >
             {status}
           </button>
@@ -67,11 +67,6 @@ export default function AdminFilterBar({
                 colorScheme: 'light',
               }}
             />
-            <img 
-              src={calendarIcon} 
-              alt="달력" 
-              className="absolute right-[7px] top-[8px] w-[24px] h-[24px] pointer-events-none"
-            />
           </div>
 
           {/* 구분자 */}
@@ -87,11 +82,6 @@ export default function AdminFilterBar({
               style={{
                 colorScheme: 'light',
               }}
-            />
-            <img 
-              src={calendarIcon} 
-              alt="달력" 
-              className="absolute right-[7px] top-[8px] w-[24px] h-[24px] pointer-events-none"
             />
           </div>
         </div>

@@ -35,19 +35,21 @@ export default function AdminItemsFilterBar({
       </button>
       
       {/* 카테고리 버튼들 */}
-      {categories.map((category) => (
-        <button
-          key={category}
-          onClick={() => onCategoryChange(category)}
-          className={`h-[41px] px-[18px] rounded-[36px] font-['Gmarket_Sans'] font-medium text-[15px] transition-colors ${
-            category === selectedCategory
-              ? 'bg-[#fe6949] text-white'
-              : 'bg-white border border-black text-black hover:bg-gray-50'
-          }`}
-        >
-          {category}
-        </button>
-      ))}
+      <div className="flex items-center gap-2">
+        {categories.map((category) => (
+          <button
+            key={category}
+            onClick={() => onCategoryChange(category)}
+            className={`h-[41px] px-[18px] rounded-[36px] font-['Gmarket_Sans'] font-medium text-[15px] transition-colors flex items-center justify-center ${
+              category === selectedCategory
+                ? 'bg-[#fe6949] text-white'
+                : 'bg-white border border-black text-black hover:bg-gray-50'
+            }`}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
       
       {/* 검색창 */}
       <div className="ml-auto flex items-center gap-2 bg-white border border-[#C3C3C3] rounded-[10px] h-[53px] px-4 w-[217px]">
