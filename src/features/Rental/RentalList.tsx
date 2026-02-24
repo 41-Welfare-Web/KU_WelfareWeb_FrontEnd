@@ -17,6 +17,15 @@ import { getItems, getCategories } from "../../api/rental/rentalApi";
 // 물품 세부사항
 import ItemDetailModal from "../../components/Rental/ItemDetailModal";
 
+// 장바구니
+import {
+  addToCart,
+  getMyCart,
+  deleteCartItem,
+} from "../../api/rental/cart/cartApi";
+import { toUiCartItems } from "../../api/rental/cart/mapper";
+import type { UiCartItem } from "../../api/rental/cart/types";
+
 export default function RentalList() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
@@ -39,11 +48,40 @@ export default function RentalList() {
     setDetailOpen(true);
   };
 
-  // 장바구니 UI (서버 연동 전)
-  const [cartItems] = useState<
-    { id: number; name: string; count: number; imageUrl?: string }[]
-  >([{ id: 1, name: "행사용 천막", count: 1, imageUrl: exampleImg }]);
+  // 장바구니
+  const [cartItems, setCartItems] = useState<UiCartItem[]>([]);
+  const [cartLoading, setCartLoading] = useState(false);
 
+  const fetchCart = async () => {
+    const data = await getMyCart();
+    setCartItems(toUiCartItems(data));
+  };
+
+  const handleRemoveCartItem = async (cartId: number) => {
+    try {
+      await deleteCartItem(cartId);
+      await fetchCart();
+    } catch (e) {
+      console.error("장바구니 삭제 실패:", e);
+      alert("장바구니에서 삭제에 실패했어요.");
+    }
+  };
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        setCartLoading(true);
+        await fetchCart();
+      } catch (e) {
+        console.error("장바구니 불러오기 실패:", e);
+      } finally {
+        setCartLoading(false);
+      }
+    };
+    run();
+  }, []);
+
+  // 카테고리(분류) 목록 조회
   useEffect(() => {
     const run = async () => {
       try {
@@ -165,17 +203,26 @@ export default function RentalList() {
             </section>
           </main>
 
-          <CartPanel items={cartItems} onGoCheckout={goCheckout} />
+          <CartPanel
+            items={cartItems}
+            onGoCheckout={goCheckout}
+            onRemove={handleRemoveCartItem}
+          />
         </div>
 
         <ItemDetailModal
           open={detailOpen}
           itemId={detailItemId}
           onClose={() => setDetailOpen(false)}
-          onAddToCart={(item) => {
-            // TODO: cartItems set 로직 연결
-            console.log("add to cart:", item);
-            setDetailOpen(false);
+          onAddToCart={async (item) => {
+            try {
+              await addToCart({ itemId: item.id, quantity: 1 });
+              await fetchCart(); // 담은 후 다시 조회해서 cartItems 갱신
+              setDetailOpen(false);
+            } catch (e) {
+              console.error("장바구니 담기 실패:", e);
+              alert("장바구니 담기에 실패했어요.");
+            }
           }}
         />
       </div>
