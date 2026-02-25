@@ -6,7 +6,6 @@ import type {
   VerifySignupCodeResponse,
   RegisterRequest,
   RegisterResponse,
-  Unit,
   CommonMetadataResponse,
 } from "./types";
 import { API_BASE_URL } from "../client";
@@ -67,7 +66,7 @@ export async function registerApi(
 }
 
 // 메타데이터 불러오기 (소속단위 목록)
-export async function getDepartments(): Promise<Unit[]> {
+export async function getDepartments(): Promise<string[]> {
   const res = await fetch(`${API_BASE_URL}/api/common/metadata`, {
     method: "GET",
     headers: { accept: "*/*" },
