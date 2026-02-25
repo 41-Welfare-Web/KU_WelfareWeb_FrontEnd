@@ -41,7 +41,7 @@ export type RegisterResponse = {
 export type Unit = { id: number; name: string };
 
 export type CommonMetadataResponse = {
-  departments: Unit[];
+  departments: string[];
   freePurposes?: unknown[];
   prices?: Record<string, unknown>;
 };

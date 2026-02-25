@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import Calendar from "../../components/Rental/Calendar";
@@ -15,6 +15,7 @@ import { getItemAvailability } from "../../api/rental/calendar";
 import type { Availability } from "../../api/rental/types";
 
 import calendar from "../../assets/rental/calendar-orange.svg";
+import RentalConfirmModal from "../../components/Rental/RentalConfirmModal";
 
 async function checkEnough(
   itemId: number,
@@ -42,19 +43,7 @@ export default function RentalCart() {
   const [cartItems, setCartItems] = useState<UiCartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [range] = useState<{
-    startDate: string | null;
-    endDate: string | null;
-  }>({
-    startDate: null,
-    endDate: null,
-  });
-
-  const totalCount = useMemo(
-    () => cartItems.reduce((sum, it) => sum + it.count, 0),
-    [cartItems],
-  );
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const [selectedCartId, setSelectedCartId] = useState<number | null>(null);
   const selected =
@@ -227,7 +216,6 @@ export default function RentalCart() {
   };
 
   // 모든 물품이 대여 가능인지 확인
-  // 모든 물품이 대여 가능인지 확인
   const allAvailable =
     cartItems.length > 0 &&
     cartItems.every((it) => statusByCartId[it.cartId] === "OK");
@@ -315,13 +303,16 @@ export default function RentalCart() {
                   type="button"
                   disabled={!allAvailable}
                   className="w-full rounded-lg bg-[#FE6949] px-4 py-3 text-[15px] font-semibold text-white disabled:opacity-40"
-                  onClick={() => {
-                    console.log("confirm", { range, cartItems, totalCount });
-                    alert("TODO: 예약 확정하기 API 연결!");
-                  }}
+                  onClick={() => setConfirmOpen(true)}
                 >
                   예약 확정하기
                 </button>
+
+                <RentalConfirmModal
+                  open={confirmOpen}
+                  onClose={() => setConfirmOpen(false)}
+                  onSubmit={() => setConfirmOpen(false)}
+                />
               </div>
             </section>
           </div>

@@ -39,7 +39,11 @@ export default function Register() {
     const fetchMetadata = async () => {
       try {
         const departments = await getDepartments();
-        setUnits(departments);
+        const mapped: Unit[] = departments.map((name, idx) => ({
+          id: idx + 1,
+          name,
+        }));
+        setUnits(mapped);
       } catch (error) {
         console.error("메타데이터 로드 실패:", error);
         // 에러 시 빈 배열 유지
