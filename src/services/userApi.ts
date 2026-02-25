@@ -1,3 +1,5 @@
+import axiosInstance from "../api/axiosInstance";
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ??
   "https://rentalweb-production.up.railway.app";
@@ -34,22 +36,14 @@ export interface ApiError {
  * GET /api/users/me
  */
 export async function getMyProfile(): Promise<UserProfile> {
-  const token = localStorage.getItem("accessToken");
-  
-  const response = await fetch(`${API_BASE_URL}/api/users/me`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json() as ApiError;
-    throw new Error(error.message || "사용자 정보를 불러오지 못했습니다.");
+  try {
+    const res = await axiosInstance.get<UserProfile>("/api/users/me");
+    return res.data;
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message || "사용자 정보를 불러오지 못했습니다.";
+    throw new Error(message);
   }
-
-  return response.json();
 }
 
 /**
@@ -57,10 +51,10 @@ export async function getMyProfile(): Promise<UserProfile> {
  * PUT /api/users/me
  */
 export async function updateMyProfile(
-  data: UpdateProfileRequest
+  data: UpdateProfileRequest,
 ): Promise<UserProfile> {
   const token = localStorage.getItem("accessToken");
-  
+
   const response = await fetch(`${API_BASE_URL}/api/users/me`, {
     method: "PUT",
     headers: {
@@ -71,7 +65,7 @@ export async function updateMyProfile(
   });
 
   if (!response.ok) {
-    const error = await response.json() as ApiError;
+    const error = (await response.json()) as ApiError;
     throw new Error(error.message || "정보 수정에 실패했습니다.");
   }
 
@@ -83,10 +77,10 @@ export async function updateMyProfile(
  * DELETE /api/users/me
  */
 export async function deleteMyAccount(
-  data: DeleteAccountRequest
+  data: DeleteAccountRequest,
 ): Promise<void> {
   const token = localStorage.getItem("accessToken");
-  
+
   const response = await fetch(`${API_BASE_URL}/api/users/me`, {
     method: "DELETE",
     headers: {
@@ -97,7 +91,7 @@ export async function deleteMyAccount(
   });
 
   if (!response.ok) {
-    const error = await response.json() as ApiError;
+    const error = (await response.json()) as ApiError;
     throw new Error(error.message || "회원 탈퇴에 실패했습니다.");
   }
 }
