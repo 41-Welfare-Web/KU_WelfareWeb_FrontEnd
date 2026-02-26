@@ -160,6 +160,7 @@ export default function PlotterFormFields({
               value={quantity}
               onChange={(e) => onQuantityChange(parseInt(e.target.value) || 1)}
               className="w-full h-[71px] px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[20px] quantity-input"
+              onWheel={e => e.currentTarget.blur()}
             />
             <span className="text-[35px] font-medium">장</span>
           </div>
