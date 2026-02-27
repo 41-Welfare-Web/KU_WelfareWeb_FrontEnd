@@ -3,45 +3,49 @@ import cancel from "../../assets/rental/cancel-white.svg";
 
 import { getMyProfile } from "../../services/userApi";
 import type { UserProfile } from "../../services/userApi";
-import { getDepartments } from "../../api/signup/signupApi";
+import { useMetadata } from "../../contexts/MetadataContext";
+
 import { getMyCart } from "../../api/rental/cart/cartApi";
 import type {
   CartAddResponse,
   CartGetResponse,
 } from "../../api/rental/cart/types";
 
-type Unit = { id: number; name: string };
-
 type Props = {
   open: boolean;
   onClose: () => void;
 
   onSubmit?: (payload: {
-    departmentId: number;
+    departmentType: string;
     cartItems: CartAddResponse[];
     profile: UserProfile;
   }) => void;
 };
 
 export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
+  const { deptGroups, loading: metaLoading } = useMetadata();
+
   // 신청자 정보
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
 
-  // 소속단위
-  const [units, setUnits] = useState<Unit[]>([]);
-  const [unitsLoading, setUnitsLoading] = useState(false);
-  const [unitsError, setUnitsError] = useState<string | null>(null);
-
-  const [departmentId, setDepartmentId] = useState<number>(0);
+  // 대분류 선택값(문자열)
+  const [departmentType, setDepartmentType] = useState<string>("");
 
   // 장바구니
   const [cart, setCart] = useState<CartGetResponse | null>(null);
   const [cartLoading, setCartLoading] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
 
-  // open될 때: profile + departments + cart 로드
+  // 대분류 옵션(문자열)
+  const deptTypeOptions = useMemo(() => {
+    return deptGroups
+      .map((g: any) => (g.type ?? g.name ?? "").trim())
+      .filter(Boolean);
+  }, [deptGroups]);
+
+  // open될 때: profile + cart 로드
   useEffect(() => {
     if (!open) return;
 
@@ -66,32 +70,7 @@ export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
         setProfileLoading(false);
       });
 
-    // 2) departments
-    setUnitsLoading(true);
-    setUnitsError(null);
-    getDepartments()
-      .then((list) => {
-        console.log("departments list:", list, "len:", list.length);
-        if (!alive) return;
-        const mapped: Unit[] = list.map((name, idx) => ({
-          id: idx + 1,
-          name,
-        }));
-
-        setUnits(mapped);
-      })
-      .catch((e: unknown) => {
-        if (!alive) return;
-        setUnitsError(
-          e instanceof Error ? e.message : "소속단위를 불러오지 못했어요.",
-        );
-      })
-      .finally(() => {
-        if (!alive) return;
-        setUnitsLoading(false);
-      });
-
-    // 3) cart
+    // 2) cart
     setCartLoading(true);
     setCartError(null);
     getMyCart()
@@ -118,12 +97,19 @@ export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
   useEffect(() => {
     if (!open) return;
     if (!profile) return;
-    if (units.length === 0) return;
-    if (departmentId !== 0) return;
+    if (!deptTypeOptions.length) return;
+    if (departmentType) return;
 
-    const found = units.find((u) => u.name === profile.departmentType); // 매칭되면 그 id, 아니면 0(선택 없음)
-    setDepartmentId(found?.id ?? 0);
-  }, [open, profile, units]);
+    // 프로필에 departmentType이 있고, 옵션에 존재하면 자동 세팅
+    const fromProfile = (profile as any).departmentType?.trim?.() ?? "";
+    if (fromProfile && deptTypeOptions.includes(fromProfile)) {
+      setDepartmentType(fromProfile);
+      return;
+    }
+
+    // 옵션에 없으면 빈 값 유지(직접 선택 유도)
+    setDepartmentType("");
+  }, [open, profile, deptTypeOptions, departmentType]);
 
   const cartItems = cart?.items ?? [];
   const totalCount =
@@ -131,15 +117,14 @@ export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
 
   const canSubmit = useMemo(() => {
     if (!profile) return false;
-    if (!departmentId) return false;
+    if (!departmentType) return false;
     if (cartItems.length === 0) return false;
     if (cart?.hasUnsetDates) return false;
     return true;
-  }, [profile, departmentId, cartItems.length, cart?.hasUnsetDates]);
+  }, [profile, departmentType, cartItems.length, cart?.hasUnsetDates]);
 
   if (!open) return null;
 
-  // 날짜 포맷 함수
   function ymd(iso: string) {
     return iso.slice(0, 10);
   }
@@ -148,6 +133,13 @@ export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
     if (!start || !end) return "-";
     return `${ymd(start)} ~ ${ymd(end)}`;
   }
+
+  const profileDeptType = (profile as any)?.departmentType ?? "";
+  const profileDeptName = (profile as any)?.departmentName ?? "";
+
+  const isProfileDeptTypeInList =
+    !!profileDeptType &&
+    deptTypeOptions.includes(String(profileDeptType).trim());
 
   return (
     <div
@@ -170,14 +162,11 @@ export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
         <div className="flex max-h-[calc(86dvh-64px)] flex-col">
           <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
             {/* 에러/로딩 */}
-            {(profileLoading || unitsLoading || cartLoading) && (
+            {(profileLoading || metaLoading || cartLoading) && (
               <div className="mb-4 text-sm text-black/50">불러오는 중…</div>
             )}
             {profileError && (
               <div className="mb-3 text-sm text-red-600">{profileError}</div>
-            )}
-            {unitsError && (
-              <div className="mb-3 text-sm text-red-600">{unitsError}</div>
             )}
             {cartError && (
               <div className="mb-3 text-sm text-red-600">{cartError}</div>
@@ -225,15 +214,15 @@ export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
 
                 <div className="relative">
                   <select
-                    value={departmentId || ""}
-                    onChange={(e) => setDepartmentId(Number(e.target.value))}
+                    value={departmentType}
+                    onChange={(e) => setDepartmentType(e.target.value)}
                     className="w-full appearance-none rounded-xl bg-[#EDEDED] px-4 py-3 pr-10 text-[15px] text-black outline-none"
-                    disabled={unitsLoading || units.length === 0}
+                    disabled={metaLoading || deptTypeOptions.length === 0}
                   >
                     <option value="">선택</option>
-                    {units.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name}
+                    {deptTypeOptions.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
                       </option>
                     ))}
                   </select>
@@ -242,16 +231,19 @@ export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
                   </div>
                 </div>
 
-                {!!profile?.departmentName && (
+                {/* departmentName 있으면 항상 표시 (요청사항) */}
+                {!!profileDeptName && (
                   <div className="mt-2 text-xs text-black/50">
-                    소속명: {profile.departmentName}
+                    소속명: {profileDeptName}
                     {/* 목록에 없을 때만 추가 문구 */}
-                    {!unitsLoading &&
-                      units.length > 0 &&
-                      !units.some((u) => u.name === profile.departmentType) && (
+                    {!!profileDeptType &&
+                      !metaLoading &&
+                      deptTypeOptions.length > 0 &&
+                      !isProfileDeptTypeInList && (
                         <>
                           <br />
-                          현재 소속단위가 목록에 없어 직접 선택해주세요.
+                          현재 소속단위({profileDeptType})가 목록에 없어 직접
+                          선택해주세요.
                         </>
                       )}
                   </div>
@@ -279,17 +271,14 @@ export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
                           key={it.id}
                           className="grid grid-cols-3 items-center gap-4 py-2"
                         >
-                          {/* 물품이름 */}
                           <div className="text-left min-w-0 truncate text-[15px] font-semibold text-black">
                             {it.item?.name ?? "이름 없음"}
                           </div>
 
-                          {/* 대여일 */}
                           <div className="text-center whitespace-nowrap text-[15px] text-black">
                             {fmtRange(it.startDate, it.endDate)}
                           </div>
 
-                          {/* 수량 */}
                           <div className="text-right whitespace-nowrap text-[15px] font-semibold text-black">
                             {it.quantity}개
                           </div>
@@ -326,7 +315,7 @@ export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
               className="w-full rounded-xl bg-[#F72] px-4 py-4 text-[15px] font-semibold text-white shadow-[0_10px_20px_rgba(254,105,73,0.35)] disabled:opacity-40"
               onClick={() => {
                 if (!profile || !cart) return;
-                onSubmit?.({ departmentId, cartItems, profile });
+                onSubmit?.({ departmentType, cartItems, profile });
               }}
             >
               ✓ 위 정보로 신청하기
