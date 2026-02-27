@@ -16,7 +16,7 @@ interface RentalData {
 
 interface PlotterData {
   id: number;
-  user: {
+  user?: {
     name: string;
     studentId: string;
     department?: string;
@@ -69,8 +69,8 @@ export function useExportCSV() {
     data.forEach(item => {
       const row = [
         `PLOT-${item.id}`,
-        item.user.name,
-        item.user.studentId,
+        item.user?.name || '사용자 정보 없음',
+        item.user?.studentId || '-',
         item.createdAt.split('T')[0],
         item.purpose.replace(/,/g, ' '),
         item.paperSize,

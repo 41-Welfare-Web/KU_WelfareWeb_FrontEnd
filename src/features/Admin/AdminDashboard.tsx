@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AdminRentalRow from '../../components/Admin/AdminRentalRow';
@@ -14,8 +13,11 @@ import AdminItemCard from '../../components/Admin/AdminItemCard';
 import AdminTableHeader from '../../components/Admin/AdminTableHeader';
 import AdminDashboardHeader from '../../components/Admin/AdminDashboardHeader';
 import { useExportCSV } from '../../hooks/useExportCSV';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+import { getRentals } from '../../services/rentalApi';
+import { getPlotterOrders } from '../../services/plotterApi';
+import { getCategories, getItems } from '../../api/rental/rentalApi';
+import type { Item, Category } from '../../api/rental/types';
+import axiosInstance from '../../api/axiosInstance';
 
 type TabType = 'rental' | 'plotter' | 'items';
 
@@ -35,7 +37,7 @@ interface RentalData {
 
 interface PlotterData {
   id: number;
-  user: {
+  user?: {
     name: string;
     studentId: string;
     department?: string;
@@ -44,31 +46,13 @@ interface PlotterData {
   paperSize: string;
   pageCount: number;
   pickupDate: string;
-  status: 'PENDING' | 'CONFIRMED' | 'PRINTED' | 'REJECTED' | 'COMPLETED';
+  status: string;
   createdAt: string;
 }
 
-interface ItemData {
-  id: number;
-  category: {
-    id: number;
-    name: string;
-  };
-  name: string;
-  itemCode: string;
-  description?: string;
-  rentalCount: number;
-  imageUrl?: string;
-  managementType: 'INDIVIDUAL' | 'BULK';
-  totalQuantity: number;
-  currentStock: number;
-  createdAt: string;
-}
-
-interface CategoryData {
-  id: number;
-  name: string;
-}
+// ItemData와 CategoryData는 API 타입 사용
+type ItemData = Item;
+type CategoryData = Category;
 
 // 대여 상태 매핑 (API <-> 컴포넌트)
 const RENTAL_STATUS_MAP: Record<string, string> = {
@@ -131,24 +115,24 @@ function AdminDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem('accessToken');
       
-      const params: any = {
+      console.log('[Admin] 대여 목록 조회 시작');
+      const response = await getRentals({
         page: 1,
         pageSize: 100
-      };
-      // 상태 필터와 날짜 필터는 프론트에서만 처리 (API는 status, page, pageSize만 지원)
-
-      const response = await axios.get(`${API_BASE_URL}/api/rentals`, {
-        params,
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
       });
-      setRentalData(response.data.rentals || []);
+      console.log('[Admin] 대여 목록 조회 성공:', response);
+      
+      setRentalData(response.rentals || []);
     } catch (err: any) {
-      console.error('대여 목록 조회 실패:', err);
-      setError(err.response?.data?.message || '대여 목록을 불러오는데 실패했습니다.');
+      console.error('[Admin] 대여 목록 조회 실패:', err);
+      console.error('[Admin] 에러 상세:', {
+        message: err.message,
+        response: err.response,
+        status: err.response?.status,
+        data: err.response?.data
+      });
+      setError(err.message || '대여 목록을 불러오는데 실패했습니다. 관리자 권한이 필요합니다.');
     } finally {
       setLoading(false);
     }
@@ -158,25 +142,24 @@ function AdminDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem('accessToken');
       
-      const params: any = {
+      console.log('[Admin] 플로터 목록 조회 시작');
+      const response = await getPlotterOrders({
         page: 1,
         pageSize: 100
-      };
-      // 상태 필터는 프론트에서만 처리
-
-      const response = await axios.get(`${API_BASE_URL}/api/plotter/orders`, {
-        params,
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
       });
+      console.log('[Admin] 플로터 목록 조회 성공:', response);
       
-      setPlotterData(response.data.orders || []);
+      setPlotterData(response.orders || []);
     } catch (err: any) {
-      console.error('플로터 목록 조회 실패:', err);
-      setError(err.response?.data?.message || '플로터 목록을 불러오는데 실패했습니다.');
+      console.error('[Admin] 플로터 목록 조회 실패:', err);
+      console.error('[Admin] 에러 상세:', {
+        message: err.message,
+        response: err.response,
+        status: err.response?.status,
+        data: err.response?.data
+      });
+      setError(err.message || '플로터 목록을 불러오는데 실패했습니다. 관리자 권한이 필요합니다.');
     } finally {
       setLoading(false);
     }
@@ -186,24 +169,18 @@ function AdminDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem('accessToken');
       
-      const params: any = {};
-      if (itemsSearchQuery.trim()) {
-        params.search = itemsSearchQuery.trim();
-      }
-      
-      const response = await axios.get(`${API_BASE_URL}/api/items`, {
-        params,
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      console.log('[Admin] 물품 목록 조회 시작');
+      const response = await getItems({
+        search: itemsSearchQuery.trim() || undefined,
       });
+      console.log('[Admin] 물품 목록 조회 성공:', response);
       
-      setItemsData(response.data || []);
+      setItemsData(response || []);
     } catch (err: any) {
-      console.error('물품 목록 조회 실패:', err);
-      setError(err.response?.data?.message || '물품 목록을 불러오는데 실패했습니다.');
+      console.error('[Admin] 물품 목록 조회 실패:', err);
+      console.error('[Admin] 에러 상세:', err);
+      setError(err instanceof Error ? err.message : '물품 목록을 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -211,13 +188,8 @@ function AdminDashboard() {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await axios.get(`${API_BASE_URL}/api/categories`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      setCategories(response.data || []);
+      const response = await getCategories();
+      setCategories(response || []);
     } catch (err: any) {
       console.error('카테고리 목록 조회 실패:', err);
     }
@@ -239,15 +211,9 @@ function AdminDashboard() {
 
   const handleRentalStatusChange = async (rentalId: number, newStatus: string) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      await axios.put(
-        `${API_BASE_URL}/api/rentals/${rentalId}/status`,
-        { status: newStatus },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+      await axiosInstance.put(
+        `/api/rentals/${rentalId}/status`,
+        { status: newStatus }
       );
       alert('상태가 변경되었습니다.');
       fetchRentals();
@@ -272,19 +238,13 @@ function AdminDashboard() {
         newStatus,
         rejectReason
       });
-      const token = localStorage.getItem('accessToken');
       const payload: any = { status: newStatus };
       if (newStatus === 'REJECTED' && rejectReason && rejectReason.trim()) {
         payload.rejectionReason = rejectReason.trim();
       }
-      await axios.put(
-        `${API_BASE_URL}/api/plotter/orders/${orderId}/status`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+      await axiosInstance.put(
+        `/api/plotter/orders/${orderId}/status`,
+        payload
       );
       alert('상태가 변경되었습니다.');
       fetchPlotterOrders();
@@ -306,7 +266,7 @@ function AdminDashboard() {
     fetchItems();
   };
 
-  const handleItemEdit = async (itemId: number) => {
+  const handleItemEdit = async (_itemId: number) => {
     alert('물품 수정 기능은 별도 페이지가 필요합니다. 준비 중입니다.');
   };
 
@@ -316,12 +276,7 @@ function AdminDashboard() {
     }
 
     try {
-      const token = localStorage.getItem('accessToken');
-      await axios.delete(`${API_BASE_URL}/api/items/${itemId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      await axiosInstance.delete(`/api/items/${itemId}`);
       alert('물품이 삭제되었습니다.');
       fetchItems();
     } catch (err: any) {
@@ -379,9 +334,11 @@ function AdminDashboard() {
     // 검색어 필터링
     if (!plotterSearchQuery.trim()) return statusMatch;
     const query = plotterSearchQuery.toLowerCase();
+    const userName = item.user?.name || '';
+    const studentId = item.user?.studentId || '';
     const searchMatch = (
-      item.user.name.toLowerCase().includes(query) ||
-      item.user.studentId.includes(query) ||
+      userName.toLowerCase().includes(query) ||
+      studentId.includes(query) ||
       item.purpose.toLowerCase().includes(query) ||
       `PLOT-${item.id}`.toLowerCase().includes(query)
     );
@@ -486,7 +443,7 @@ function AdminDashboard() {
                             key={rental.id}
                             rentalCode={`R-${rental.id}`}
                             userName={rental.user.name}
-                            department={rental.user.department || rental.user.studentId}
+                            department={rental.user.department || '-'}
                             itemName={rental.itemSummary}
                             startDate={rental.startDate}
                             endDate={rental.endDate}
@@ -564,12 +521,12 @@ function AdminDashboard() {
                           <AdminPlotterRow
                             key={plotter.id}
                             orderCode={`P-${plotter.id}`}
-                            userName={plotter.user.name}
-                            club={plotter.user.department || plotter.user.studentId}
+                            userName={plotter.user?.name || '사용자 정보 없음'}
+                            club={plotter.user?.department || '-'}
                             purpose={plotter.purpose}
                             paperSizeAndCount={`${plotter.paperSize} / ${plotter.pageCount}장`}
                             orderDate={plotter.pickupDate}
-                            status={PLOTTER_STATUS_MAP_REVERSE[plotter.status] as 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'}
+                            status={PLOTTER_STATUS_MAP_REVERSE[plotter.status as keyof typeof PLOTTER_STATUS_MAP_REVERSE] as 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'}
                             onStatusChange={(newStatus) => {
                               handlePlotterStatusChange(
                                 plotter.id,
@@ -629,7 +586,7 @@ function AdminDashboard() {
                       category={item.category.name}
                       description={item.description || ''}
                       quantity={item.totalQuantity}
-                      imageUrl={item.imageUrl}
+                      imageUrl={item.imageUrl || undefined}
                       onEdit={handleItemEdit}
                       onDelete={handleItemDelete}
                     />
