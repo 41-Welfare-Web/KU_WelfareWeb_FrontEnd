@@ -28,7 +28,8 @@ export type RegisterRequest = {
   name: string;
   studentId: string;
   phoneNumber: string;
-  department: string;
+  departmentType: string;
+  departmentName: string;
   verificationCode: string;
 };
 
@@ -41,7 +42,7 @@ export type RegisterResponse = {
 export type Unit = { id: number; name: string };
 
 export type CommonMetadataResponse = {
-  departments: string[];
+  departments: string[][];
   freePurposes?: unknown[];
   prices?: Record<string, unknown>;
 };

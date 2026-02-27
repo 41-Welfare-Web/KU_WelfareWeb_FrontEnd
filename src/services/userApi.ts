@@ -6,7 +6,8 @@ export interface UserProfile {
   name: string;
   studentId: string;
   phoneNumber: string;
-  department: string;
+  departmentType: string;
+  departmentName: string;
   role: "USER" | "ADMIN";
   createdAt: string;
 }
@@ -15,7 +16,8 @@ export interface UpdateProfileRequest {
   currentPassword: string;
   newPassword?: string;
   phoneNumber?: string;
-  department?: string;
+  departmentType?: string;
+  departmentName?: string;
 }
 
 export interface DeleteAccountRequest {
