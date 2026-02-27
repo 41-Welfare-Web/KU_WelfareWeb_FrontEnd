@@ -1,12 +1,12 @@
+import { useState } from "react";
 import FileOrangeIcon from "../../assets/plotter/file-orange.svg";
-import DepartmentSelectModal from "./DepartmentSelectModal";
+import DepartmentPickerModal from "../DepartmentPickerModal";
 
 interface PlotterFormFieldsProps {
   studentNo: string;
   name: string;
   departmentType: string;
   departmentName: string | null;
-  departments?: string[][];
   onDepartmentChange: (type: string, name: string | null) => void;
   phone: string;
   purpose: string;
@@ -24,7 +24,6 @@ export default function PlotterFormFields({
   name,
   departmentType,
   departmentName,
-  departments = [],
   onDepartmentChange,
   phone,
   purpose,
@@ -36,6 +35,8 @@ export default function PlotterFormFields({
   onQuantityChange,
   className = "",
 }: PlotterFormFieldsProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <div className={className}>
       <div className="flex items-center gap-3 mb-8">
@@ -68,11 +69,24 @@ export default function PlotterFormFields({
       {/* 소속 단위 */}
       <div className="mb-6">
         <label className="block text-[20px] font-medium text-black mb-2">소속 단위</label>
-        <DepartmentSelectModal
-          departments={departments}
-          selectedType={departmentType}
-          selectedName={departmentName}
-          onSelect={onDepartmentChange}
+        <button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          className="w-full h-[71px] px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[20px] text-left flex items-center justify-between hover:bg-gray-50 transition"
+        >
+          <span>
+            {departmentName ? `${departmentType} - ${departmentName}` : departmentType}
+          </span>
+          <span className="text-[#8e8e8e]">▼</span>
+        </button>
+
+        <DepartmentPickerModal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          value={{ departmentType, departmentName: departmentName || "" }}
+          onConfirm={({ departmentType: type, departmentName: name }) => {
+            onDepartmentChange(type, name);
+          }}
         />
       </div>
 

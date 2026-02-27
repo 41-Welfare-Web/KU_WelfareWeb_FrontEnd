@@ -22,7 +22,6 @@ interface Purpose {
 export default function PlotterRequest() {
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
-  const [departments, setDepartments] = useState<string[][]>([]);
   const [departmentType, setDepartmentType] = useState("학생복지위원회");
   const [departmentName, setDepartmentName] = useState<string | null>(null);
   const [purposes, setPurposes] = useState<Purpose[]>([]);
@@ -33,6 +32,7 @@ export default function PlotterRequest() {
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("010-0000-0000");
+  const [studentId, setStudentId] = useState("");
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   // 로그인 체크
@@ -51,9 +51,13 @@ export default function PlotterRequest() {
       try {
         const profile = await getMyProfile();
         setPhoneNumber(profile.phoneNumber || "010-0000-0000");
+        setStudentId(profile.studentId || "");
         // 프로필의 소속 단위로 초기값 설정
-        if (profile.department) {
-          setDepartmentType(profile.department);
+        if (profile.departmentType) {
+          setDepartmentType(profile.departmentType);
+        }
+        if (profile.departmentName) {
+          setDepartmentName(profile.departmentName);
         }
       } catch (error) {
         console.error("프로필 로드 실패:", error);
@@ -65,16 +69,11 @@ export default function PlotterRequest() {
     fetchProfile();
   }, [isLoggedIn]);
 
-  // 소속 단위 목록 로드
+  // 목적 목록 로드
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
         const metadata = await getCommonMetadata();
-        
-        // 소속 단위 설정 (데이터가 없으면 빈 배열)
-        if (metadata.departments) {
-          setDepartments(metadata.departments);
-        }
         
         // 목적 설정 (데이터가 없으면 빈 배열)
         if (metadata.plotterPurposes) {
@@ -154,8 +153,8 @@ export default function PlotterRequest() {
       navigate("/plotter/complete", {
         state: {
           orderId: response.id,
-          name: user?.name || "",
-          studentNo: user?.username || "",
+          name: response.user?.name || user?.name || "",
+          studentNo: response.user?.studentId || "",
           phone: phoneNumber,
           purpose: response.purpose,
           quantity: response.pageCount,
@@ -194,11 +193,10 @@ export default function PlotterRequest() {
             {/* 왼쪽: 신청 정보 입력 */}
             <div className="w-full lg:w-[764px] bg-white rounded-[30px] p-8 shadow-lg">
               <PlotterFormFields
-                studentNo={user?.username || ""}
+                studentNo={studentId || ""}
                 name={user?.name || ""}
                 departmentType={departmentType}
                 departmentName={departmentName}
-                departments={departments}
                 onDepartmentChange={(type, name) => {
                   setDepartmentType(type);
                   setDepartmentName(name);
