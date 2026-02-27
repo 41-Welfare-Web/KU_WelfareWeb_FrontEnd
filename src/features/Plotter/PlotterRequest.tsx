@@ -31,7 +31,7 @@ export default function PlotterRequest() {
   const [unit, setUnit] = useState("학생복지위원회");
   const [purposes, setPurposes] = useState<Purpose[]>([]);
   const [purpose, setPurpose] = useState("대자보 출력");
-  const [paperSize, setPaperSize] = useState("A1(594 x 941mm)");
+  const [paperSize, setPaperSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
