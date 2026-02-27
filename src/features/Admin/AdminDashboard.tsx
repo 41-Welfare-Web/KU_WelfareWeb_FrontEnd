@@ -9,9 +9,11 @@ import AdminPlotterFilterBar from '../../components/Admin/AdminPlotterFilterBar'
 import AdminItemsFilterBar from '../../components/Admin/AdminItemsFilterBar';
 import PlotterRejectHandler from '../../components/Admin/PlotterRejectHandler';
 import type { PlotterRejectHandlerRef } from '../../components/Admin/PlotterRejectHandler';
-import downloadIcon from '../../assets/admin/download.svg';
-import pencilIcon from '../../assets/admin/pencil.svg';
-import trashIcon from '../../assets/admin/trash.svg';
+import AdminTabNavigation from '../../components/Admin/AdminTabNavigation';
+import AdminItemCard from '../../components/Admin/AdminItemCard';
+import AdminTableHeader from '../../components/Admin/AdminTableHeader';
+import AdminDashboardHeader from '../../components/Admin/AdminDashboardHeader';
+import { useExportCSV } from '../../hooks/useExportCSV';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -86,6 +88,7 @@ const PLOTTER_STATUS_MAP_REVERSE: Record<
 
 function AdminDashboard() {
   const rejectHandlerRef = useRef<PlotterRejectHandlerRef>(null);
+  const { exportCSV } = useExportCSV();
   const [activeTab, setActiveTab] = useState<TabType>('rental');
   const [rentalStatusFilter, setRentalStatusFilter] = useState('전체 보기');
   const [plotterStatusFilter, setPlotterStatusFilter] = useState('전체 상태');
@@ -236,60 +239,7 @@ function AdminDashboard() {
   };
 
   const handleDownload = () => {
-    const data = activeTab === 'rental' ? rentalData : plotterData;
-    if (data.length === 0) {
-      alert('다운로드할 데이터가 없습니다.');
-      return;
-    }
-
-    let csvContent = '';
-    
-    if (activeTab === 'rental') {
-      // 대여 데이터 CSV 헤더
-      csvContent = '예약번호,이름,학번,신청일,예약 기간,상태,물품명\n';
-      rentalData.forEach(item => {
-        const row = [
-          `RENT-${item.id}`,
-          item.user.name,
-          item.user.studentId,
-          item.createdAt.split('T')[0],
-          `${item.startDate} ~ ${item.endDate}`,
-          item.status,
-          item.itemSummary.replace(/,/g, ' ')
-        ].join(',');
-        csvContent += row + '\n';
-      });
-    } else {
-      // 플로터 데이터 CSV 헤더
-      csvContent = '주문번호,이름,학번,신청일,목적,용지 크기,장수,수령일,상태\n';
-      plotterData.forEach(item => {
-        const row = [
-          `PLOT-${item.id}`,
-          item.user.name,
-          item.user.studentId,
-          item.createdAt.split('T')[0],
-          item.purpose.replace(/,/g, ' '),
-          item.paperSize,
-          item.pageCount,
-          item.pickupDate || '-',
-          item.status
-        ].join(',');
-        csvContent += row + '\n';
-      });
-    }
-
-    // BOM 추가 (한글 깨짐 방지)
-    const BOM = '\uFEFF';
-    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${activeTab === 'rental' ? '대여관리' : '플로터관리'}_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportCSV(activeTab, rentalData, plotterData);
   };
 
   const filteredRentalData = rentalData.filter(item => {
@@ -353,71 +303,17 @@ function AdminDashboard() {
       <div className="w-full bg-gradient-to-b from-[#ffdcc5] to-white min-h-screen pb-20">
         <div className="max-w-[1440px] mx-auto px-8 pt-8">
           {/* 상단 영역: 타이틀과 버튼들 */}
-          <div className="flex justify-between items-start mb-6">
-            <div className="relative inline-block">
-              <h1 className="text-[48px] font-bold text-[#410f07] mb-2">관리자 대시보드</h1>
-              <div className="absolute left-0 bottom-0 w-[300px] h-[4px] bg-[#410f07]"></div>
-            </div>
-            
-            {/* 버튼 그룹 */}
-            <div className="flex gap-3">
-              {/* 신규 물품 등록 버튼 */}
-              {activeTab === 'items' && (
-                <button
-                  onClick={() => alert('신규 물품 등록 기능 준비 중')}
-                  className="flex items-center gap-2 bg-[#f72] border border-white rounded-[13px] h-[40px] px-4 hover:opacity-90 transition-opacity"
-                >
-                  <span className="font-['Gmarket_Sans'] font-medium text-[20px] text-white">신규 물품 등록</span>
-                </button>
-              )}
-              
-              {/* 엑셀 다운로드 버튼 */}
-              <button
-                onClick={handleDownload}
-                className="flex items-center gap-2 bg-white border border-[#a4a4a4] rounded-[13px] h-[40px] px-4 hover:bg-gray-50 transition-colors"
-              >
-                <img src={downloadIcon} alt="다운로드" className="w-5 h-5" />
-                <span className="font-['Gmarket_Sans'] font-medium text-[20px]">엑셀 다운로드</span>
-              </button>
-            </div>
-          </div>
+          <AdminDashboardHeader
+            activeTab={activeTab}
+            onDownload={handleDownload}
+            onAddItem={() => alert('신규 물품 등록 기능 준비 중')}
+          />
 
           {/* 탭 네비게이션 */}
-          <div className="flex gap-8 mb-6 border-b-2 border-[#D9D9D9]">
-            <button
-              onClick={() => setActiveTab('rental')}
-              className={`pb-2 font-['HanbatGothic'] font-medium text-[24px] relative ${
-                activeTab === 'rental' ? 'text-[#FE6949]' : 'text-[#8E8E8E]'
-              }`}
-            >
-              물품 대여 관리
-              {activeTab === 'rental' && (
-                <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#FE6949]"></div>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('plotter')}
-              className={`pb-2 font-['HanbatGothic'] font-medium text-[24px] relative ${
-                activeTab === 'plotter' ? 'text-[#FE6949]' : 'text-[#8E8E8E]'
-              }`}
-            >
-              플로터 인쇄 관리
-              {activeTab === 'plotter' && (
-                <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#FE6949]"></div>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('items')}
-              className={`pb-2 font-['HanbatGothic'] font-medium text-[24px] relative ${
-                activeTab === 'items' ? 'text-[#FE6949]' : 'text-[#8E8E8E]'
-              }`}
-            >
-              물품 목록 관리
-              {activeTab === 'items' && (
-                <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#FE6949]"></div>
-              )}
-            </button>
-          </div>
+          <AdminTabNavigation
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
 
           {/* 대여 관리 탭 내용 */}
           {activeTab === 'rental' && (
@@ -440,16 +336,18 @@ function AdminDashboard() {
               {/* 테이블 */}
               <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible mt-6">
                 {/* 테이블 헤더 */}
-                <div className="bg-[#EDEDED] border-b border-[#C2C2C2] h-[52px] flex items-center px-8 gap-4 font-['HanbatGothic'] font-medium text-[16px] text-black">
-                  <div className="w-[90px] text-center">신청번호</div>
-                  <div className="w-[100px] text-center">신청자</div>
-                  <div className="w-[150px] text-center">소속</div>
-                  <div className="flex-1 text-center">대여 품목</div>
-                  <div className="w-[120px] text-center">대여 날짜</div>
-                  <div className="w-[120px] text-center">반납 날짜</div>
-                  <div className="w-[100px] text-center">상태</div>
-                  <div className="w-[120px] text-center">비고</div>
-                </div>
+                <AdminTableHeader
+                  columns={[
+                    { label: '신청번호', width: 'w-[90px]' },
+                    { label: '신청자', width: 'w-[100px]' },
+                    { label: '소속', width: 'w-[150px]' },
+                    { label: '대여 품목', width: 'flex-1' },
+                    { label: '대여 날짜', width: 'w-[120px]' },
+                    { label: '반납 날짜', width: 'w-[120px]' },
+                    { label: '상태', width: 'w-[100px]' },
+                    { label: '비고', width: 'w-[120px]' },
+                  ]}
+                />
 
                 {/* 로딩 및 에러 표시 */}
                 {loading && (
@@ -517,16 +415,18 @@ function AdminDashboard() {
               {/* 테이블 */}
               <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible mt-6">
                 {/* 테이블 헤더 */}
-                <div className="bg-[#EDEDED] border-b border-[#C2C2C2] h-[52px] flex items-center px-8 gap-4 font-['HanbatGothic'] font-medium text-[16px] text-black">
-                  <div className="w-[90px] text-center">신청번호</div>
-                  <div className="w-[100px] text-center">신청자</div>
-                  <div className="w-[160px] text-center">소속</div>
-                  <div className="flex-1 text-center">파일명</div>
-                  <div className="w-[110px] text-center">용지/장수</div>
-                  <div className="w-[120px] text-center">날짜</div>
-                  <div className="w-[100px] text-center">상태</div>
-                  <div className="w-[120px] text-center">비고</div>
-                </div>
+                <AdminTableHeader
+                  columns={[
+                    { label: '신청번호', width: 'w-[90px]' },
+                    { label: '신청자', width: 'w-[100px]' },
+                    { label: '소속', width: 'w-[160px]' },
+                    { label: '파일명', width: 'flex-1' },
+                    { label: '용지/장수', width: 'w-[110px]' },
+                    { label: '날짜', width: 'w-[120px]' },
+                    { label: '상태', width: 'w-[100px]' },
+                    { label: '비고', width: 'w-[120px]' },
+                  ]}
+                />
 
                 {/* 로딩 및 에러 표시 */}
                 {loading && (
@@ -595,46 +495,20 @@ function AdminDashboard() {
               <div className="grid grid-cols-4 gap-x-[53px] gap-y-[30px]">
                 {/* 예시 물품 카드들 */}
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                  <div
+                  <AdminItemCard
                     key={item}
-                    className="bg-white border border-[#d72002] rounded-[11px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.2)] overflow-clip relative w-[224px] h-[280px]"
-                  >
-                    {/* 이미지 영역 */}
-                    <div className="w-full h-[193px] bg-gradient-to-br from-blue-400 to-blue-600 relative">
-                      <div className="absolute inset-0 bg-[rgba(0,0,0,0.05)]" />
-                    </div>
-
-                    {/* 상단 버튼들 */}
-                    <div className="absolute top-[7px] right-[7px] flex gap-[9px] z-10">
-                      <button className="bg-white border border-black rounded-[5px] w-[23px] h-[23px] flex items-center justify-center hover:bg-gray-100 transition-colors">
-                        <img src={pencilIcon} alt="수정" className="w-[19px] h-[19px]" />
-                      </button>
-                      <button className="bg-white border border-black rounded-[5px] w-[23px] h-[23px] flex items-center justify-center hover:bg-gray-100 transition-colors">
-                        <img src={trashIcon} alt="삭제" className="w-[19px] h-[19px]" />
-                      </button>
-                    </div>
-
-                    {/* 정보 영역 */}
-                    <div className="absolute top-[203px] left-[11px] right-[11px]">
-                      <p className="font-['Signika'] font-medium text-[13px] text-[#fe6949] leading-normal mb-0">
-                        축제용품
-                      </p>
-                    </div>
-
-                    <div className="absolute top-[203px] right-[11px]">
-                      <div className="bg-[#d9d9d9] rounded-[10px] h-[24px] px-2 flex items-center">
-                        <span className="font-['Signika'] font-medium text-[11px] text-black tracking-[0.33px]">수량 10개</span>
-                      </div>
-                    </div>
-
-                    <h3 className="absolute top-[227px] left-[11px] font-['Noto_Sans'] font-semibold text-[20px] text-[#410f07] leading-normal tracking-[-0.4px]">
-                      행사용 천막
-                    </h3>
-
-                    <p className="absolute top-[249px] left-[11px] right-[11px] font-['Gmarket_Sans'] font-light text-[12px] text-[#410f07] leading-normal">
-                      야외 행사 및 축제 부스 운영 시 필요한 접이식 천막입니다.
-                    </p>
-                  </div>
+                    id={item}
+                    name="행사용 천막"
+                    category="축제용품"
+                    description="야외 행사 및 축제 부스 운영 시 필요한 접이식 천막입니다."
+                    quantity={10}
+                    onEdit={(id) => alert(`물품 ${id} 수정 기능 준비 중`)}
+                    onDelete={(id) => {
+                      if (window.confirm(`물품 ${id}를 삭제하시겠습니까?`)) {
+                        alert(`물품 ${id} 삭제 기능 준비 중`);
+                      }
+                    }}
+                  />
                 ))}
               </div>
 
