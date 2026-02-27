@@ -121,8 +121,7 @@ export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
     if (units.length === 0) return;
     if (departmentId !== 0) return;
 
-    const found = units.find((u) => u.name === profile.department);
-    // 매칭되면 그 id, 아니면 0(선택 없음)
+    const found = units.find((u) => u.name === profile.departmentType); // 매칭되면 그 id, 아니면 0(선택 없음)
     setDepartmentId(found?.id ?? 0);
   }, [open, profile, units]);
 
@@ -243,16 +242,20 @@ export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
                   </div>
                 </div>
 
-                {/* 매칭이 안 될 때 안내(선택 유도) */}
-                {!!profile &&
-                  !unitsLoading &&
-                  units.length > 0 &&
-                  departmentId === 0 && (
-                    <div className="mt-2 text-xs text-black/50">
-                      현재 소속단위({profile.department})가 목록에 없어 직접
-                      선택해주세요.
-                    </div>
-                  )}
+                {!!profile?.departmentName && (
+                  <div className="mt-2 text-xs text-black/50">
+                    소속명: {profile.departmentName}
+                    {/* 목록에 없을 때만 추가 문구 */}
+                    {!unitsLoading &&
+                      units.length > 0 &&
+                      !units.some((u) => u.name === profile.departmentType) && (
+                        <>
+                          <br />
+                          현재 소속단위가 목록에 없어 직접 선택해주세요.
+                        </>
+                      )}
+                  </div>
+                )}
               </div>
             </div>
 

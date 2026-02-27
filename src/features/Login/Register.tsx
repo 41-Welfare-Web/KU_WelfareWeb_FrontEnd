@@ -21,6 +21,7 @@ export default function Register() {
   // 소속 단위 (department)
   const [units, setUnits] = useState<Unit[]>([]);
   const [unitId, setUnitId] = useState<number | "">("");
+  const [departmentName, setDepartmentName] = useState("");
 
   const [phone, setPhone] = useState(""); // phoneNumber
   const [verificationCode, setVerificationCode] = useState("");
@@ -81,11 +82,13 @@ export default function Register() {
   const onSendVerification = async () => {
     setErrorMsg("");
 
-    const phoneNumber = phone.trim();
-    if (!phoneNumber) {
+    const phoneNumberRaw = phone.trim();
+    if (!phoneNumberRaw) {
       setErrorMsg("핸드폰 번호를 입력해 주세요.");
       return;
     }
+
+    const phoneNumber = normalizePhone(phoneNumberRaw);
 
     try {
       setLoading(true);
@@ -105,14 +108,14 @@ export default function Register() {
     }
   };
 
-  const verifySignupCode = async (phoneNumber: string, code: string) => {
+  const verifySignupCode = async (phoneNumberRaw: string, code: string) => {
     setErrorMsg("");
 
     try {
       setVerifying(true);
 
       const data = await verifySignupCodeApi({
-        phoneNumber,
+        phoneNumber: normalizePhone(phoneNumberRaw),
         verificationCode: code,
       });
 
@@ -134,6 +137,7 @@ export default function Register() {
     if (!name.trim()) return setErrorMsg("이름을 입력해 주세요.");
     if (!studentNo.trim()) return setErrorMsg("학번을 입력해 주세요.");
     if (!unitId) return setErrorMsg("소속 단위를 선택해 주세요.");
+    if (!departmentName.trim()) return setErrorMsg("소속을 입력해 주세요.");
     if (!phone.trim()) return setErrorMsg("핸드폰 번호를 입력해 주세요.");
     if (!verificationCode.trim())
       return setErrorMsg("인증번호를 입력해 주세요.");
@@ -147,8 +151,9 @@ export default function Register() {
         password,
         name: name.trim(),
         studentId: studentNo.trim(),
-        phoneNumber: phone.trim(),
-        department: selectedUnitName,
+        phoneNumber: normalizePhone(phone.trim()),
+        departmentType: selectedUnitName,
+        departmentName: departmentName.trim(),
         verificationCode: verificationCode.trim(),
       });
 
@@ -176,6 +181,10 @@ export default function Register() {
       7,
       11,
     )}`;
+  }
+
+  function normalizePhone(value: string) {
+    return value.replace(/\D/g, "");
   }
 
   return (
@@ -296,6 +305,14 @@ export default function Register() {
                     선택됨: {selectedUnitName}
                   </p>
                 )}
+
+                <input
+                  value={departmentName}
+                  onChange={(e) => setDepartmentName(e.target.value)}
+                  type="text"
+                  placeholder="소속을 입력해주세요"
+                  className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                />
               </div>
 
               {/* 핸드폰 번호 + 인증 버튼 */}

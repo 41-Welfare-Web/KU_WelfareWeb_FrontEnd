@@ -28,7 +28,8 @@ export type RegisterRequest = {
   name: string;
   studentId: string;
   phoneNumber: string;
-  department: string;
+  departmentType: string;
+  departmentName: string;
   verificationCode: string;
 };
 
