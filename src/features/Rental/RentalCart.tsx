@@ -9,12 +9,11 @@ import {
   updateCartItem,
 } from "../../api/rental/cart/cartApi";
 import { toUiCartItems } from "../../api/rental/cart/mapper";
-import type { UiCartItem, CartAddResponse } from "../../api/rental/cart/types";
+import type { UiCartItem } from "../../api/rental/cart/types";
 import RentalCartItemRow from "../../components/Rental/RentalCartItemRow";
 import { getItemAvailability } from "../../api/rental/calendar";
 import type { Availability } from "../../api/rental/types";
 import { createRentals } from "../../api/rental/rentalApi";
-import type { UserProfile } from "../../services/userApi";
 
 import calendar from "../../assets/rental/calendar-orange.svg";
 import RentalConfirmModal from "../../components/Rental/RentalConfirmModal";
