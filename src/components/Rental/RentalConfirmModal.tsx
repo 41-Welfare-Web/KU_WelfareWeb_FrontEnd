@@ -119,6 +119,7 @@ export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
     if (!open) return;
     if (!profile) return;
     if (units.length === 0) return;
+    if (departmentId !== 0) return;
 
     const found = units.find((u) => u.name === profile.department);
     // 매칭되면 그 id, 아니면 0(선택 없음)
@@ -148,13 +149,6 @@ export default function RentalConfirmModal({ open, onClose, onSubmit }: Props) {
     if (!start || !end) return "-";
     return `${ymd(start)} ~ ${ymd(end)}`;
   }
-
-  // 단위 매핑
-  getDepartments().then((list) => {
-    // list: string[]
-    const mapped: Unit[] = list.map((name, idx) => ({ id: idx + 1, name }));
-    setUnits(mapped);
-  });
 
   return (
     <div

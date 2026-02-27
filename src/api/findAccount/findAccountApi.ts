@@ -35,7 +35,7 @@ export async function findUsername(body: {
   };
 }
 
-// 비밀번호 초기화 - 본인인증
+// 비밀번호 초기화 - 본인인증 (POST /api/auth/password-reset/request)
 export async function requestPasswordReset(body: {
   username: string;
   phoneNumber: string;
@@ -54,5 +54,53 @@ export async function requestPasswordReset(body: {
   const data = await safeJsonOrEmpty(res);
   return {
     message: data?.message ?? "요청이 접수되었습니다.",
+  };
+}
+
+// 비밀전호 초기화 - 인증번호 검증 (POST /api/auth/password-reset/verify)
+export async function verifyPasswordResetCode(body: {
+  username: string;
+  verificationCode: string;
+}) {
+  const res = await fetch(`${API_BASE_URL}/api/auth/password-reset/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await safeJsonOrEmpty(res);
+    throw new Error(err?.message ?? "인증 코드 확인에 실패했습니다.");
+  }
+
+  const data = await safeJsonOrEmpty(res);
+
+  const resetToken = data?.resetToken;
+  if (!resetToken) {
+    throw new Error("resetToken을 받지 못했습니다.");
+  }
+
+  return { resetToken: String(resetToken) };
+}
+
+// 비밀번호 초기화 - 새 비밀번호 요청 (POST /api/auth/password-reset/confirm)
+export async function confirmPasswordReset(body: {
+  resetToken: string;
+  newPassword: string;
+}) {
+  const res = await fetch(`${API_BASE_URL}/api/auth/password-reset/confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await safeJsonOrEmpty(res);
+    throw new Error(err?.message ?? "비밀번호 재설정에 실패했습니다.");
+  }
+
+  const data = await safeJsonOrEmpty(res);
+  return {
+    message: data?.message ?? "비밀번호가 변경되었습니다.",
   };
 }

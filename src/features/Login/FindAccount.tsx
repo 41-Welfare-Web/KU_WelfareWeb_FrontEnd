@@ -5,8 +5,9 @@ import FindAccountTabs from "../../components/Login/FindAccountTabs";
 import {
   findUsername,
   requestPasswordReset,
+  verifyPasswordResetCode,
+  confirmPasswordReset,
 } from "../../api/findAccount/findAccountApi";
-import { verifySignupCodeApi } from "../../api/signup/signupApi";
 
 type TabKey = "findId" | "resetPw";
 
@@ -26,6 +27,9 @@ export default function FindAccount() {
   const [pwPhone, setPwPhone] = useState("");
   const [code, setCode] = useState("");
 
+  // 리프레쉬 토큰
+  const [resetToken, setResetToken] = useState<string | null>(null);
+
   const [resetRequested, setResetRequested] = useState(false);
   const [newPw, setNewPw] = useState("");
   const [newPw2, setNewPw2] = useState("");
@@ -39,7 +43,7 @@ export default function FindAccount() {
     return tab === "findId" ? "아이디 찾기" : "비밀번호 초기화";
   }, [tab]);
 
-  // 아이디 찾기
+  // 아이디 찾기 / 비밀번호 초기화
   const onPrimary = async () => {
     if (tab === "findId") {
       if (!name.trim()) {
@@ -70,7 +74,31 @@ export default function FindAccount() {
       return;
     }
 
-    alert("비밀번호 초기화 요청 (UI만 구현)");
+    if (!resetRequested || !resetToken) {
+      alert("먼저 인증을 완료해주세요.");
+      return;
+    }
+
+    if (!pwOk) {
+      alert("비밀번호 확인을 먼저 해주세요.");
+      return;
+    }
+
+    try {
+      setFinding(true);
+
+      await confirmPasswordReset({
+        resetToken,
+        newPassword: newPw,
+      });
+
+      alert("비밀번호가 변경되었습니다. 로그인 해주세요.");
+      navigate("/login");
+    } catch (e: any) {
+      alert(e?.message ?? "비밀번호 변경에 실패했어요.");
+    } finally {
+      setFinding(false);
+    }
   };
 
   // 인증번호 발송
@@ -88,6 +116,9 @@ export default function FindAccount() {
 
       setSent(true);
       setVerified(false);
+      setResetRequested(false);
+      setResetToken(null);
+
       alert("인증번호를 발송했어요.");
     } catch (e: any) {
       alert(e?.message ?? "요청에 실패했어요.");
@@ -104,15 +135,19 @@ export default function FindAccount() {
     try {
       setFinding(true);
 
-      await verifySignupCodeApi({
-        phoneNumber: pwPhone.replace(/\D/g, ""),
+      const { resetToken } = await verifyPasswordResetCode({
+        username: username.trim(),
         verificationCode: code.trim(),
       });
 
+      setResetToken(resetToken);
       setVerified(true);
       setResetRequested(true);
+      alert("인증이 완료되었어요. 새 비밀번호를 설정해주세요.");
     } catch (e: any) {
       setVerified(false);
+      setResetRequested(false);
+      setResetToken(null);
       alert(e?.message ?? "인증에 실패했어요.");
     } finally {
       setFinding(false);
@@ -143,6 +178,8 @@ export default function FindAccount() {
     setVerified(false);
 
     setResetRequested(false);
+    setResetToken(null);
+
     setNewPw("");
     setNewPw2("");
     setPwOk(false);
@@ -150,8 +187,6 @@ export default function FindAccount() {
     setUsername("");
     setPwPhone("");
     setCode("");
-    setSent(false);
-    setVerified(false);
   };
 
   return (
