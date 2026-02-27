@@ -18,9 +18,9 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
-  const [deptSub, setDeptSub] = useState<string>("");
-  const [deptSubMode, setDeptSubMode] = useState<"select" | "input">("select");
-  const [departmentNameInput, setDepartmentNameInput] = useState("");
+  const [, setDeptSub] = useState<string>("");
+  const [, setDeptSubMode] = useState<"select" | "input">("select");
+  const [, setDepartmentNameInput] = useState("");
 
   const [phone, setPhone] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
