@@ -12,11 +12,7 @@ import { createPlotterOrder } from "../../services/plotterApi";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMyProfile } from "../../services/userApi";
 import { getCommonMetadata } from "../../services/commonApi";
-
-interface DepartmentUnit {
-  id: number;
-  name: string;
-}
+import { getExpectedDateKorean } from "../../utils/dateUtils";
 
 interface Purpose {
   id: number;
@@ -26,16 +22,17 @@ interface Purpose {
 export default function PlotterRequest() {
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
-  const [units, setUnits] = useState<DepartmentUnit[]>([]);
-  const [unit, setUnit] = useState("학생복지위원회");
+  const [departmentType, setDepartmentType] = useState("학생복지위원회");
+  const [departmentName, setDepartmentName] = useState<string | null>(null);
   const [purposes, setPurposes] = useState<Purpose[]>([]);
   const [purpose, setPurpose] = useState("대자보 출력");
-  const [paperSize, setPaperSize] = useState("A1(594 x 941mm)");
+  const [paperSize, setPaperSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("010-0000-0000");
+  const [studentId, setStudentId] = useState("");
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   // 로그인 체크
@@ -54,9 +51,13 @@ export default function PlotterRequest() {
       try {
         const profile = await getMyProfile();
         setPhoneNumber(profile.phoneNumber || "010-0000-0000");
+        setStudentId(profile.studentId || "");
         // 프로필의 소속 단위로 초기값 설정
-        if (profile.department) {
-          setUnit(profile.department);
+        if (profile.departmentType) {
+          setDepartmentType(profile.departmentType);
+        }
+        if (profile.departmentName) {
+          setDepartmentName(profile.departmentName);
         }
       } catch (error) {
         console.error("프로필 로드 실패:", error);
@@ -68,16 +69,11 @@ export default function PlotterRequest() {
     fetchProfile();
   }, [isLoggedIn]);
 
-  // 소속 단위 목록 로드
+  // 목적 목록 로드
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
         const metadata = await getCommonMetadata();
-        
-        // 소속 단위 설정 (데이터가 없으면 빈 배열)
-        if (metadata.departments) {
-          setUnits(metadata.departments);
-        }
         
         // 목적 설정 (데이터가 없으면 빈 배열)
         if (metadata.plotterPurposes) {
@@ -97,26 +93,10 @@ export default function PlotterRequest() {
     return null;
   }
 
-  // 예상 수령일 계산 (근무일 기준 2일 후)
-  const getExpectedDate = () => {
-    const today = new Date();
-    let workDays = 0;
-    let current = new Date(today);
-    
-    while (workDays < 2) {
-      current.setDate(current.getDate() + 1);
-      const day = current.getDay();
-      if (day !== 0 && day !== 6) workDays++;
-    }
-    
-    return `${current.getMonth() + 1}월 ${current.getDate()}일`;
-  };
-
   // 용지 크기에 따른 가격 책정 (예시)
   const getPaperPrice = () => {
     if (paperSize.includes("A1")) return 5000;
     if (paperSize.includes("A2")) return 3000;
-    if (paperSize.includes("A3")) return 2000;
     return 0;
   };
 
@@ -163,7 +143,8 @@ export default function PlotterRequest() {
         purpose: purpose.trim(),
         paperSize: extractedPaperSize,
         pageCount: quantity,
-        department: unit,
+        departmentType,
+        departmentName: departmentName || undefined,
         pdfFile,
         paymentReceiptImage: receiptFile || undefined,
       });
@@ -172,8 +153,8 @@ export default function PlotterRequest() {
       navigate("/plotter/complete", {
         state: {
           orderId: response.id,
-          name: user?.name || "",
-          studentNo: user?.username || "",
+          name: response.user?.name || user?.name || "",
+          studentNo: response.user?.studentId || "",
           phone: phoneNumber,
           purpose: response.purpose,
           quantity: response.pageCount,
@@ -212,11 +193,14 @@ export default function PlotterRequest() {
             {/* 왼쪽: 신청 정보 입력 */}
             <div className="w-full lg:w-[764px] bg-white rounded-[30px] p-8 shadow-lg">
               <PlotterFormFields
-                studentNo={user?.username || ""}
+                studentNo={studentId || ""}
                 name={user?.name || ""}
-                unit={unit}
-                units={units}
-                onUnitChange={setUnit}
+                departmentType={departmentType}
+                departmentName={departmentName}
+                onDepartmentChange={(type, name) => {
+                  setDepartmentType(type);
+                  setDepartmentName(name);
+                }}
                 phone={phoneNumber}
                 purpose={purpose}
                 purposes={purposes}
@@ -254,7 +238,7 @@ export default function PlotterRequest() {
               <ApplicationSummary
                 paperSize={paperSize}
                 quantity={quantity}
-                expectedDate={getExpectedDate()}
+                expectedDate={getExpectedDateKorean(2)}
                 isFree={false}
                 totalAmount={totalPrice}
                 onSubmit={handleSubmit}

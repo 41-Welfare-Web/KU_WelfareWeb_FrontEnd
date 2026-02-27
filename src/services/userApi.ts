@@ -52,12 +52,10 @@ export async function updateMyProfile(
   data: UpdateProfileRequest,
 ): Promise<UserProfile> {
   try {
-    const res = await axiosInstance.put<UserProfile>("/api/users/me", data);
-    return res.data;
+    const response = await axiosInstance.put<UserProfile>("/api/users/me", data);
+    return response.data;
   } catch (error: any) {
-    const message =
-      error?.response?.data?.message || "정보 수정에 실패했습니다.";
-    throw new Error(message);
+    throw new Error(error.response?.data?.message || "정보 수정에 실패했습니다.");
   }
 }
 
@@ -69,10 +67,10 @@ export async function deleteMyAccount(
   data: DeleteAccountRequest,
 ): Promise<void> {
   try {
-    await axiosInstance.delete("/api/users/me", { data });
+    await axiosInstance.delete("/api/users/me", {
+      data,
+    });
   } catch (error: any) {
-    const message =
-      error?.response?.data?.message || "회원 탈퇴에 실패했습니다.";
-    throw new Error(message);
+    throw new Error(error.response?.data?.message || "회원 탈퇴에 실패했습니다.");
   }
 }

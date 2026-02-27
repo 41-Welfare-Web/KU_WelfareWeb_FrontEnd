@@ -1,12 +1,11 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ??
-  "https://rentalweb-production.up.railway.app";
+import axiosInstance from "../api/axiosInstance";
 
 export interface PlotterOrderRequest {
   purpose: string;
   paperSize: string;
   pageCount: number;
-  department: string;
+  departmentType: string;
+  departmentName?: string;
   pdfFile: File;
   paymentReceiptImage?: File;
 }
@@ -17,6 +16,7 @@ export interface PlotterOrderResponse {
     name: string;
     studentId: string;
     department?: string;
+    departmentName?: string;
   };
   purpose: string;
   paperSize: string;
@@ -52,29 +52,32 @@ export async function createPlotterOrder(
   formData.append("purpose", data.purpose);
   formData.append("paperSize", data.paperSize);
   formData.append("pageCount", data.pageCount.toString());
-  formData.append("department", data.department);
+  formData.append("departmentType", data.departmentType);
+  
+  if (data.departmentName) {
+    formData.append("departmentName", data.departmentName);
+  }
+  
   formData.append("pdfFile", data.pdfFile);
   
   if (data.paymentReceiptImage) {
     formData.append("paymentReceiptImage", data.paymentReceiptImage);
   }
 
-  const token = localStorage.getItem("accessToken");
-  
-  const response = await fetch(`${API_BASE_URL}/api/plotter/orders`, {
-    method: "POST",
-    headers: {
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const error = await response.json() as ApiError;
-    throw new Error(error.message || "플로터 주문 신청에 실패했습니다.");
+  try {
+    const response = await axiosInstance.post<PlotterOrderDetailResponse>(
+      "/api/plotter/orders",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "플로터 주문 신청에 실패했습니다.");
   }
-
-  return response.json();
 }
 
 /**
@@ -95,31 +98,22 @@ export async function getPlotterOrders(params?: {
   };
   orders: PlotterOrderResponse[];
 }> {
-  const queryParams = new URLSearchParams();
-  if (params?.userId) queryParams.set("userId", params.userId);
-  if (params?.status) queryParams.set("status", params.status);
-  if (params?.page) queryParams.set("page", params.page.toString());
-  if (params?.pageSize) queryParams.set("pageSize", params.pageSize.toString());
-
-  const queryString = queryParams.toString();
-  const url = `${API_BASE_URL}/api/plotter/orders${queryString ? `?${queryString}` : ""}`;
-
-  const token = localStorage.getItem("accessToken");
-  
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json() as ApiError;
-    throw new Error(error.message || "플로터 주문 목록 조회에 실패했습니다.");
+  try {
+    const response = await axiosInstance.get<{
+      pagination: {
+        page: number;
+        pageSize: number;
+        totalItems: number;
+        totalPages: number;
+      };
+      orders: PlotterOrderResponse[];
+    }>("/api/plotter/orders", {
+      params,
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "플로터 주문 목록 조회에 실패했습니다.");
   }
-
-  return response.json();
 }
 
 /**
@@ -127,18 +121,10 @@ export async function getPlotterOrders(params?: {
  * DELETE /api/plotter/orders/{orderId}
  */
 export async function cancelPlotterOrder(orderId: number): Promise<void> {
-  const token = localStorage.getItem("accessToken");
-  
-  const response = await fetch(`${API_BASE_URL}/api/plotter/orders/${orderId}`, {
-    method: "DELETE",
-    headers: {
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json() as ApiError;
-    throw new Error(error.message || "플로터 주문 취소에 실패했습니다.");
+  try {
+    await axiosInstance.delete(`/api/plotter/orders/${orderId}`);
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "플로터 주문 취소에 실패했습니다.");
   }
 }
 
@@ -169,13 +155,13 @@ export async function createDummyPlotterOrders(count: number = 5): Promise<Plott
     const purpose = purposes[i % purposes.length];
     const paperSize = paperSizes[Math.floor(Math.random() * paperSizes.length)];
     const pageCount = Math.floor(Math.random() * 5) + 1;
-    const department = departments[Math.floor(Math.random() * departments.length)];
+    const departmentType = departments[Math.floor(Math.random() * departments.length)];
 
     const orderData: PlotterOrderRequest = {
       purpose,
       paperSize,
       pageCount,
-      department,
+      departmentType,
       pdfFile: createDummyPDF(`sample_${i + 1}`),
       ...(needsReceipt && { paymentReceiptImage: createDummyImage() })
     };
