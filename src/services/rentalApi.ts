@@ -1,6 +1,4 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ??
-  "https://rentalweb-production.up.railway.app";
+import axiosInstance from "../api/axiosInstance";
 
 export interface RentalItem {
   id: number;
@@ -43,31 +41,14 @@ export async function getRentals(params?: {
   page?: number;
   pageSize?: number;
 }): Promise<RentalsResponse> {
-  const queryParams = new URLSearchParams();
-  if (params?.userId) queryParams.set("userId", params.userId);
-  if (params?.status) queryParams.set("status", params.status);
-  if (params?.page) queryParams.set("page", params.page.toString());
-  if (params?.pageSize) queryParams.set("pageSize", params.pageSize.toString());
-
-  const queryString = queryParams.toString();
-  const url = `${API_BASE_URL}/api/rentals${queryString ? `?${queryString}` : ""}`;
-
-  const token = localStorage.getItem("accessToken");
-  
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json() as ApiError;
-    throw new Error(error.message || "대여 목록 조회에 실패했습니다.");
+  try {
+    const response = await axiosInstance.get<RentalsResponse>("/api/rentals", {
+      params,
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "대여 목록 조회에 실패했습니다.");
   }
-
-  return response.json();
 }
 
 /**
@@ -75,18 +56,10 @@ export async function getRentals(params?: {
  * DELETE /api/rentals/{rentalId}
  */
 export async function cancelRental(rentalId: number): Promise<void> {
-  const token = localStorage.getItem("accessToken");
-  
-  const response = await fetch(`${API_BASE_URL}/api/rentals/${rentalId}`, {
-    method: "DELETE",
-    headers: {
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json() as ApiError;
-    throw new Error(error.message || "대여 취소에 실패했습니다.");
+  try {
+    await axiosInstance.delete(`/api/rentals/${rentalId}`);
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "대여 취소에 실패했습니다.");
   }
 }
 
@@ -118,23 +91,12 @@ export interface CreateRentalResponse {
 }
 
 export async function createRental(data: CreateRentalRequest): Promise<CreateRentalResponse> {
-  const token = localStorage.getItem("accessToken");
-  
-  const response = await fetch(`${API_BASE_URL}/api/rentals`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const error = await response.json() as ApiError;
-    throw new Error(error.message || "대여 예약 생성에 실패했습니다.");
+  try {
+    const response = await axiosInstance.post<CreateRentalResponse>("/api/rentals", data);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "대여 예약 생성에 실패했습니다.");
   }
-
-  return response.json();
 }
 
 /**
