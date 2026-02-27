@@ -48,6 +48,28 @@ interface PlotterData {
   createdAt: string;
 }
 
+interface ItemData {
+  id: number;
+  category: {
+    id: number;
+    name: string;
+  };
+  name: string;
+  itemCode: string;
+  description?: string;
+  rentalCount: number;
+  imageUrl?: string;
+  managementType: 'INDIVIDUAL' | 'BULK';
+  totalQuantity: number;
+  currentStock: number;
+  createdAt: string;
+}
+
+interface CategoryData {
+  id: number;
+  name: string;
+}
+
 // 대여 상태 매핑 (API <-> 컴포넌트)
 const RENTAL_STATUS_MAP: Record<string, string> = {
   '예약': 'RESERVED',
@@ -100,10 +122,12 @@ function AdminDashboard() {
   const [itemsSearchQuery, setItemsSearchQuery] = useState('');
   const [rentalData, setRentalData] = useState<RentalData[]>([]);
   const [plotterData, setPlotterData] = useState<PlotterData[]>([]);
+  const [itemsData, setItemsData] = useState<ItemData[]>([]);
+  const [categories, setCategories] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRentals = async (customStartDate?: string, customEndDate?: string) => {
+  const fetchRentals = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -113,12 +137,7 @@ function AdminDashboard() {
         page: 1,
         pageSize: 100
       };
-      // 상태 필터는 프론트에서만 처리
-      // 날짜 필터 적용
-      const start = customStartDate !== undefined ? customStartDate : rentalStartDate;
-      const end = customEndDate !== undefined ? customEndDate : rentalEndDate;
-      if (start) params.startDate = start;
-      if (end) params.endDate = end;
+      // 상태 필터와 날짜 필터는 프론트에서만 처리 (API는 status, page, pageSize만 지원)
 
       const response = await axios.get(`${API_BASE_URL}/api/rentals`, {
         params,
@@ -145,8 +164,6 @@ function AdminDashboard() {
         page: 1,
         pageSize: 100
       };
-      
-
       // 상태 필터는 프론트에서만 처리
 
       const response = await axios.get(`${API_BASE_URL}/api/plotter/orders`, {
@@ -165,13 +182,60 @@ function AdminDashboard() {
     }
   };
 
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem('accessToken');
+      
+      const params: any = {};
+      if (itemsSearchQuery.trim()) {
+        params.search = itemsSearchQuery.trim();
+      }
+      
+      const response = await axios.get(`${API_BASE_URL}/api/items`, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      setItemsData(response.data || []);
+    } catch (err: any) {
+      console.error('물품 목록 조회 실패:', err);
+      setError(err.response?.data?.message || '물품 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.get(`${API_BASE_URL}/api/categories`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setCategories(response.data || []);
+    } catch (err: any) {
+      console.error('카테고리 목록 조회 실패:', err);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'rental') {
       fetchRentals();
-    } else {
+    } else if (activeTab === 'plotter') {
       fetchPlotterOrders();
+    } else if (activeTab === 'items') {
+      fetchItems();
     }
-  }, [activeTab, rentalStatusFilter]);
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const handleRentalStatusChange = async (rentalId: number, newStatus: string) => {
     try {
@@ -231,11 +295,39 @@ function AdminDashboard() {
   };
 
   const handleRentalSearch = () => {
-    fetchRentals(rentalStartDate, rentalEndDate);
+    fetchRentals();
   };
 
   const handlePlotterSearch = () => {
     fetchPlotterOrders();
+  };
+
+  const handleItemsSearch = () => {
+    fetchItems();
+  };
+
+  const handleItemEdit = async (itemId: number) => {
+    alert('물품 수정 기능은 별도 페이지가 필요합니다. 준비 중입니다.');
+  };
+
+  const handleItemDelete = async (itemId: number) => {
+    if (!window.confirm('이 물품을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      await axios.delete(`${API_BASE_URL}/api/items/${itemId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      alert('물품이 삭제되었습니다.');
+      fetchItems();
+    } catch (err: any) {
+      console.error('물품 삭제 실패:', err);
+      alert(err.response?.data?.message || '물품 삭제에 실패했습니다.');
+    }
   };
 
   const handleDownload = () => {
@@ -294,6 +386,24 @@ function AdminDashboard() {
       `PLOT-${item.id}`.toLowerCase().includes(query)
     );
     return statusMatch && searchMatch;
+  });
+
+  const filteredItemsData = itemsData.filter(item => {
+    // 카테고리 필터링
+    let categoryMatch = true;
+    if (itemsCategoryFilter !== '전체') {
+      categoryMatch = item.category.name === itemsCategoryFilter;
+    }
+
+    // 검색어 필터링
+    if (!itemsSearchQuery.trim()) return categoryMatch;
+    const query = itemsSearchQuery.toLowerCase();
+    const searchMatch = (
+      item.name.toLowerCase().includes(query) ||
+      item.itemCode.toLowerCase().includes(query) ||
+      (item.description && item.description.toLowerCase().includes(query))
+    );
+    return categoryMatch && searchMatch;
   });
 
   return (
@@ -482,40 +592,48 @@ function AdminDashboard() {
             <div>
               {/* 카테고리 필터 바 */}
               <AdminItemsFilterBar
-                categories={['전체', '전자기기', '축제용품', '음향기기', '공구', '체육용품']}
+                categories={['전체', ...categories.map(c => c.name)]}
                 selectedCategory={itemsCategoryFilter}
                 onCategoryChange={setItemsCategoryFilter}
                 searchQuery={itemsSearchQuery}
                 onSearchQueryChange={setItemsSearchQuery}
-                onSearch={() => console.log('물품 검색:', itemsSearchQuery)}
+                onSearch={handleItemsSearch}
                 searchPlaceholder="물품 검색"
               />
 
-              {/* 물품 카드 그리드 */}
-              <div className="grid grid-cols-4 gap-x-[53px] gap-y-[30px]">
-                {/* 예시 물품 카드들 */}
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                  <AdminItemCard
-                    key={item}
-                    id={item}
-                    name="행사용 천막"
-                    category="축제용품"
-                    description="야외 행사 및 축제 부스 운영 시 필요한 접이식 천막입니다."
-                    quantity={10}
-                    onEdit={(id) => alert(`물품 ${id} 수정 기능 준비 중`)}
-                    onDelete={(id) => {
-                      if (window.confirm(`물품 ${id}를 삭제하시겠습니까?`)) {
-                        alert(`물품 ${id} 삭제 기능 준비 중`);
-                      }
-                    }}
-                  />
-                ))}
-              </div>
+              {loading && (
+                <div className="h-[400px] flex items-center justify-center">
+                  <span className="text-gray-500 text-lg">로딩 중...</span>
+                </div>
+              )}
 
-              {/* 빈 상태 메시지 (물품이 없을 때) */}
-              {false && (
+              {!loading && error && (
+                <div className="h-[400px] flex items-center justify-center">
+                  <span className="text-red-500 text-lg">{error}</span>
+                </div>
+              )}
+
+              {!loading && !error && filteredItemsData.length === 0 && (
                 <div className="h-[400px] flex items-center justify-center">
                   <span className="text-gray-500 text-lg">등록된 물품이 없습니다.</span>
+                </div>
+              )}
+
+              {!loading && !error && filteredItemsData.length > 0 && (
+                <div className="grid grid-cols-4 gap-x-[53px] gap-y-[30px]">
+                  {filteredItemsData.map((item) => (
+                    <AdminItemCard
+                      key={item.id}
+                      id={item.id}
+                      name={item.name}
+                      category={item.category.name}
+                      description={item.description || ''}
+                      quantity={item.totalQuantity}
+                      imageUrl={item.imageUrl}
+                      onEdit={handleItemEdit}
+                      onDelete={handleItemDelete}
+                    />
+                  ))}
                 </div>
               )}
             </div>
