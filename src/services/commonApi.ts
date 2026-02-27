@@ -2,11 +2,6 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ??
   "https://rentalweb-production.up.railway.app";
 
-export interface Department {
-  id: number;
-  name: string;
-}
-
 export interface PlotterPurpose {
   id: number;
   name: string;
@@ -19,7 +14,7 @@ export interface PaperSize {
 }
 
 export interface CommonMetadata {
-  departments: Department[];
+  departments: string[][];
   plotterPurposes: PlotterPurpose[];
   plotterPaperSizes?: PaperSize[];
 }

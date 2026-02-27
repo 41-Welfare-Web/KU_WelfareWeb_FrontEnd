@@ -14,11 +14,6 @@ import { getMyProfile } from "../../services/userApi";
 import { getCommonMetadata } from "../../services/commonApi";
 import { getExpectedDateKorean } from "../../utils/dateUtils";
 
-interface DepartmentUnit {
-  id: number;
-  name: string;
-}
-
 interface Purpose {
   id: number;
   name: string;
@@ -27,8 +22,9 @@ interface Purpose {
 export default function PlotterRequest() {
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
-  const [units, setUnits] = useState<DepartmentUnit[]>([]);
-  const [unit, setUnit] = useState("학생복지위원회");
+  const [departments, setDepartments] = useState<string[][]>([]);
+  const [departmentType, setDepartmentType] = useState("학생복지위원회");
+  const [departmentName, setDepartmentName] = useState<string | null>(null);
   const [purposes, setPurposes] = useState<Purpose[]>([]);
   const [purpose, setPurpose] = useState("대자보 출력");
   const [paperSize, setPaperSize] = useState("");
@@ -57,7 +53,7 @@ export default function PlotterRequest() {
         setPhoneNumber(profile.phoneNumber || "010-0000-0000");
         // 프로필의 소속 단위로 초기값 설정
         if (profile.department) {
-          setUnit(profile.department);
+          setDepartmentType(profile.department);
         }
       } catch (error) {
         console.error("프로필 로드 실패:", error);
@@ -77,7 +73,7 @@ export default function PlotterRequest() {
         
         // 소속 단위 설정 (데이터가 없으면 빈 배열)
         if (metadata.departments) {
-          setUnits(metadata.departments);
+          setDepartments(metadata.departments);
         }
         
         // 목적 설정 (데이터가 없으면 빈 배열)
@@ -148,7 +144,8 @@ export default function PlotterRequest() {
         purpose: purpose.trim(),
         paperSize: extractedPaperSize,
         pageCount: quantity,
-        department: unit,
+        departmentType,
+        departmentName: departmentName || undefined,
         pdfFile,
         paymentReceiptImage: receiptFile || undefined,
       });
@@ -199,9 +196,13 @@ export default function PlotterRequest() {
               <PlotterFormFields
                 studentNo={user?.username || ""}
                 name={user?.name || ""}
-                unit={unit}
-                units={units}
-                onUnitChange={setUnit}
+                departmentType={departmentType}
+                departmentName={departmentName}
+                departments={departments}
+                onDepartmentChange={(type, name) => {
+                  setDepartmentType(type);
+                  setDepartmentName(name);
+                }}
                 phone={phoneNumber}
                 purpose={purpose}
                 purposes={purposes}
