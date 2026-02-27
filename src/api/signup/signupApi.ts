@@ -66,14 +66,12 @@ export async function registerApi(
 }
 
 // 메타데이터 불러오기 (소속단위 목록)
-export async function getDepartments(): Promise<string[]> {
+export async function getCommonMetadata(): Promise<CommonMetadataResponse> {
   const res = await fetch(`${API_BASE_URL}/api/common/metadata`, {
     method: "GET",
     headers: { accept: "*/*" },
   });
 
   if (!res.ok) throw new Error(await readErrorMessage(res));
-
-  const data = (await res.json()) as CommonMetadataResponse;
-  return Array.isArray(data.departments) ? data.departments : [];
+  return (await res.json()) as CommonMetadataResponse;
 }
