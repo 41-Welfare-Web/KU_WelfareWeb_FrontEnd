@@ -45,3 +45,73 @@ export type Availability = {
   availableQuantity: number;
   totalQuantity: number;
 };
+
+// 대여 예약 생성
+export type RentalCreateItem = {
+  itemId: number;
+  quantity: number;
+  startDate: string;
+  endDate: string;
+};
+
+export type RentalCreateRequest = {
+  items: RentalCreateItem[];
+};
+
+export type RentalStatus = "RESERVED" | "RENTED" | "RETURNED" | "CANCELED";
+
+export type RentalUser = {
+  id: string;
+  name: string;
+  username: string;
+  password: string;
+  studentId: string;
+  phoneNumber: string;
+  departmentType: string;
+  departmentName: string;
+  role: string;
+  loginAttempts: number;
+  lockUntil: string | null;
+  deletedAt: string | null;
+  createdAt: string;
+};
+
+export type RentalItemDetail = {
+  id: number;
+  categoryId: number;
+  name: string;
+  itemCode: string;
+  description: string;
+  rentalCount: number;
+  imageUrl: string | null;
+  managementType: "INDIVIDUAL" | "BULK" | string;
+  totalQuantity: number;
+  deletedAt: string | null;
+  createdAt: string;
+};
+
+export type RentalRentalItem = {
+  id: number;
+  rentalId: number;
+  itemId: number;
+  quantity: number;
+  instanceId: number | null;
+  item: RentalItemDetail;
+};
+
+export type Rental = {
+  id: number;
+  userId: string;
+  startDate: string;
+  endDate: string;
+  status: RentalStatus;
+  memo: string | null;
+  deletedAt: string | null;
+  createdAt: string;
+  user: RentalUser;
+  rentalItems: RentalRentalItem[];
+};
+
+export type RentalCreateResponse = {
+  rentals: Rental[];
+};

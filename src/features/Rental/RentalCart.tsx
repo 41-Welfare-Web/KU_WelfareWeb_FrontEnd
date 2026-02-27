@@ -9,10 +9,12 @@ import {
   updateCartItem,
 } from "../../api/rental/cart/cartApi";
 import { toUiCartItems } from "../../api/rental/cart/mapper";
-import type { UiCartItem } from "../../api/rental/cart/types";
+import type { UiCartItem, CartAddResponse } from "../../api/rental/cart/types";
 import RentalCartItemRow from "../../components/Rental/RentalCartItemRow";
 import { getItemAvailability } from "../../api/rental/calendar";
 import type { Availability } from "../../api/rental/types";
+import { createRentals } from "../../api/rental/rentalApi";
+import type { UserProfile } from "../../services/userApi";
 
 import calendar from "../../assets/rental/calendar-orange.svg";
 import RentalConfirmModal from "../../components/Rental/RentalConfirmModal";
@@ -311,7 +313,27 @@ export default function RentalCart() {
                 <RentalConfirmModal
                   open={confirmOpen}
                   onClose={() => setConfirmOpen(false)}
-                  onSubmit={() => setConfirmOpen(false)}
+                  onSubmit={async ({ cartItems }) => {
+                    try {
+                      await createRentals({
+                        items: cartItems.map((it) => ({
+                          itemId: it.itemId,
+                          quantity: it.quantity,
+                          startDate: (it.startDate ?? "").slice(0, 10),
+                          endDate: (it.endDate ?? "").slice(0, 10),
+                        })),
+                      });
+
+                      setConfirmOpen(false);
+                    } catch (e) {
+                      console.error("대여 신청 실패:", e);
+                      alert(
+                        e instanceof Error
+                          ? e.message
+                          : "대여 신청에 실패했어요. 다시 시도해주세요.",
+                      );
+                    }
+                  }}
                 />
               </div>
             </section>

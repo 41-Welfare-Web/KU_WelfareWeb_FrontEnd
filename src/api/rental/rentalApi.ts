@@ -1,5 +1,13 @@
+import axiosInstance from "../axiosInstance";
 import { API_BASE_URL } from "../client";
-import type { Category, Item, ItemsQuery, ItemDetail } from "./types";
+import type {
+  Category,
+  Item,
+  ItemsQuery,
+  ItemDetail,
+  RentalCreateRequest,
+  RentalCreateResponse,
+} from "./types";
 
 function buildQuery(params: ItemsQuery) {
   const sp = new URLSearchParams();
@@ -32,4 +40,13 @@ export async function getItems(params: ItemsQuery): Promise<Item[]> {
 export async function getItemDetail(itemId: number): Promise<ItemDetail> {
   const res = await fetch(`${API_BASE_URL}/api/items/${itemId}`);
   return parseJson<ItemDetail>(res);
+}
+
+// 새 대여 예약 생성 (POST /api/rentals)
+export async function createRentals(body: RentalCreateRequest) {
+  const res = await axiosInstance.post<RentalCreateResponse>(
+    "/api/rentals",
+    body,
+  );
+  return res.data;
 }
