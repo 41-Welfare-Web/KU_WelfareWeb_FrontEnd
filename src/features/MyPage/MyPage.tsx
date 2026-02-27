@@ -51,7 +51,8 @@ export default function MyPage() {
     username: string;
     name: string;
     studentId: string;
-    department: string;
+    departmentType: string;
+    departmentName: string;
   } | null>(null);
   
   // 로딩 상태
@@ -68,7 +69,8 @@ export default function MyPage() {
           username: profile.username,
           name: profile.name,
           studentId: profile.studentId,
-          department: profile.department,
+          departmentType: profile.departmentType,
+          departmentName: profile.departmentName,
         });
       } catch (error) {
         console.error("사용자 정보 조회 실패:", error);
@@ -185,19 +187,22 @@ export default function MyPage() {
   const handleProfileUpdate = async (data: {
     currentPassword: string;
     newPassword?: string;
-    department: string;
+    departmentType: string;
+    departmentName: string;
   }) => {
     try {
       const updatedProfile = await updateMyProfile({
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
-        department: data.department,
+        departmentType: data.departmentType,
+        departmentName: data.departmentName,
       });
       setUserProfile({
         username: updatedProfile.username,
         name: updatedProfile.name,
         studentId: updatedProfile.studentId,
-        department: updatedProfile.department,
+        departmentType: updatedProfile.departmentType,
+        departmentName: updatedProfile.departmentName,
       });
       alert("개인정보가 수정되었습니다.");
     } catch (error) {
@@ -298,7 +303,8 @@ export default function MyPage() {
                   <div className="flex justify-center py-8">
                     <ProfileEditForm
                       userId={userProfile.studentId}
-                      initialDepartment={userProfile.department}
+                      initialDepartmentType={userProfile.departmentType}
+                      initialDepartmentName={userProfile.departmentName}
                       onUpdate={handleProfileUpdate}
                       onDelete={handleAccountDelete}
                     />
