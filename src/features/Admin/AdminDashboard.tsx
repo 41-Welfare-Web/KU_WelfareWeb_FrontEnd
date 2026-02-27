@@ -27,6 +27,7 @@ interface RentalData {
     name: string;
     studentId: string;
     department?: string;
+    departmentName?: string;
   };
   startDate: string;
   endDate: string;
@@ -41,6 +42,7 @@ interface PlotterData {
     name: string;
     studentId: string;
     department?: string;
+    departmentName?: string;
   };
   purpose: string;
   paperSize: string;
@@ -443,7 +445,7 @@ function AdminDashboard() {
                             key={rental.id}
                             rentalCode={`R-${rental.id}`}
                             userName={rental.user.name}
-                            department={rental.user.department || '-'}
+                            department={rental.user.departmentName || '-'}
                             itemName={rental.itemSummary}
                             startDate={rental.startDate}
                             endDate={rental.endDate}
@@ -522,7 +524,7 @@ function AdminDashboard() {
                             key={plotter.id}
                             orderCode={`P-${plotter.id}`}
                             userName={plotter.user?.name || '사용자 정보 없음'}
-                            club={plotter.user?.department || '-'}
+                            club={plotter.user?.departmentName || '-'}
                             purpose={plotter.purpose}
                             paperSizeAndCount={`${plotter.paperSize} / ${plotter.pageCount}장`}
                             orderDate={plotter.pickupDate}

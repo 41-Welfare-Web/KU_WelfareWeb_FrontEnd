@@ -17,6 +17,7 @@ export interface PlotterOrderResponse {
     name: string;
     studentId: string;
     department?: string;
+    departmentName?: string;
   };
   purpose: string;
   paperSize: string;

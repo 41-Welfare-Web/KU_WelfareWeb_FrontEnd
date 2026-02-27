@@ -8,6 +8,7 @@ export interface RentalItem {
     name: string;
     studentId: string;
     department?: string;
+    departmentName?: string;
   };
   startDate: string;
   endDate: string;

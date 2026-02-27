@@ -16,8 +16,8 @@ export default function RejectReasonModal({ open, onClose, onSubmit }: RejectRea
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-[350px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+      <div className="bg-white rounded-lg shadow-2xl p-6 w-[350px] pointer-events-auto border border-gray-200">
         <h2 className="text-lg font-bold mb-3 text-center">반려 사유를 입력해주세요</h2>
         <textarea
           className="w-full h-24 border border-gray-300 rounded p-2 mb-4 resize-none focus:outline-none focus:border-blue-500"
