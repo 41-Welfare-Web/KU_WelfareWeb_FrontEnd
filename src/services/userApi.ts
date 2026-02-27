@@ -1,16 +1,13 @@
 import axiosInstance from "../api/axiosInstance";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ??
-  "https://rentalweb-production.up.railway.app";
-
 export interface UserProfile {
   id: string;
   username: string;
   name: string;
   studentId: string;
   phoneNumber: string;
-  department: string;
+  departmentType: string;
+  departmentName: string;
   role: "USER" | "ADMIN";
   createdAt: string;
 }
@@ -19,7 +16,8 @@ export interface UpdateProfileRequest {
   currentPassword: string;
   newPassword?: string;
   phoneNumber?: string;
-  department?: string;
+  departmentType?: string;
+  departmentName?: string;
 }
 
 export interface DeleteAccountRequest {
@@ -53,23 +51,14 @@ export async function getMyProfile(): Promise<UserProfile> {
 export async function updateMyProfile(
   data: UpdateProfileRequest,
 ): Promise<UserProfile> {
-  const token = localStorage.getItem("accessToken");
-
-  const response = await fetch(`${API_BASE_URL}/api/users/me`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const error = (await response.json()) as ApiError;
-    throw new Error(error.message || "정보 수정에 실패했습니다.");
+  try {
+    const res = await axiosInstance.put<UserProfile>("/api/users/me", data);
+    return res.data;
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message || "정보 수정에 실패했습니다.";
+    throw new Error(message);
   }
-
-  return response.json();
 }
 
 /**
@@ -79,19 +68,11 @@ export async function updateMyProfile(
 export async function deleteMyAccount(
   data: DeleteAccountRequest,
 ): Promise<void> {
-  const token = localStorage.getItem("accessToken");
-
-  const response = await fetch(`${API_BASE_URL}/api/users/me`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const error = (await response.json()) as ApiError;
-    throw new Error(error.message || "회원 탈퇴에 실패했습니다.");
+  try {
+    await axiosInstance.delete("/api/users/me", { data });
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message || "회원 탈퇴에 실패했습니다.";
+    throw new Error(message);
   }
 }
