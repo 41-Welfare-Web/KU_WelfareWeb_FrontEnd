@@ -12,6 +12,7 @@ import { createPlotterOrder } from "../../services/plotterApi";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMyProfile } from "../../services/userApi";
 import { getCommonMetadata } from "../../services/commonApi";
+import { getExpectedDateKorean } from "../../utils/dateUtils";
 
 interface DepartmentUnit {
   id: number;
@@ -97,26 +98,10 @@ export default function PlotterRequest() {
     return null;
   }
 
-  // 예상 수령일 계산 (근무일 기준 2일 후)
-  const getExpectedDate = () => {
-    const today = new Date();
-    let workDays = 0;
-    let current = new Date(today);
-    
-    while (workDays < 2) {
-      current.setDate(current.getDate() + 1);
-      const day = current.getDay();
-      if (day !== 0 && day !== 6) workDays++;
-    }
-    
-    return `${current.getMonth() + 1}월 ${current.getDate()}일`;
-  };
-
   // 용지 크기에 따른 가격 책정 (예시)
   const getPaperPrice = () => {
     if (paperSize.includes("A1")) return 5000;
     if (paperSize.includes("A2")) return 3000;
-    if (paperSize.includes("A3")) return 2000;
     return 0;
   };
 
@@ -254,7 +239,7 @@ export default function PlotterRequest() {
               <ApplicationSummary
                 paperSize={paperSize}
                 quantity={quantity}
-                expectedDate={getExpectedDate()}
+                expectedDate={getExpectedDateKorean(2)}
                 isFree={false}
                 totalAmount={totalPrice}
                 onSubmit={handleSubmit}
