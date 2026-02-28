@@ -90,11 +90,13 @@ select {
   -webkit-overflow-scrolling: touch;
 }
 
-/* 인쇄 장수 input 화살표 크기 조정 */
+/* 인쇄 장수 input 화살표 숨기기 */
 .quantity-input::-webkit-inner-spin-button,
 .quantity-input::-webkit-outer-spin-button {
-  opacity: 1;
-  width: 30px;
-  height: 40px;
-  cursor: pointer;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.quantity-input[type="number"] {
+  -moz-appearance: textfield;
 }

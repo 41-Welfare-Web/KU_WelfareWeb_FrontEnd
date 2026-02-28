@@ -101,63 +101,63 @@ export default function ProfileEditForm({
   };
 
   return (
-    <div className={`bg-white border border-[#e2e2e2] rounded-[22px] shadow-lg p-12 w-[544px] ${className}`}>
-      <h2 className="text-[32px] font-bold text-black text-center mb-8">
+    <div className={`bg-white border border-[#e2e2e2] rounded-[22px] shadow-lg p-4 md:p-12 w-full md:w-[544px] ${className}`}>
+      <h2 className="text-[24px] md:text-[32px] font-bold text-black text-center mb-6 md:mb-8">
         개인정보 수정
       </h2>
 
       {/* 아이디 */}
-      <div className="mb-8">
-        <label className="block text-[20px] text-black mb-3">아이디</label>
+      <div className="mb-6 md:mb-8">
+        <label className="block text-[16px] md:text-[20px] text-black mb-2 md:mb-3">아이디</label>
         <input
           type="text"
           value={userId}
           disabled
-          className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-[#afafaf]"
+          className="w-full h-[50px] md:h-[71px] bg-[#efefef] rounded-[10px] px-3 md:px-6 text-[16px] md:text-[20px] text-[#afafaf]"
         />
       </div>
 
       {/* 현재 비밀번호 */}
-      <div className="mb-8">
-        <label className="block text-[20px] text-black mb-3">현재 비밀번호 (필수)</label>
+      <div className="mb-6 md:mb-8">
+        <label className="block text-[16px] md:text-[20px] text-black mb-2 md:mb-3">현재 비밀번호 (필수)</label>
         <input
           type="password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           placeholder="본인 확인을 위해 현재 비밀번호를 입력하세요"
-          className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-black placeholder:text-[#afafaf]"
+          className="w-full h-[50px] md:h-[71px] bg-[#efefef] rounded-[10px] px-3 md:px-6 text-[16px] md:text-[20px] text-black placeholder:text-[#afafaf]"
         />
       </div>
 
       {/* 새 비밀번호 */}
-      <div className="mb-8">
-        <label className="block text-[20px] text-black mb-3">새 비밀번호 (선택)</label>
+      <div className="mb-6 md:mb-8">
+        <label className="block text-[16px] md:text-[20px] text-black mb-2 md:mb-3">새 비밀번호 (선택)</label>
         <input
           type="password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           placeholder="변경하지 않으려면 비워두세요"
-          className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-black placeholder:text-[#afafaf]"
+          className="w-full h-[50px] md:h-[71px] bg-[#efefef] rounded-[10px] px-3 md:px-6 text-[16px] md:text-[20px] text-black placeholder:text-[#afafaf]"
         />
-        <p className="mt-2 text-[14px] text-[#868686]">
+        <p className="mt-2 text-[12px] md:text-[14px] text-[#868686]">
           * 최소 8자 이상, 영문자, 숫자, 특수문자(@$!%*#?&) 각 1개 이상 포함
         </p>
       </div>
 
       {/* 새 비밀번호 확인 */}
-      <div className="mb-8">
-        <label className="block text-[20px] text-black mb-3">새 비밀번호 확인</label>
-        <div className="flex gap-3">
+      <div className="mb-6 md:mb-8">
+        <label className="block text-[16px] md:text-[20px] text-black mb-2 md:mb-3">새 비밀번호 확인</label>
+        <div className="flex gap-2 md:gap-3">
           <input
             type="password"
             value={newPasswordConfirm}
             onChange={(e) => setNewPasswordConfirm(e.target.value)}
             placeholder="새 비밀번호를 다시 입력하세요"
-            className="flex-1 h-[67px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-black placeholder:text-[#afafaf]"
+            className="flex-1 h-[50px] md:h-[67px] bg-[#efefef] rounded-[10px] px-3 md:px-6 text-[16px] md:text-[20px] text-black placeholder:text-[#afafaf]"
           />
           <button
             onClick={handlePasswordCheck}
-            className="w-[106px] h-[67px] bg-[#fe6949] rounded-[10px] text-[24px] text-white font-bold hover:bg-[#e55838] transition"
+            className="w-[70px] md:w-[106px] h-[50px] md:h-[67px] bg-[#fe6949] rounded-[10px] text-[18px] md:text-[24px] text-white font-bold hover:bg-[#e55838] transition"
           >
             확인
           </button>
@@ -165,12 +165,12 @@ export default function ProfileEditForm({
       </div>
 
       {/* 단위 변경 */}
-      <div className="mb-8">
-        <label className="block text-[20px] text-black mb-3">단위 변경</label>
+      <div className="mb-6 md:mb-8">
+        <label className="block text-[16px] md:text-[20px] text-black mb-2 md:mb-3">단위 변경</label>
         <button
           type="button"
           onClick={() => setIsDepartmentModalOpen(true)}
-          className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-black text-left flex items-center justify-between hover:bg-[#e0e0e0] transition"
+          className="w-full h-[50px] md:h-[71px] bg-[#efefef] rounded-[10px] px-3 md:px-6 text-[16px] md:text-[20px] text-black text-left flex items-center justify-between hover:bg-[#e0e0e0] transition"
         >
           <span>
             {departmentName ? `${departmentType} - ${departmentName}` : departmentType}
@@ -193,7 +193,7 @@ export default function ProfileEditForm({
       {/* 수정 완료 버튼 */}
       <button
         onClick={handleProfileUpdate}
-        className="w-full h-[71px] bg-[#fd7d5d] rounded-[10px] text-[24px] text-white font-bold hover:bg-[#e46c4c] transition mb-6"
+        className="w-full h-[50px] md:h-[71px] bg-[#fd7d5d] rounded-[10px] text-[18px] md:text-[24px] text-white font-bold hover:bg-[#e46c4c] transition mb-4 md:mb-6"
       >
         수정 완료
       </button>
@@ -201,7 +201,7 @@ export default function ProfileEditForm({
       {/* 회원 탈퇴 */}
       <button
         onClick={handleAccountDelete}
-        className="w-full text-[20px] text-[#868686] underline hover:text-[#666] transition"
+        className="w-full text-[16px] md:text-[20px] text-[#868686] underline hover:text-[#666] transition"
       >
         회원 탈퇴하기
       </button>
