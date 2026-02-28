@@ -188,10 +188,10 @@ export default function PlotterRequest() {
         />
 
         {/* 메인 컨텐츠 */}
-        <section className="max-w-[1440px] mx-auto px-4 pb-20">
-          <div className="flex flex-col lg:flex-row gap-10 items-start justify-center">
+        <section className="max-w-[1440px] mx-auto px-3 md:px-4 pb-10 md:pb-20">
+          <div className="flex flex-col lg:flex-row gap-4 md:gap-10 items-start justify-center">
             {/* 왼쪽: 신청 정보 입력 */}
-            <div className="w-full lg:w-[764px] bg-white rounded-[30px] p-8 shadow-lg">
+            <div className="w-full lg:w-[764px] bg-white rounded-[30px] p-4 md:p-8 shadow-lg">
               <PlotterFormFields
                 studentNo={studentId || ""}
                 name={user?.name || ""}
@@ -233,7 +233,7 @@ export default function PlotterRequest() {
             </div>
 
             {/* 오른쪽: 신청 요약 + 유의사항 */}
-            <div className="w-full lg:w-[469px] flex flex-col gap-6">
+            <div className="w-full lg:w-[469px] flex flex-col gap-4 md:gap-6">
               {/* 신청 요약 */}
               <ApplicationSummary
                 paperSize={paperSize}
