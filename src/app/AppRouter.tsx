@@ -7,8 +7,6 @@ import PlotterRequest from "../features/Plotter/PlotterRequest";
 import PlotterComplete from "../features/Plotter/PlotterComplete";
 import MyPage from "../features/MyPage/MyPage";
 import AdminDashboard from "../features/Admin/AdminDashboard";
-import ComponentTest from "../features/ComponentTest/ComponentTest";
-import TestDataPage from "../features/Test/TestDataPage";
 import FindAccount from "../features/Login/FindAccount";
 import RentalCart from "../features/Rental/RentalCart";
 
@@ -29,8 +27,6 @@ export default function AppRouter() {
       <Route path="/mypage" element={<MyPage />} />
 
       <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/test" element={<ComponentTest />} />
-      <Route path="/test-data" element={<TestDataPage />} />
     </Routes>
   );
 }

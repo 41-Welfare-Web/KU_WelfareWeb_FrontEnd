@@ -8,10 +8,10 @@ export default function PageHeader({ title, subtitle, className = "" }: PageHead
   return (
     <section className={`w-full pt-12 pb-8 px-4 ${className}`}>
       <div className="max-w-[1440px] mx-auto text-center">
-        <h1 className="text-[48px] font-extrabold text-black mb-4">
+        <h1 className="text-[45px] md:text-[48px] font-extrabold text-black mb-4">
           {title}
         </h1>
-        <p className="text-[22px] md:text-[25px] text-[#6a7282]">
+        <p className="text-[19px] md:text-[25px] text-[#6a7282]">
           {subtitle}
         </p>
       </div>

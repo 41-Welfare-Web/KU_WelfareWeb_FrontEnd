@@ -18,27 +18,27 @@ export default function PaymentProofBox({
   className = ""
 }: PaymentProofBoxProps) {
   return (
-    <div className={`mb-6 ${className}`}>
+    <div className={`mb-4 md:mb-6 ${className}`}>
       <div className="flex items-center gap-2 mb-2">
-        <img src={CardIcon} alt="Card" className="w-4 h-4" />
-        <label className="text-[20px] font-medium text-black">입금 내역 증빙</label>
+        <img src={CardIcon} alt="Card" className="w-3 h-3 md:w-4 md:h-4" />
+        <label className="text-[15px] md:text-[20px] font-medium text-black">입금 내역 증빙</label>
       </div>
-      <div className="bg-[#fff3e5] border border-dashed border-[#99a1af] rounded-[10px] p-6">
-        <div className="mb-4 space-y-2">
+      <div className="bg-[#fff3e5] border border-dashed border-[#99a1af] rounded-[10px] p-4 md:p-6">
+        <div className="mb-3 md:mb-4 space-y-1 md:space-y-2">
           <div className="flex items-start gap-2">
-            <span className="text-[20px] text-[#606060]">입금 계좌:</span>
-            <span className="text-[20px] text-[#f72] font-medium">
+            <span className="text-[13px] md:text-[20px] text-[#606060]">입금 계좌:</span>
+            <span className="text-[13px] md:text-[20px] text-[#f72] font-medium break-all">
               {accountInfo.bank} {accountInfo.accountNumber} ({accountInfo.accountHolder})
             </span>
           </div>
           <div className="flex items-start gap-2">
-            <span className="text-[20px] text-[#606060]">입금자명:</span>
-            <span className="text-[20px] text-[#606060]">
+            <span className="text-[13px] md:text-[20px] text-[#606060]">입금자명:</span>
+            <span className="text-[13px] md:text-[20px] text-[#606060]">
               본인 이름으로 입금해주세요.
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <input
             type="file"
             accept="image/*"
@@ -48,11 +48,11 @@ export default function PaymentProofBox({
           />
           <label
             htmlFor="receipt-upload"
-            className="inline-block bg-[#fccc96] px-6 py-2 rounded-[19px] text-[15px] text-[#f72] cursor-pointer hover:bg-[#fbb974] font-medium"
+            className="inline-block bg-[#fccc96] px-4 md:px-6 py-1.5 md:py-2 rounded-[19px] text-[12px] md:text-[15px] text-[#f72] cursor-pointer hover:bg-[#fbb974] font-medium"
           >
             파일 선택
           </label>
-          <span className="text-[20px] text-[#bababa]">
+          <span className="text-[13px] md:text-[20px] text-[#bababa] truncate">
             {file ? file.name : "선택된 파일 없음"}
           </span>
         </div>

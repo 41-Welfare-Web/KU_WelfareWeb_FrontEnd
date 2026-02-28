@@ -229,11 +229,11 @@ export default function MyPage() {
       <Header />
 
       <div className="w-full bg-gradient-to-b from-[#ffdcc5] to-white min-h-screen pb-20">
-        <div className="max-w-[1440px] mx-auto px-4 pt-8">
+        <div className="max-w-[1440px] mx-auto px-4 pt-4 md:pt-8">
           {/* 페이지 타이틀 */}
-          <div className="flex items-center gap-4 mb-8">
-            <img src={myOrangeIcon} alt="user" className="w-9 h-9" />
-            <h1 className="text-[32px] font-bold text-[#410f07]">마이페이지</h1>
+          <div className="flex items-center gap-4 mb-4 md:mb-8">
+            <img src={myOrangeIcon} alt="user" className="w-7 h-7 md:w-9 md:h-9" />
+            <h1 className="text-[24px] md:text-[32px] font-bold text-[#410f07]">마이페이지</h1>
           </div>
 
           {/* 로딩 중 */}
@@ -251,9 +251,9 @@ export default function MyPage() {
               </div>
 
               {/* 탭 컨텐츠 */}
-              <div className="px-11 py-8 bg-white min-h-[400px] flex flex-col items-center">
+              <div className="px-3 py-0 md:px-11 md:py-8 bg-white min-h-[400px] flex flex-col items-center">
                 {activeTab === "rental" && (
-                  <div className="space-y-5 w-full">
+                  <div className="space-y-3 md:space-y-5 w-full pt-3 md:pt-0">
                     {isLoadingRentals ? (
                       <LoadingState message="대여 내역을 불러오는 중..." />
                     ) : reservations.length === 0 ? (
@@ -279,7 +279,7 @@ export default function MyPage() {
                 )}
 
                 {activeTab === "plotter" && (
-                  <div className="space-y-5 w-full">
+                  <div className="space-y-3 md:space-y-5 w-full pt-3 md:pt-0">
                     {isLoadingPlotter ? (
                       <LoadingState message="플로터 내역을 불러오는 중..." />
                     ) : plotterReservations.length === 0 ? (
@@ -300,7 +300,7 @@ export default function MyPage() {
                 )}
 
                 {activeTab === "profile" && (
-                  <div className="flex justify-center py-8">
+                  <div className="flex justify-center py-0 md:py-8">
                     <ProfileEditForm
                       userId={userProfile.studentId}
                       initialDepartmentType={userProfile.departmentType}
