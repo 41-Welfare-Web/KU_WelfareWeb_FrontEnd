@@ -50,10 +50,10 @@ export default function PlotterComplete() {
 
           {/* 완료 메시지 */}
           <div className="text-center mb-6">
-            <h1 className="text-[50px] font-bold text-[#410f07] mb-4">
+            <h1 className="text-[44px] md:text-[50px] font-bold text-[#410f07] mb-4">
               예약이 완료되었습니다!
             </h1>
-            <p className="text-[30px] text-[#410f07] leading-relaxed">
+            <p className="text-[24px] md:text-[30px] text-[#410f07] leading-relaxed">
               수령 가능일부터 학생복지위원회실에<br />
               방문하여 출력물을 수령해주시기 바랍니다.
             </p>

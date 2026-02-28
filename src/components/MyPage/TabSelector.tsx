@@ -12,12 +12,12 @@ const TabSelector = ({ activeTab, onTabChange, className = '' }: TabSelectorProp
   ];
 
   return (
-    <div className={`flex h-[94px] ${className}`}>
+    <div className={`flex h-[60px] md:h-[94px] ${className}`}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
-          className={`w-[293px] h-full text-[30px] font-medium text-[#410f07] transition-colors rounded-tl-[10px] rounded-tr-[10px] ${
+          className={`min-w-[100px] md:w-[293px] flex-shrink-0 h-full text-[15px] md:text-[30px] font-medium text-[#410f07] transition-colors rounded-tl-[10px] rounded-tr-[10px] px-4 whitespace-nowrap ${
             activeTab === tab.id
               ? 'bg-[#ff7755]'
               : 'bg-white hover:bg-[#f5f5f5] border border-[#e3e3e3]'

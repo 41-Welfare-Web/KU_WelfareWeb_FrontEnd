@@ -131,7 +131,7 @@ export default function PlotterFormFields({
       </div>
 
       {/* 용지 크기 & 인쇄 장수 */}
-      <div className="flex justify-between mb-6">
+      <div className="flex justify-between gap-6 mb-6">
         <div className="w-[311px]">
           <label className="block text-[20px] font-medium text-black mb-2">용지 크기</label>
           <select
