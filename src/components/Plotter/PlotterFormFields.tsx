@@ -124,11 +124,7 @@ export default function PlotterFormFields({
               </option>
             ))
           ) : (
-            <>
-              <option>대자보 출력</option>
-              <option>포스터 제작</option>
-              <option>현수막 제작</option>
-            </>
+            <option value="" disabled>로딩 중...</option>
           )}
         </select>
       </div>

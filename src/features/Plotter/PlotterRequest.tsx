@@ -26,13 +26,13 @@ export default function PlotterRequest() {
   const [departmentName, setDepartmentName] = useState<string | null>(null);
   const [purposes, setPurposes] = useState<Purpose[]>([]);
   const [paperSizes, setPaperSizes] = useState<PaperSize[]>([]);
-  const [purpose, setPurpose] = useState("대자보 출력");
+  const [purpose, setPurpose] = useState("");
   const [paperSize, setPaperSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("010-0000-0000");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [studentId, setStudentId] = useState("");
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
@@ -51,7 +51,7 @@ export default function PlotterRequest() {
       
       try {
         const profile = await getMyProfile();
-        setPhoneNumber(profile.phoneNumber || "010-0000-0000");
+        setPhoneNumber(profile.phoneNumber);
         setStudentId(profile.studentId || "");
         // 프로필의 소속 단위로 초기값 설정
         if (profile.departmentType) {
@@ -78,6 +78,10 @@ export default function PlotterRequest() {
         
         // 목적 설정
         setPurposes(metadata.plotterPurposes);
+        // 첫 번째 목적을 기본값으로 설정
+        if (metadata.plotterPurposes.length > 0) {
+          setPurpose(metadata.plotterPurposes[0].name);
+        }
         
         // 용지 크기 설정
         setPaperSizes(metadata.plotterPaperSizes);
