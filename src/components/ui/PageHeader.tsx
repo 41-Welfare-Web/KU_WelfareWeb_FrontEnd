@@ -11,7 +11,7 @@ export default function PageHeader({ title, subtitle, className = "" }: PageHead
         <h1 className="text-[48px] font-extrabold text-black mb-4">
           {title}
         </h1>
-        <p className="text-[28px] text-[#6a7282]">
+        <p className="text-[22px] md:text-[25px] text-[#6a7282]">
           {subtitle}
         </p>
       </div>
