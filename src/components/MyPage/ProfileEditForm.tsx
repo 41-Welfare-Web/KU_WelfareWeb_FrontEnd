@@ -1,12 +1,15 @@
 import { useState } from "react";
+import DepartmentPickerModal from "../DepartmentPickerModal";
 
 interface ProfileEditFormProps {
   userId: string;
-  initialDepartment?: string;
+  initialDepartmentType?: string;
+  initialDepartmentName?: string;
   onUpdate?: (data: {
     currentPassword: string;
     newPassword?: string;
-    department: string;
+    departmentType: string;
+    departmentName: string;
   }) => void;
   onDelete?: (password: string) => void;
   className?: string;
@@ -14,7 +17,8 @@ interface ProfileEditFormProps {
 
 export default function ProfileEditForm({
   userId,
-  initialDepartment = "학생복지 위원회",
+  initialDepartmentType = "학생복지위원회",
+  initialDepartmentName = "",
   onUpdate,
   onDelete,
   className = "",
@@ -22,7 +26,9 @@ export default function ProfileEditForm({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
-  const [department, setDepartment] = useState(initialDepartment);
+  const [departmentType, setDepartmentType] = useState(initialDepartmentType);
+  const [departmentName, setDepartmentName] = useState(initialDepartmentName);
+  const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false);
 
   // 비밀번호 유효성 검사
   const validatePassword = (password: string): boolean => {
@@ -71,7 +77,8 @@ export default function ProfileEditForm({
       onUpdate({ 
         currentPassword, 
         newPassword: newPassword || undefined, 
-        department 
+        departmentType,
+        departmentName
       });
     } else {
       alert("개인정보가 수정되었습니다.");
@@ -160,22 +167,27 @@ export default function ProfileEditForm({
       {/* 단위 변경 */}
       <div className="mb-8">
         <label className="block text-[20px] text-black mb-3">단위 변경</label>
-        <select
-          value={department}
-          onChange={(e) => setDepartment(e.target.value)}
-          className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-black appearance-none cursor-pointer"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z' fill='%23000000'/%3E%3C/svg%3E")`,
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'right 1rem center',
-          }}
+        <button
+          type="button"
+          onClick={() => setIsDepartmentModalOpen(true)}
+          className="w-full h-[71px] bg-[#efefef] rounded-[10px] px-6 text-[20px] text-black text-left flex items-center justify-between hover:bg-[#e0e0e0] transition"
         >
-          <option value="학생복지 위원회">학생복지 위원회</option>
-          <option value="총학생회">총학생회</option>
-          <option value="단과대 학생회">단과대 학생회</option>
-          <option value="동아리">동아리</option>
-          <option value="학과 학생회">학과 학생회</option>
-        </select>
+          <span>
+            {departmentName ? `${departmentType} - ${departmentName}` : departmentType}
+          </span>
+          <span className="text-[#666]">▼</span>
+        </button>
+
+        <DepartmentPickerModal
+          open={isDepartmentModalOpen}
+          onClose={() => setIsDepartmentModalOpen(false)}
+          value={{ departmentType, departmentName }}
+          onConfirm={({ departmentType: type, departmentName: name }) => {
+            setDepartmentType(type);
+            setDepartmentName(name);
+          }}
+          title="단위 선택"
+        />
       </div>
 
       {/* 수정 완료 버튼 */}

@@ -162,8 +162,9 @@ export default function ComponentTest() {
                 <PlotterFormFields
                   studentNo="202112345"
                   name="홍길동"
-                  unit="학생복지위원회"
-                  onUnitChange={() => {}}
+                  departmentType="학생복지위원회"
+                  departmentName=""
+                  onDepartmentChange={() => {}}
                   phone="010-1234-5678"
                   purpose="대자보 출력"
                   onPurposeChange={() => {}}
@@ -267,7 +268,8 @@ export default function ComponentTest() {
                 <div className="flex justify-center">
                   <ProfileEditForm
                     userId="202112345"
-                    initialDepartment="학생복지위원회"
+                    initialDepartmentType="학생복지위원회"
+                    initialDepartmentName=""
                     onUpdate={(data) => console.log("프로필 수정:", data)}
                     onDelete={(password) => console.log("회원 탈퇴:", password)}
                   />

@@ -1,11 +1,13 @@
+import { useState } from "react";
 import FileOrangeIcon from "../../assets/plotter/file-orange.svg";
+import DepartmentPickerModal from "../DepartmentPickerModal";
 
 interface PlotterFormFieldsProps {
   studentNo: string;
   name: string;
-  unit: string;
-  units?: { id: number; name: string }[];
-  onUnitChange: (value: string) => void;
+  departmentType: string;
+  departmentName: string | null;
+  onDepartmentChange: (type: string, name: string | null) => void;
   phone: string;
   purpose: string;
   purposes?: { id: number; name: string }[];
@@ -20,9 +22,9 @@ interface PlotterFormFieldsProps {
 export default function PlotterFormFields({
   studentNo,
   name,
-  unit,
-  units = [],
-  onUnitChange,
+  departmentType,
+  departmentName,
+  onDepartmentChange,
   phone,
   purpose,
   purposes = [],
@@ -33,6 +35,8 @@ export default function PlotterFormFields({
   onQuantityChange,
   className = "",
 }: PlotterFormFieldsProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <div className={className}>
       <div className="flex items-center gap-3 mb-8">
@@ -65,30 +69,25 @@ export default function PlotterFormFields({
       {/* 소속 단위 */}
       <div className="mb-6">
         <label className="block text-[20px] font-medium text-black mb-2">소속 단위</label>
-        <select
-          value={unit}
-          onChange={(e) => onUnitChange(e.target.value)}
-          className="w-full h-[71px] px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[20px] appearance-none cursor-pointer"
-          style={{ 
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E")`, 
-            backgroundRepeat: 'no-repeat', 
-            backgroundPosition: 'right 20px center' 
-          }}
+        <button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          className="w-full h-[71px] px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[20px] text-left flex items-center justify-between hover:bg-gray-50 transition"
         >
-          {units.length > 0 ? (
-            units.map((u) => (
-              <option key={u.id} value={u.name}>
-                {u.name}
-              </option>
-            ))
-          ) : (
-            <>
-              <option>학생복지위원회</option>
-              <option>총학생회</option>
-              <option>동아리연합회</option>
-            </>
-          )}
-        </select>
+          <span>
+            {departmentName ? `${departmentType} - ${departmentName}` : departmentType}
+          </span>
+          <span className="text-[#8e8e8e]">▼</span>
+        </button>
+
+        <DepartmentPickerModal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          value={{ departmentType, departmentName: departmentName || "" }}
+          onConfirm={({ departmentType: type, departmentName: name }) => {
+            onDepartmentChange(type, name);
+          }}
+        />
       </div>
 
       {/* 전화번호 */}
@@ -159,6 +158,7 @@ export default function PlotterFormFields({
               min="1"
               value={quantity}
               onChange={(e) => onQuantityChange(parseInt(e.target.value) || 1)}
+              onWheel={(e) => e.currentTarget.blur()}
               className="w-full h-[71px] px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[20px] quantity-input"
             />
             <span className="text-[35px] font-medium">장</span>

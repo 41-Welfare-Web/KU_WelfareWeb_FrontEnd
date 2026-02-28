@@ -6,13 +6,16 @@ import TabSelector from "../../components/MyPage/TabSelector";
 import RentalContainer from "../../components/MyPage/RentalContainer";
 import PlotterContainer from "../../components/MyPage/PlotterContainer";
 import ProfileEditForm from "../../components/MyPage/ProfileEditForm";
+import LoadingState from "../../components/ui/LoadingState";
+import EmptyState from "../../components/ui/EmptyState";
 import myOrangeIcon from "../../assets/mypage/my-orange.svg";
 import { getMyProfile, updateMyProfile, deleteMyAccount } from "../../services/userApi";
 import { getRentals, cancelRental } from "../../services/rentalApi";
 import { getPlotterOrders } from "../../services/plotterApi";
+import { mapRentalStatus, mapPlotterStatus, type UiRentalStatus, type UiPlotterStatus } from "../../utils/statusMapper";
 
-type ReservationStatus = 'reserved' | 'renting' | 'returned' | 'defective' | 'canceled';
-type PlotterStatus = 'waiting' | 'confirmed' | 'printing' | 'completed' | 'rejected';
+type ReservationStatus = UiRentalStatus;
+type PlotterStatus = UiPlotterStatus;
 type TabType = "rental" | "plotter" | "profile";
 
 type Reservation = {
@@ -48,7 +51,8 @@ export default function MyPage() {
     username: string;
     name: string;
     studentId: string;
-    department: string;
+    departmentType: string;
+    departmentName: string;
   } | null>(null);
   
   // 로딩 상태
@@ -65,7 +69,8 @@ export default function MyPage() {
           username: profile.username,
           name: profile.name,
           studentId: profile.studentId,
-          department: profile.department,
+          departmentType: profile.departmentType,
+          departmentName: profile.departmentName,
         });
       } catch (error) {
         console.error("사용자 정보 조회 실패:", error);
@@ -85,18 +90,6 @@ export default function MyPage() {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
-
-  // API status를 UI status로 매핑
-  const mapRentalStatus = (apiStatus: string): ReservationStatus => {
-    const statusMap: Record<string, ReservationStatus> = {
-      'reserved': 'reserved',
-      'rented': 'renting',
-      'returned': 'returned',
-      'overdue': 'defective', // 연체를 불량 반납으로 매핑
-      'canceled': 'canceled',
-    };
-    return statusMap[apiStatus.toLowerCase()] || 'reserved';
-  };
 
   // 대여 내역 조회
   useEffect(() => {
@@ -130,19 +123,6 @@ export default function MyPage() {
       fetchRentals();
     }
   }, [activeTab, isLoadingUser]);
-
-  // API 상태를 UI 상태로 매핑
-  const mapPlotterStatus = (apiStatus: string): PlotterStatus => {
-    const statusMap: Record<string, PlotterStatus> = {
-      'PENDING': 'waiting',
-      'CONFIRMED': 'confirmed',
-      'PRINTING': 'printing',
-      'PRINTED': 'printing',
-      'COMPLETED': 'completed',
-      'REJECTED': 'rejected',
-    };
-    return statusMap[apiStatus] || 'waiting';
-  };
 
   // 플로터 내역 조회
   useEffect(() => {
@@ -207,19 +187,22 @@ export default function MyPage() {
   const handleProfileUpdate = async (data: {
     currentPassword: string;
     newPassword?: string;
-    department: string;
+    departmentType: string;
+    departmentName: string;
   }) => {
     try {
       const updatedProfile = await updateMyProfile({
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
-        department: data.department,
+        departmentType: data.departmentType,
+        departmentName: data.departmentName,
       });
       setUserProfile({
         username: updatedProfile.username,
         name: updatedProfile.name,
         studentId: updatedProfile.studentId,
-        department: updatedProfile.department,
+        departmentType: updatedProfile.departmentType,
+        departmentName: updatedProfile.departmentName,
       });
       alert("개인정보가 수정되었습니다.");
     } catch (error) {
@@ -254,11 +237,7 @@ export default function MyPage() {
           </div>
 
           {/* 로딩 중 */}
-          {isLoadingUser && (
-            <div className="flex justify-center items-center py-20">
-              <p className="text-[20px] text-[#606060]">로딩 중...</p>
-            </div>
-          )}
+          {isLoadingUser && <LoadingState />}
 
           {/* 메인 컨텐츠 카드 */}
           {!isLoadingUser && userProfile && (
@@ -276,13 +255,9 @@ export default function MyPage() {
                 {activeTab === "rental" && (
                   <div className="space-y-5 w-full">
                     {isLoadingRentals ? (
-                      <div className="flex justify-center items-center py-20">
-                        <p className="text-[20px] text-[#606060]">대여 내역을 불러오는 중...</p>
-                      </div>
+                      <LoadingState message="대여 내역을 불러오는 중..." />
                     ) : reservations.length === 0 ? (
-                      <div className="flex justify-center items-center py-20">
-                        <p className="text-[20px] text-[#606060]">대여 내역이 없습니다.</p>
-                      </div>
+                      <EmptyState message="대여 내역이 없습니다." />
                     ) : (
                       reservations.map((reservation) => (
                         <RentalContainer
@@ -306,13 +281,9 @@ export default function MyPage() {
                 {activeTab === "plotter" && (
                   <div className="space-y-5 w-full">
                     {isLoadingPlotter ? (
-                      <div className="flex justify-center items-center py-20">
-                        <p className="text-[20px] text-[#606060]">플로터 내역을 불러오는 중...</p>
-                      </div>
+                      <LoadingState message="플로터 내역을 불러오는 중..." />
                     ) : plotterReservations.length === 0 ? (
-                      <div className="flex justify-center items-center py-20">
-                        <p className="text-[20px] text-[#606060]">플로터 주문 내역이 없습니다.</p>
-                      </div>
+                      <EmptyState message="플로터 주문 내역이 없습니다." />
                     ) : (
                       plotterReservations.map((reservation) => (
                         <PlotterContainer
@@ -332,7 +303,8 @@ export default function MyPage() {
                   <div className="flex justify-center py-8">
                     <ProfileEditForm
                       userId={userProfile.studentId}
-                      initialDepartment={userProfile.department}
+                      initialDepartmentType={userProfile.departmentType}
+                      initialDepartmentName={userProfile.departmentName}
                       onUpdate={handleProfileUpdate}
                       onDelete={handleAccountDelete}
                     />
