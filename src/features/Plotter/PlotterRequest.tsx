@@ -11,7 +11,7 @@ import PlotterFormFields from "../../components/Plotter/PlotterFormFields";
 import { createPlotterOrder } from "../../services/plotterApi";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMyProfile } from "../../services/userApi";
-import { getCommonMetadata } from "../../services/commonApi";
+import { getCommonMetadata, type PaperSize } from "../../services/commonApi";
 import { getExpectedDateKorean } from "../../utils/dateUtils";
 
 interface Purpose {
@@ -25,6 +25,7 @@ export default function PlotterRequest() {
   const [departmentType, setDepartmentType] = useState("학생복지위원회");
   const [departmentName, setDepartmentName] = useState<string | null>(null);
   const [purposes, setPurposes] = useState<Purpose[]>([]);
+  const [paperSizes, setPaperSizes] = useState<PaperSize[]>([]);
   const [purpose, setPurpose] = useState("대자보 출력");
   const [paperSize, setPaperSize] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -69,16 +70,17 @@ export default function PlotterRequest() {
     fetchProfile();
   }, [isLoggedIn]);
 
-  // 목적 목록 로드
+  // 목적 및 용지 크기 목록 로드
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
         const metadata = await getCommonMetadata();
         
-        // 목적 설정 (데이터가 없으면 빈 배열)
-        if (metadata.plotterPurposes) {
-          setPurposes(metadata.plotterPurposes);
-        }
+        // 목적 설정
+        setPurposes(metadata.plotterPurposes);
+        
+        // 용지 크기 설정
+        setPaperSizes(metadata.plotterPaperSizes);
       } catch (error) {
         console.error("메타데이터 로드 실패:", error);
         // 에러 시 빈 배열 유지
@@ -93,11 +95,13 @@ export default function PlotterRequest() {
     return null;
   }
 
-  // 용지 크기에 따른 가격 책정 (예시)
+  // 용지 크기에 따른 가격 책정
   const getPaperPrice = () => {
-    if (paperSize.includes("A1")) return 5000;
-    if (paperSize.includes("A2")) return 3000;
-    return 0;
+    if (!paperSize || paperSizes.length === 0) return 0;
+    
+    // paperSize와 일치하는 항목 찾기
+    const found = paperSizes.find(ps => ps.name === paperSize);
+    return found ? found.price : 0;
   };
 
   const totalPrice = getPaperPrice() * quantity;
@@ -206,6 +210,7 @@ export default function PlotterRequest() {
                 purposes={purposes}
                 onPurposeChange={setPurpose}
                 paperSize={paperSize}
+                paperSizes={paperSizes}
                 onPaperSizeChange={setPaperSize}
                 quantity={quantity}
                 onQuantityChange={setQuantity}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import FileOrangeIcon from "../../assets/plotter/file-orange.svg";
 import DepartmentPickerModal from "../DepartmentPickerModal";
+import type { PaperSize } from "../../services/commonApi";
 
 interface PlotterFormFieldsProps {
   studentNo: string;
@@ -13,6 +14,7 @@ interface PlotterFormFieldsProps {
   purposes?: { id: number; name: string }[];
   onPurposeChange: (value: string) => void;
   paperSize: string;
+  paperSizes?: PaperSize[];
   onPaperSizeChange: (value: string) => void;
   quantity: number;
   onQuantityChange: (value: number) => void;
@@ -30,6 +32,7 @@ export default function PlotterFormFields({
   purposes = [],
   onPurposeChange,
   paperSize,
+  paperSizes = [],
   onPaperSizeChange,
   quantity,
   onQuantityChange,
@@ -145,9 +148,11 @@ export default function PlotterFormFields({
             }}
           >
             <option value="">용지를 선택하세요</option>
-            <option value="A1(594 x 941mm)">A1(594 x 941mm)</option>
-            <option value="A2(420 x 594mm)">A2(420 x 594mm)</option>
-            <option value="A3(297 x 420mm)">A3(297 x 420mm)</option>
+            {paperSizes.map((ps) => (
+              <option key={ps.id} value={ps.name}>
+                {ps.name}
+              </option>
+            ))}
           </select>
         </div>
         <div className="w-full">
