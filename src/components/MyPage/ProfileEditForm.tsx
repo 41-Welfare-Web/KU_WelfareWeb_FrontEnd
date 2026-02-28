@@ -101,7 +101,7 @@ export default function ProfileEditForm({
   };
 
   return (
-    <div className={`bg-white border border-[#e2e2e2] rounded-[22px] shadow-lg p-4 md:p-12 w-full md:w-[544px] ${className}`}>
+    <div className={`bg-white border border-[#e2e2e2] rounded-[22px] shadow-lg p-4 md:p-12 w-full ${className}`}>
       <h2 className="text-[24px] md:text-[32px] font-bold text-black text-center mb-6 md:mb-8">
         개인정보 수정
       </h2>

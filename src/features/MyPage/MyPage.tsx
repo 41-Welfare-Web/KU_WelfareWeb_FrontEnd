@@ -251,7 +251,7 @@ export default function MyPage() {
               </div>
 
               {/* 탭 컨텐츠 */}
-              <div className="px-3 py-0 md:px-11 md:py-8 bg-white min-h-[400px] flex flex-col items-center">
+              <div className="px-3 py-3 md:px-11 md:py-8 bg-white min-h-[400px] flex flex-col items-center">
                 {activeTab === "rental" && (
                   <div className="space-y-3 md:space-y-5 w-full pt-3 md:pt-0">
                     {isLoadingRentals ? (
@@ -300,7 +300,7 @@ export default function MyPage() {
                 )}
 
                 {activeTab === "profile" && (
-                  <div className="flex justify-center py-0 md:py-8">
+                  <div className="w-full">
                     <ProfileEditForm
                       userId={userProfile.studentId}
                       initialDepartmentType={userProfile.departmentType}
