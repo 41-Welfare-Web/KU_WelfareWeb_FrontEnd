@@ -55,6 +55,8 @@ export type RentalCreateItem = {
 };
 
 export type RentalCreateRequest = {
+  departmentType: string;
+  departmentName: string;
   items: RentalCreateItem[];
 };
 

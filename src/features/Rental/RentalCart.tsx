@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import Calendar from "../../components/Rental/Calendar";
@@ -41,6 +42,8 @@ async function checkEnough(
 }
 
 export default function RentalCart() {
+  const navigate = useNavigate();
+
   const [cartItems, setCartItems] = useState<UiCartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -312,18 +315,26 @@ export default function RentalCart() {
                 <RentalConfirmModal
                   open={confirmOpen}
                   onClose={() => setConfirmOpen(false)}
-                  onSubmit={async ({ cartItems }) => {
+                  onSubmit={async ({
+                    departmentType,
+                    departmentName,
+                    cartItems,
+                  }) => {
                     try {
-                      await createRentals({
-                        items: cartItems.map((it) => ({
-                          itemId: it.itemId,
-                          quantity: it.quantity,
-                          startDate: (it.startDate ?? "").slice(0, 10),
-                          endDate: (it.endDate ?? "").slice(0, 10),
+                      const result = await createRentals({
+                        departmentType,
+                        departmentName,
+                        items: cartItems.map((it: any) => ({
+                          itemId: it.item?.id ?? it.itemId,
+                          quantity: it.quantity ?? it.count ?? 1,
+                          startDate: String(it.startDate ?? "").slice(0, 10),
+                          endDate: String(it.endDate ?? "").slice(0, 10),
                         })),
                       });
 
+                      navigate("/rental/complete", { state: { result } });
                       setConfirmOpen(false);
+                      await fetchCart();
                     } catch (e) {
                       console.error("대여 신청 실패:", e);
                       alert(

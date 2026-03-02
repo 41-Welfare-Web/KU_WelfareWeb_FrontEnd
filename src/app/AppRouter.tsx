@@ -9,6 +9,7 @@ import MyPage from "../features/MyPage/MyPage";
 import AdminDashboard from "../features/Admin/AdminDashboard";
 import FindAccount from "../features/Login/FindAccount";
 import RentalCart from "../features/Rental/RentalCart";
+import RentalComplete from "../components/Rental/RentalComplete";
 
 export default function AppRouter() {
   return (
@@ -20,6 +21,7 @@ export default function AppRouter() {
 
       <Route path="/rental" element={<RentalList />} />
       <Route path="/rental/cart" element={<RentalCart />} />
+      <Route path="/rental/complete" element={<RentalComplete />} />
 
       <Route path="/plotter" element={<PlotterRequest />} />
       <Route path="/plotter/complete" element={<PlotterComplete />} />
