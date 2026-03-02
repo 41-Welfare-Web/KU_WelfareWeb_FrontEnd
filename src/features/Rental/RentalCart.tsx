@@ -41,6 +41,23 @@ async function checkEnough(
   return min >= qty;
 }
 
+function getApiErrorMessage(err: unknown) {
+  const anyErr = err as any;
+
+  const status: number | undefined = anyErr?.response?.status ?? anyErr?.status;
+
+  const serverMsg: string | undefined =
+    anyErr?.response?.data?.message ?? anyErr?.response?.data?.error?.message;
+
+  const fallbackMsg =
+    anyErr instanceof Error ? anyErr.message : "요청에 실패했어요.";
+
+  return {
+    status,
+    message: serverMsg || fallbackMsg,
+  };
+}
+
 export default function RentalCart() {
   const navigate = useNavigate();
 
@@ -337,10 +354,18 @@ export default function RentalCart() {
                       await fetchCart();
                     } catch (e) {
                       console.error("대여 신청 실패:", e);
+
+                      const { status, message } = getApiErrorMessage(e);
+
+                      // 400/409는 서버 이유를 그대로 보여주기
+                      if (status === 400 || status === 409) {
+                        alert(message);
+                        return;
+                      }
+
+                      // 그 외는 기본 메시지
                       alert(
-                        e instanceof Error
-                          ? e.message
-                          : "대여 신청에 실패했어요. 다시 시도해주세요.",
+                        message || "대여 신청에 실패했어요. 다시 시도해주세요.",
                       );
                     }
                   }}
