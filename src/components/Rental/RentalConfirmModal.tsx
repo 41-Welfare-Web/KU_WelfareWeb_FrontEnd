@@ -11,8 +11,6 @@ import type {
   CartGetResponse,
 } from "../../api/rental/cart/types";
 import DepartmentPickerModal from "../DepartmentPickerModal";
-import { createRentals } from "../../api/rental/rentalApi";
-import type { RentalCreateRequest } from "../../api/rental/types";
 
 type Props = {
   open: boolean;
