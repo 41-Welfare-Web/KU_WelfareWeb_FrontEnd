@@ -68,7 +68,7 @@ export default function DepartmentPickerModal({
 
   return (
     <div
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 px-4"
+      className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 px-4"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

@@ -16,6 +16,7 @@ export default function Header() {
   const mobileUserMenuRef = useRef<HTMLDivElement | null>(null);
 
   const { isLoggedIn, user, logout } = useAuth();
+  const isAdmin = isLoggedIn && user?.role === "ADMIN";
 
   const closeAll = () => {
     setOpen(false);
@@ -110,14 +111,15 @@ export default function Header() {
           </button>
 
           {/* ========================= */}
-          {/* admin 사이트 QA 위한 코드 */}
-          <button
-            type="button"
-            onClick={() => navigate("/admin")}
-            className={menuClass("/admin")}
-          >
-            admin
-          </button>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => navigate("/admin")}
+              className={menuClass("/admin")}
+            >
+              admin
+            </button>
+          )}
           {/* ========================= */}
 
           {!isLoggedIn ? (

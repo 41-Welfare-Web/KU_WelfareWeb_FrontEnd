@@ -29,7 +29,7 @@ function getMonthGrid(viewYear: number, viewMonthIndex0: number) {
   const last = new Date(viewYear, viewMonthIndex0 + 1, 0);
 
   const firstDow = first.getDay(); // 0..6
-  const offset = (firstDow + 6) % 7; // Monday start
+  const offset = firstDow;
   const start = new Date(first);
   start.setDate(first.getDate() - offset);
 
@@ -44,6 +44,19 @@ function getMonthGrid(viewYear: number, viewMonthIndex0: number) {
 function addMonths(year: number, monthIndex0: number, delta: number) {
   const d = new Date(year, monthIndex0 + delta, 1);
   return { year: d.getFullYear(), monthIndex0: d.getMonth() };
+}
+
+function isWeekend(d: Date) {
+  const dow = d.getDay(); // 0=일 ... 6=토
+  return dow === 0 || dow === 6;
+}
+
+function isSameDate(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }
 
 export default function Calendar({
@@ -74,7 +87,6 @@ export default function Calendar({
 
   const monthStartYmd = useMemo(() => toYmd(first), [first]);
   const monthEndYmd = useMemo(() => toYmd(last), [last]);
-  const todayYmd = useMemo(() => toYmd(new Date()), []);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -188,7 +200,7 @@ export default function Calendar({
       </div>
 
       <div className="mt-4 grid grid-cols-7 text-center text-[13px] font-semibold text-black/70">
-        {["월", "화", "수", "목", "금", "토", "일"].map((d) => (
+        {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
           <div key={d} className="py-2">
             {d}
           </div>
@@ -199,7 +211,29 @@ export default function Calendar({
         {cells.map((cell) => {
           const ymd = toYmd(cell.date);
           const inMonth = cell.inMonth;
-          const isPast = ymd < todayYmd;
+
+          const now = new Date();
+          const todayDate = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+          );
+          const cellDate = new Date(
+            cell.date.getFullYear(),
+            cell.date.getMonth(),
+            cell.date.getDate(),
+          );
+
+          const todayYmdLive = toYmd(now); // 매 렌더마다 오늘 문자열
+          const isPast = ymd < todayYmdLive;
+
+          const isToday = isSameDate(cellDate, todayDate);
+          const afterSix = now.getHours() >= 18; // 18:00 이후면 true
+          const isWeekendDay = isWeekend(cell.date);
+
+          // 예약 불가 조건
+          const isBlocked =
+            !inMonth || isPast || isWeekendDay || (isToday && afterSix);
 
           const av = mapByDate.get(ymd);
           const available = av?.availableQuantity ?? null;
@@ -212,24 +246,26 @@ export default function Calendar({
 
           let base =
             "bg-white border border-black/10 hover:bg-black/5 text-black";
+
           // 1) 달 밖
           if (!inMonth)
             base = "bg-transparent text-black/25 border-transparent";
 
-          // 2) 오늘 이전(달 안쪽이라도) - 예약 불가 스타일
-          if (inMonth && isPast)
+          // 2) 과거/주말/오늘18시이후 -> 예약 불가 스타일
+          if (inMonth && (isPast || isWeekendDay || (isToday && afterSix))) {
             base =
               "bg-transparent text-black/30 border-transparent cursor-not-allowed";
+          }
 
-          // 3) 재고 표시(오늘 이후인 날짜에만)
-          if (inMonth && !isPast) {
+          // 3) 재고 표시(예약 가능한 날짜에만)
+          if (inMonth && !isBlocked) {
             if (enough === true) base = "bg-emerald-100 text-black";
             else if (enough === false) base = "bg-[#FFA2A2] text-[#FF0000]";
           }
 
-          // 선택 스타일은 오늘 이후인 날짜에만 적용
+          // 선택 스타일은 예약 가능한 날짜에만
           let selectedCls = "";
-          if (!isPast && inMonth) {
+          if (!isBlocked && inMonth) {
             if (inRange) selectedCls = "bg-orange-500 text-white";
             if (isStart || isEnd) selectedCls = "bg-orange-500 text-white";
           }
@@ -238,8 +274,11 @@ export default function Calendar({
             <button
               key={ymd}
               type="button"
-              onClick={() => inMonth && onPickDay(ymd)}
-              disabled={!inMonth}
+              onClick={() => {
+                if (isBlocked) return;
+                onPickDay(ymd);
+              }}
+              disabled={isBlocked}
               className={[
                 "rounded-xl p-2 text-left transition",
                 "min-h-[64px] md:min-h-[72px]",
@@ -252,10 +291,14 @@ export default function Calendar({
                   {cell.date.getDate()}
                 </div>
 
-                {inMonth && available != null && (
+                {inMonth && !isBlocked && available != null && (
                   <div className="whitespace-nowrap text-[8px] font-semibold px-2 py-1 rounded-full">
                     {available}개
                   </div>
+                )}
+
+                {inMonth && isWeekendDay && (
+                  <div className="mt-1 text-[10px] text-black/40">주말</div>
                 )}
               </div>
             </button>
