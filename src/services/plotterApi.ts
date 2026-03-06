@@ -18,6 +18,8 @@ export interface PlotterOrderResponse {
     department?: string;
     departmentName?: string;
   };
+  departmentType?: string;
+  departmentName?: string;
   purpose: string;
   paperSize: string;
   pageCount: number;

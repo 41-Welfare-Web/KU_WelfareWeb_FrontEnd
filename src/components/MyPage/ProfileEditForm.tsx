@@ -170,12 +170,14 @@ export default function ProfileEditForm({
         <button
           type="button"
           onClick={() => setIsDepartmentModalOpen(true)}
-          className="w-full h-[50px] md:h-[71px] bg-[#efefef] rounded-[10px] px-3 md:px-6 text-[16px] md:text-[20px] text-black text-left flex items-center justify-between hover:bg-[#e0e0e0] transition"
+          className="w-full h-[50px] md:h-[71px] bg-[#efefef] rounded-[10px] px-3 md:px-6 text-[16px] md:text-[20px] text-black text-left appearance-none cursor-pointer"
+          style={{ 
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E")`, 
+            backgroundRepeat: 'no-repeat', 
+            backgroundPosition: 'right 20px center' 
+          }}
         >
-          <span>
-            {departmentName ? `${departmentType} - ${departmentName}` : departmentType}
-          </span>
-          <span className="text-[#666]">▼</span>
+          {departmentName ? `${departmentType} - ${departmentName}` : departmentType}
         </button>
 
         <DepartmentPickerModal
