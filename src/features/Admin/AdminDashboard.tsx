@@ -28,6 +28,7 @@ interface RentalData {
     studentId: string;
     department?: string;
     departmentName?: string;
+    departmentType?: string;
   };
   startDate: string;
   endDate: string;
@@ -44,6 +45,8 @@ interface PlotterData {
     department?: string;
     departmentName?: string;
   };
+  departmentType?: string;
+  departmentName?: string;
   purpose: string;
   paperSize: string;
   pageCount: number;
@@ -316,9 +319,11 @@ function AdminDashboard() {
     // 검색어 필터
     if (!rentalSearchQuery.trim()) return statusMatch && dateMatch;
     const query = rentalSearchQuery.toLowerCase();
+    const departmentName = item.user.departmentName || item.user.departmentType || '';
     const searchMatch = (
       item.user.name.toLowerCase().includes(query) ||
       item.user.studentId.includes(query) ||
+      departmentName.toLowerCase().includes(query) ||
       item.itemSummary.toLowerCase().includes(query) ||
       `RENT-${item.id}`.toLowerCase().includes(query)
     );
@@ -338,9 +343,11 @@ function AdminDashboard() {
     const query = plotterSearchQuery.toLowerCase();
     const userName = item.user?.name || '';
     const studentId = item.user?.studentId || '';
+    const departmentName = item.departmentName || item.user?.departmentName || item.departmentType || '';
     const searchMatch = (
       userName.toLowerCase().includes(query) ||
       studentId.includes(query) ||
+      departmentName.toLowerCase().includes(query) ||
       item.purpose.toLowerCase().includes(query) ||
       `PLOT-${item.id}`.toLowerCase().includes(query)
     );
@@ -445,7 +452,7 @@ function AdminDashboard() {
                             key={rental.id}
                             rentalCode={`R-${rental.id}`}
                             userName={rental.user.name}
-                            department={rental.user.departmentName || '-'}
+                            department={rental.user.departmentName || rental.user.departmentType || '-'}
                             itemName={rental.itemSummary}
                             startDate={rental.startDate}
                             endDate={rental.endDate}
@@ -524,7 +531,7 @@ function AdminDashboard() {
                             key={plotter.id}
                             orderCode={`P-${plotter.id}`}
                             userName={plotter.user?.name || '사용자 정보 없음'}
-                            club={plotter.user?.departmentName || '-'}
+                            club={plotter.departmentName || plotter.user?.departmentName || plotter.departmentType || '-'}
                             purpose={plotter.purpose}
                             paperSizeAndCount={`${plotter.paperSize} / ${plotter.pageCount}장`}
                             orderDate={plotter.pickupDate}
