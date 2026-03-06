@@ -19,7 +19,7 @@ export default function AdminDashboardHeader({
     <div className={`flex justify-between items-start mb-6 ${className}`}>
       <div className="relative inline-block">
         <h1 className="text-[48px] font-bold text-[#410f07] mb-2">관리자 대시보드</h1>
-        <div className="absolute left-0 bottom-0 w-[300px] h-[4px] bg-[#410f07]"></div>
+        <div className="absolute left-0 bottom-0 w-full h-[4px] bg-[#410f07]"></div>
       </div>
       
       {/* 버튼 그룹 */}

@@ -6,6 +6,8 @@ interface RentalData {
     name: string;
     studentId: string;
     department?: string;
+    departmentName?: string;
+    departmentType?: string;
   };
   startDate: string;
   endDate: string;
@@ -20,7 +22,10 @@ interface PlotterData {
     name: string;
     studentId: string;
     department?: string;
+    departmentName?: string;
   };
+  departmentType?: string;
+  departmentName?: string;
   purpose: string;
   paperSize: string;
   pageCount: number;
@@ -37,7 +42,7 @@ export function useExportCSV() {
     }
 
     // CSV 헤더
-    let csvContent = '예약번호,이름,학번,신청일,예약 기간,상태,물품명\n';
+    let csvContent = '예약번호,이름,학번,소속,신청일,예약 기간,상태,물품명\n';
     
     // CSV 행 생성
     data.forEach(item => {
@@ -45,6 +50,7 @@ export function useExportCSV() {
         `RENT-${item.id}`,
         item.user.name,
         item.user.studentId,
+        item.user.departmentName || item.user.departmentType || '-',
         item.createdAt.split('T')[0],
         `${item.startDate} ~ ${item.endDate}`,
         item.status,
@@ -63,14 +69,16 @@ export function useExportCSV() {
     }
 
     // CSV 헤더
-    let csvContent = '주문번호,이름,학번,신청일,목적,용지 크기,장수,수령일,상태\n';
+    let csvContent = '주문번호,이름,학번,소속,신청일,목적,용지 크기,장수,수령일,상태\n';
     
     // CSV 행 생성
     data.forEach(item => {
+      const departmentName = item.departmentName || item.user?.departmentName || item.departmentType || '-';
       const row = [
         `PLOT-${item.id}`,
         item.user?.name || '사용자 정보 없음',
         item.user?.studentId || '-',
+        departmentName,
         item.createdAt.split('T')[0],
         item.purpose.replace(/,/g, ' '),
         item.paperSize,

@@ -75,12 +75,14 @@ export default function PlotterFormFields({
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className="w-full h-[50px] md:h-[71px] px-4 md:px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[16px] md:text-[20px] text-left flex items-center justify-between hover:bg-gray-50 transition"
+          className="w-full h-[50px] md:h-[71px] px-4 md:px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[16px] md:text-[16px] text-left appearance-none cursor-pointer font-normal"
+          style={{ 
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E")`, 
+            backgroundRepeat: 'no-repeat', 
+            backgroundPosition: 'right 20px center' 
+          }}
         >
-          <span>
-            {departmentName ? `${departmentType} - ${departmentName}` : departmentType}
-          </span>
-          <span className="text-[#8e8e8e]">▼</span>
+          {departmentName ? `${departmentType} - ${departmentName}` : departmentType}
         </button>
 
         <DepartmentPickerModal

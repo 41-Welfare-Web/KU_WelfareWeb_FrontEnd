@@ -18,18 +18,18 @@ export default function AdminTabNavigation({
   ];
 
   return (
-    <div className={`flex gap-8 mb-6 border-b-2 border-[#D9D9D9] ${className}`}>
+    <div className={`flex gap-8 mb-8 border-b-2 border-[#D9D9D9] ${className}`}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
-          className={`pb-2 font-['HanbatGothic'] font-medium text-[24px] relative ${
+          className={`pb-2 font-['HanbatGothic'] font-medium text-[24px] relative inline-block ${
             activeTab === tab.id ? 'text-[#FE6949]' : 'text-[#8E8E8E]'
           }`}
         >
           {tab.label}
           {activeTab === tab.id && (
-            <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#FE6949]"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#FE6949]"></div>
           )}
         </button>
       ))}
