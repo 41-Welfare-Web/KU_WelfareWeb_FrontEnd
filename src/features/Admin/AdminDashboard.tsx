@@ -385,15 +385,17 @@ function AdminDashboard() {
             onAddItem={() => alert('신규 물품 등록 기능 준비 중')}
           />
 
-          {/* 탭 네비게이션 */}
-          <AdminTabNavigation
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
+          {/* 탭과 내용을 감싸는 박스 */}
+          <div className="bg-white rounded-[20px] p-8 shadow-sm">
+            {/* 탭 네비게이션 */}
+            <AdminTabNavigation
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
 
-          {/* 대여 관리 탭 내용 */}
-          {activeTab === 'rental' && (
-            <div>
+            {/* 대여 관리 탭 내용 */}
+            {activeTab === 'rental' && (
+              <div>
               {/* 필터 바 */}
               <AdminFilterBar
                 statusOptions={['전체 보기', '예약', '대여 중', '정상 반납', '불량 반납', '예약 취소']}
@@ -604,6 +606,7 @@ function AdminDashboard() {
               )}
             </div>
           )}
+          </div>
         </div>
       </div>
 
