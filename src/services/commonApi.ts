@@ -13,7 +13,8 @@ export interface PaperSize {
 
 // API 응답 인터페이스 (실제 API 형식)
 interface CommonMetadataResponse {
-  departments: string[];
+  departments: string[][];
+  purposes: string[];
   freePurposes: string[];
   prices: {
     [key: string]: number; // { a0: 5000, a1: 3000 }
@@ -51,7 +52,7 @@ export async function getCommonMetadata(): Promise<CommonMetadata> {
     const data = response.data;
     
     // API 응답을 프론트엔드 형식으로 변환
-    const plotterPurposes: PlotterPurpose[] = data.freePurposes?.map((name, index) => ({
+    const plotterPurposes: PlotterPurpose[] = data.purposes?.map((name, index) => ({
       id: index + 1,
       name,
     })) || [];
@@ -63,7 +64,7 @@ export async function getCommonMetadata(): Promise<CommonMetadata> {
     }));
     
     return {
-      departments: data.departments ? [data.departments] : [],
+      departments: data.departments || [],
       plotterPurposes,
       plotterPaperSizes,
     };

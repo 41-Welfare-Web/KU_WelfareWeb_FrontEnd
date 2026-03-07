@@ -117,3 +117,50 @@ export type Rental = {
 export type RentalCreateResponse = {
   rentals: Rental[];
 };
+
+// 대여 예약 상세조회 (GET /api/rentals/{id})
+export type RentalHistory = {
+  id: number;
+  rentalId: number;
+  rentalItemId: number | null;
+  changedBy: string;
+  oldStatus: RentalStatus | null;
+  newStatus: RentalStatus;
+  memo: string | null;
+  changedAt: string;
+  user: { name: string };
+};
+
+export type RentalDetail = {
+  id: number;
+  userId: string;
+  startDate: string;
+  endDate: string;
+  departmentType: string;
+  departmentName: string | null;
+  status: RentalStatus;
+  memo: string | null;
+  deletedAt: string | null;
+  createdAt: string;
+  user: RentalUser;
+  rentalItems: RentalRentalItem[];
+  rentalHistories: RentalHistory[];
+};
+
+// 대여 예약 수정 (PUT /api/rentals/{id})
+export type RentalUpsertItem = {
+  itemId: number;
+  quantity: number;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+};
+
+export type RentalUpsertRequest = {
+  departmentType: string;
+  departmentName: string | null;
+  items: RentalUpsertItem[];
+};
+
+export type RentalUpsertResponse = {
+  rentals: Rental[];
+};

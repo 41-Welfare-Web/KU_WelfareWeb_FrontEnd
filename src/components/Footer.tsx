@@ -63,7 +63,7 @@ export default function Footer() {
             <p className="mt-6 text-[12px] sm:text-[13px] leading-[1.6] font-semibold text-[#3A2A23]/80 [font-family:var(--font-crimson)]">
               서울특별시 광진구 능동로 120
               <br />
-              건국대학교 제1학생회관 B102호
+              건국대학교 제1학생회관 B110호
             </p>
           </div>
         </div>
