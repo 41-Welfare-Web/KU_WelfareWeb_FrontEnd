@@ -45,6 +45,50 @@ async function checkEnough(
   return min >= qty;
 }
 
+function isBetweenInclusive(date: string, start: string, end: string) {
+  return date >= start && date <= end;
+}
+
+async function checkEnoughForEdit(
+  itemId: number,
+  startDate: string,
+  endDate: string,
+  qty: number,
+  originalStartDate: string,
+  originalEndDate: string,
+  originalQty: number,
+) {
+  const rows: Availability[] = await getItemAvailability({
+    itemId,
+    startDate,
+    endDate,
+  });
+
+  if (!rows || rows.length === 0) return false;
+
+  const adjustedRows = rows.map((row) => {
+    const inOriginalRange = isBetweenInclusive(
+      row.date,
+      originalStartDate,
+      originalEndDate,
+    );
+
+    return {
+      ...row,
+      availableQuantity: inOriginalRange
+        ? (row.availableQuantity ?? 0) + originalQty
+        : (row.availableQuantity ?? 0),
+    };
+  });
+
+  const min = adjustedRows.reduce<number>(
+    (acc, r) => Math.min(acc, r.availableQuantity ?? 0),
+    Infinity,
+  );
+
+  return min >= qty;
+}
+
 function getApiErrorMessage(err: unknown) {
   const anyErr = err as any;
 
@@ -148,12 +192,27 @@ export default function RentalCart() {
       return;
     }
 
-    const ok = await checkEnough(
-      selected.itemId,
-      range.startDate,
-      range.endDate,
-      selected.count,
-    );
+    const ok =
+      isEditMode &&
+      selected.originalStartDate &&
+      selected.originalEndDate &&
+      typeof selected.originalCount === "number"
+        ? await checkEnoughForEdit(
+            selected.itemId,
+            range.startDate,
+            range.endDate,
+            selected.count,
+            selected.originalStartDate,
+            selected.originalEndDate,
+            selected.originalCount,
+          )
+        : await checkEnough(
+            selected.itemId,
+            range.startDate,
+            range.endDate,
+            selected.count,
+          );
+
     setStatusByCartId((m) => ({ ...m, [selected.cartId]: ok ? "OK" : "NO" }));
 
     if (isEditMode) return;
@@ -179,12 +238,21 @@ export default function RentalCart() {
       patchLocalCart(cartId, { count: nextQty });
 
       if (it.startDate && it.endDate) {
-        const ok = await checkEnough(
-          it.itemId,
-          it.startDate,
-          it.endDate,
-          nextQty,
-        );
+        const ok =
+          it.originalStartDate &&
+          it.originalEndDate &&
+          typeof it.originalCount === "number"
+            ? await checkEnoughForEdit(
+                it.itemId,
+                it.startDate,
+                it.endDate,
+                nextQty,
+                it.originalStartDate,
+                it.originalEndDate,
+                it.originalCount,
+              )
+            : await checkEnough(it.itemId, it.startDate, it.endDate, nextQty);
+
         setStatusByCartId((m) => ({ ...m, [cartId]: ok ? "OK" : "NO" }));
       }
       return;
@@ -278,6 +346,9 @@ export default function RentalCart() {
               count: it.quantity,
               startDate: mappedEditRental.startDate,
               endDate: mappedEditRental.endDate,
+              originalStartDate: mappedEditRental.startDate,
+              originalEndDate: mappedEditRental.endDate,
+              originalCount: it.quantity,
               imageUrl: "",
               categoryName: "",
             }),
@@ -312,7 +383,23 @@ export default function RentalCart() {
       setStatusByCartId((m) => ({ ...m, [it.cartId]: "WAIT" }));
       return;
     }
-    const ok = await checkEnough(it.itemId, it.startDate, it.endDate, it.count);
+
+    const ok =
+      isEditMode &&
+      it.originalStartDate &&
+      it.originalEndDate &&
+      typeof it.originalCount === "number"
+        ? await checkEnoughForEdit(
+            it.itemId,
+            it.startDate,
+            it.endDate,
+            it.count,
+            it.originalStartDate,
+            it.originalEndDate,
+            it.originalCount,
+          )
+        : await checkEnough(it.itemId, it.startDate, it.endDate, it.count);
+
     setStatusByCartId((m) => ({ ...m, [it.cartId]: ok ? "OK" : "NO" }));
   };
 
@@ -369,6 +456,15 @@ export default function RentalCart() {
                     startDate: selected.startDate,
                     endDate: selected.endDate,
                   }}
+                  editAdjust={
+                    isEditMode
+                      ? {
+                          originalStartDate: selected.originalStartDate ?? null,
+                          originalEndDate: selected.originalEndDate ?? null,
+                          originalCount: selected.originalCount ?? 0,
+                        }
+                      : null
+                  }
                   onChange={onCalendarChange}
                 />
               ) : (
