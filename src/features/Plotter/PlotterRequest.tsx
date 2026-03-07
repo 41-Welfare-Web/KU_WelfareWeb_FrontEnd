@@ -237,6 +237,7 @@ export default function PlotterRequest() {
                 label="인쇄 파일 (PDF)"
                 accept=".pdf"
                 onChange={handlePdfUpload}
+                onRemove={() => setPdfFile(null)}
                 file={pdfFile}
                 helperText="글꼴 깨짐 방지를 위해 PDF 포맷으로 업로드 해주세요"
               />
