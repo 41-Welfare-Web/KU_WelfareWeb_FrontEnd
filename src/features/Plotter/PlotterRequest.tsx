@@ -25,6 +25,7 @@ export default function PlotterRequest() {
   const [departmentType, setDepartmentType] = useState("학생복지위원회");
   const [departmentName, setDepartmentName] = useState<string | null>(null);
   const [purposes, setPurposes] = useState<Purpose[]>([]);
+  const [freePurposes, setFreePurposes] = useState<string[]>([]);
   const [paperSizes, setPaperSizes] = useState<PaperSize[]>([]);
   const [purpose, setPurpose] = useState("");
   const [paperSize, setPaperSize] = useState("");
@@ -78,6 +79,7 @@ export default function PlotterRequest() {
         
         // 목적 설정
         setPurposes(metadata.plotterPurposes);
+        setFreePurposes(metadata.plotterFreePurposes);
         // 첫 번째 목적을 기본값으로 설정
         if (metadata.plotterPurposes.length > 0) {
           setPurpose(metadata.plotterPurposes[0].name);
@@ -99,8 +101,12 @@ export default function PlotterRequest() {
     return null;
   }
 
+  // 선택된 목적이 무료 목적인지 확인
+  const isFreePurpose = freePurposes.includes(purpose);
+
   // 용지 크기에 따른 가격 책정
   const getPaperPrice = () => {
+    if (isFreePurpose) return 0;
     if (!paperSize || paperSizes.length === 0) return 0;
     
     // paperSize와 일치하는 항목 찾기
@@ -131,7 +137,7 @@ export default function PlotterRequest() {
       alert("PDF 파일을 업로드해 주세요.");
       return;
     }
-    if (!receiptFile) {
+    if (!isFreePurpose && !receiptFile) {
       alert("입금 내역 증빙 파일을 올려주세요.");
       return;
     }
@@ -230,15 +236,17 @@ export default function PlotterRequest() {
               />
 
               {/* 입금 내역 증빙 */}
-              <PaymentProofBox
-                accountInfo={{
-                  bank: "카카오뱅크",
-                  accountNumber: "3333-00-1234567",
-                  accountHolder: "정근녕"
-                }}
-                onChange={handleReceiptUpload}
-                file={receiptFile}
-              />
+              {!isFreePurpose && (
+                <PaymentProofBox
+                  accountInfo={{
+                    bank: "카카오뱅크",
+                    accountNumber: "3333-00-1234567",
+                    accountHolder: "정근녕"
+                  }}
+                  onChange={handleReceiptUpload}
+                  file={receiptFile}
+                />
+              )}
             </div>
 
             {/* 오른쪽: 신청 요약 + 유의사항 */}
@@ -248,7 +256,7 @@ export default function PlotterRequest() {
                 paperSize={paperSize}
                 quantity={quantity}
                 expectedDate={getExpectedDateKorean(2)}
-                isFree={false}
+                isFree={isFreePurpose}
                 totalAmount={totalPrice}
                 onSubmit={handleSubmit}
                 isSubmitting={isSubmitting}

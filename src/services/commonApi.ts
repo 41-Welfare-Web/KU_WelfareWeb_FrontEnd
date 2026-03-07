@@ -25,6 +25,7 @@ interface CommonMetadataResponse {
 export interface CommonMetadata {
   departments: string[][];
   plotterPurposes: PlotterPurpose[];
+  plotterFreePurposes: string[];
   plotterPaperSizes: PaperSize[];
 }
 
@@ -66,6 +67,7 @@ export async function getCommonMetadata(): Promise<CommonMetadata> {
     return {
       departments: data.departments || [],
       plotterPurposes,
+      plotterFreePurposes: data.freePurposes || [],
       plotterPaperSizes,
     };
   } catch (error: any) {
