@@ -27,6 +27,10 @@ import {
 import { toUiCartItems } from "../../api/rental/cart/mapper";
 import type { UiCartItem } from "../../api/rental/cart/types";
 
+function normalizeSearch(value: string) {
+  return value.replace(/\s+/g, "").toLowerCase();
+}
+
 export default function RentalList() {
   const navigate = useNavigate();
 
@@ -106,7 +110,6 @@ export default function RentalList() {
     const fetchItems = async () => {
       try {
         const data = await getItems({
-          search: search.trim() || undefined,
           categoryIds: category_ids,
           sortBy: sortBy ?? undefined,
           sortOrder: sortBy ? sortOrder : undefined,
@@ -122,6 +125,13 @@ export default function RentalList() {
   const goCheckout = () => {
     navigate("/rental/cart");
   };
+
+  const filteredItems = useMemo(() => {
+    const keyword = normalizeSearch(search.trim());
+    if (!keyword) return items;
+
+    return items.filter((item) => normalizeSearch(item.name).includes(keyword));
+  }, [items, search]);
 
   return (
     <>
@@ -194,7 +204,7 @@ export default function RentalList() {
                 </div>
               )}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                {items.map((item) => (
+                {filteredItems.map((item) => (
                   <ItemCard
                     key={item.id}
                     item={item}

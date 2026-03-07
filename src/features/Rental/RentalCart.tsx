@@ -122,7 +122,7 @@ export default function RentalCart() {
   const editRentalIdParam = searchParams.get("editRentalId");
   const isEditMode = !!editRentalIdParam;
 
-  const [, setEditRental] = useState<EditRentalData | null>(null);
+  const [editRental, setEditRental] = useState<EditRentalData | null>(null);
   const [, setEditLoading] = useState(false);
   const [, setEditError] = useState<string | null>(null);
 
@@ -535,6 +535,12 @@ export default function RentalCart() {
                   open={confirmOpen}
                   onClose={() => setConfirmOpen(false)}
                   mode={isEditMode ? "edit" : "create"}
+                  initialDepartmentType={
+                    isEditMode ? (editRental?.departmentType ?? "") : ""
+                  }
+                  initialDepartmentName={
+                    isEditMode ? (editRental?.departmentName ?? "") : ""
+                  }
                   editRentalId={
                     isEditMode ? Number(editRentalIdParam) : undefined
                   }
