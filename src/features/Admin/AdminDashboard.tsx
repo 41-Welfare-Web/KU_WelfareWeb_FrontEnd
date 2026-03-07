@@ -30,6 +30,8 @@ interface RentalData {
     departmentName?: string;
     departmentType?: string;
   };
+  departmentName?: string;
+  departmentType?: string;
   startDate: string;
   endDate: string;
   status: 'RESERVED' | 'RENTED' | 'RETURNED' | 'OVERDUE' | 'CANCELED' | 'DEFECTIVE';
@@ -319,7 +321,7 @@ function AdminDashboard() {
     // 검색어 필터
     if (!rentalSearchQuery.trim()) return statusMatch && dateMatch;
     const query = rentalSearchQuery.toLowerCase();
-    const departmentName = item.user.departmentName || item.user.departmentType || '';
+    const departmentName = item.departmentName || item.departmentType || '';
     const searchMatch = (
       item.user.name.toLowerCase().includes(query) ||
       item.user.studentId.includes(query) ||
@@ -454,7 +456,7 @@ function AdminDashboard() {
                             key={rental.id}
                             rentalCode={`R-${rental.id}`}
                             userName={rental.user.name}
-                            department={rental.user.departmentName || rental.user.departmentType || '-'}
+                            department={rental.departmentName || rental.departmentType || '-'}
                             itemName={rental.itemSummary}
                             startDate={rental.startDate}
                             endDate={rental.endDate}
@@ -533,7 +535,7 @@ function AdminDashboard() {
                             key={plotter.id}
                             orderCode={`P-${plotter.id}`}
                             userName={plotter.user?.name || '사용자 정보 없음'}
-                            club={plotter.departmentName || plotter.user?.departmentName || plotter.departmentType || '-'}
+                            club={plotter.departmentName || plotter.departmentType || '-'}
                             purpose={plotter.purpose}
                             paperSizeAndCount={`${plotter.paperSize} / ${plotter.pageCount}장`}
                             orderDate={plotter.pickupDate}
