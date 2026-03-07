@@ -124,7 +124,7 @@ export default function MyPage() {
               console.log("대여 항목:", rental);
               return {
                 id: rental.id.toString(),
-                title: rental.itemSummary || "대여 항목",
+                title: rental.itemSummary?.replace(/\s*외\s*0건$/, '') || "대여 항목",
                 status: mapRentalStatus(rental.status),
                 code: `RENT-${rental.id}`,
                 applicationDate: rental.createdAt
@@ -215,7 +215,7 @@ export default function MyPage() {
         const response = await getRentals({ pageSize: 100 });
         const mappedRentals: Reservation[] = response.rentals.map((rental) => ({
           id: rental.id.toString(),
-          title: rental.itemSummary,
+          title: rental.itemSummary?.replace(/\s*외\s*0건$/, '') || '',
           status: rental.status.toLowerCase() as ReservationStatus,
           code: `RENT-${rental.id}`,
           applicationDate: rental.createdAt.split("T")[0],
