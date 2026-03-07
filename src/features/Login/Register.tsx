@@ -14,9 +14,15 @@ export default function Register() {
   const { deptGroups, loading: metaLoading, refresh } = useMetadata();
 
   const [username, setUsername] = useState("");
+  const [usernameError, setUsernameError] = useState("");
   const [studentNo, setStudentNo] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  const usernameRegex = /^[a-z0-9]{5,20}$/;
+  const passwordRegex =
+    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]).{8,}$/;
 
   const [, setDeptSub] = useState<string>("");
   const [, setDeptSubMode] = useState<"select" | "input">("select");
@@ -140,8 +146,22 @@ export default function Register() {
   const onSignUp = async () => {
     setErrorMsg("");
 
-    if (!username.trim()) return setErrorMsg("아이디를 입력해 주세요.");
-    if (!password.trim()) return setErrorMsg("비밀번호를 입력해 주세요.");
+    if (!username.trim()) {
+      return setErrorMsg("아이디를 입력해 주세요.");
+    }
+    if (!usernameRegex.test(username.trim())) {
+      return setErrorMsg(
+        "아이디는 5~20자 영문 소문자, 숫자만 사용할 수 있습니다.",
+      );
+    }
+    if (!password.trim()) {
+      return setErrorMsg("비밀번호를 입력해 주세요.");
+    }
+    if (!passwordRegex.test(password)) {
+      return setErrorMsg(
+        "비밀번호는 영어, 숫자, 특수문자를 포함한 8자리 이상이어야 합니다.",
+      );
+    }
     if (!name.trim()) return setErrorMsg("이름을 입력해 주세요.");
     if (!studentNo.trim()) return setErrorMsg("학번을 입력해 주세요.");
 
@@ -216,12 +236,28 @@ export default function Register() {
                 </label>
                 <input
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setUsername(value);
+
+                    if (!value) {
+                      setUsernameError("");
+                    } else if (!usernameRegex.test(value)) {
+                      setUsernameError(
+                        "5~20자 영문 소문자, 숫자만 입력할 수 있습니다.",
+                      );
+                    } else {
+                      setUsernameError("");
+                    }
+                  }}
                   type="text"
                   placeholder="5~20자 영문 소문자, 숫자"
                   className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                 />
               </div>
+              {usernameError && (
+                <p className="text-[13px] text-red-500">{usernameError}</p>
+              )}
 
               {/* 학번 */}
               <div className="space-y-2">
@@ -244,12 +280,26 @@ export default function Register() {
                 </label>
                 <input
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPassword(value);
+
+                    if (!passwordRegex.test(value)) {
+                      setPasswordError(
+                        "영문, 숫자, 특수문자 포함하여 8자 이상 입력해야합니다.",
+                      );
+                    } else {
+                      setPasswordError("");
+                    }
+                  }}
                   type="password"
                   placeholder="영문, 숫자, 특수문자 포함 8자 이상"
                   className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                 />
               </div>
+              {passwordError && (
+                <p className="text-[13px] text-red-500">{passwordError}</p>
+              )}
 
               {/* 이름 */}
               <div className="space-y-2">

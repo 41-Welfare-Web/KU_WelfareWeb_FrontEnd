@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import cancel from "../../assets/rental/cancel.svg";
 
 type Status = "WAIT" | "OK" | "NO";
@@ -59,6 +60,47 @@ export default function RentalCartItemRow({
   onChangeQty,
 }: Props) {
   const hasDates = !!item.startDate && !!item.endDate;
+  const [inputValue, setInputValue] = useState(String(item.count));
+
+  useEffect(() => {
+    setInputValue(String(item.count));
+  }, [item.count]);
+
+  const increase = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    onChangeQty(item.count + 1);
+  };
+
+  const decrease = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    onChangeQty(Math.max(1, item.count - 1));
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    const raw = e.target.value;
+
+    if (raw === "") {
+      setInputValue("");
+      return;
+    }
+
+    if (!/^\d+$/.test(raw)) return;
+    setInputValue(raw);
+  };
+
+  const applyInputValue = () => {
+    let value = Number(inputValue);
+
+    if (!inputValue || isNaN(value)) value = 1;
+    if (value < 1) value = 1;
+
+    setInputValue(String(value));
+
+    if (value !== item.count) {
+      onChangeQty(value);
+    }
+  };
 
   return (
     <div
@@ -77,7 +119,6 @@ export default function RentalCartItemRow({
         "hover:bg-[#E3E3E3]",
       ].join(" ")}
     >
-      {/* X : 오른쪽 상단 */}
       <button
         type="button"
         onClick={(e) => {
@@ -85,24 +126,24 @@ export default function RentalCartItemRow({
           onRemove();
         }}
         className="
-    absolute top-3 right-2
-    w-8 h-8
-    flex items-center justify-center
+    absolute top-2 right-2
+    grid place-items-center
+    w-9 h-9
     rounded-full
     hover:bg-black/10
     transition
+    z-10
   "
         aria-label="삭제"
       >
         <img
           src={cancel}
           alt="취소"
-          className="w-3.5 h-3.5 pointer-events-none"
+          className="block w-4 h-4 pointer-events-none"
         />
       </button>
 
       <div className="flex items-start gap-4">
-        {/* 썸네일 (작게) */}
         <div className="h-14 w-14 shrink-0 rounded-full bg-white overflow-hidden flex items-center justify-center">
           {item.imageUrl ? (
             <img
@@ -113,9 +154,7 @@ export default function RentalCartItemRow({
           ) : null}
         </div>
 
-        {/* 본문 */}
         <div className="flex-1 min-w-0 relative">
-          {/* 상단: 카테고리/이름 */}
           <div className="pr-8">
             <div className="text-[#FE6949] font-bold text-[12px]">
               {item.categoryName ?? ""}
@@ -124,7 +163,6 @@ export default function RentalCartItemRow({
               {item.name}
             </div>
 
-            {/* 기간 + 상태 */}
             <div className="mt-2 flex items-center gap-2">
               <span className="px-2 py-1 rounded-md bg-white text-[#3B160D] text-[12px] font-semibold">
                 {hasDates
@@ -135,33 +173,44 @@ export default function RentalCartItemRow({
             </div>
           </div>
 
-          {/* 수량 : 왼쪽 하단 */}
           <div className="mt-3 flex justify-end items-center gap-2">
             <div className="text-[#3B160D] text-[13px] font-semibold">수량</div>
 
             <div className="flex items-center rounded-lg bg-white border border-black/10 overflow-hidden">
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChangeQty(Math.max(1, item.count - 1));
-                }}
+                onClick={decrease}
                 className="w-8 h-8 hover:bg-black/5"
                 aria-label="수량 감소"
               >
                 –
               </button>
 
-              <div className="w-9 text-center text-[13px] font-bold">
-                {item.count}
-              </div>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={inputValue}
+                onClick={(e) => e.stopPropagation()}
+                onChange={handleInputChange}
+                onBlur={applyInputValue}
+                onFocus={(e) => {
+                  e.stopPropagation();
+                  e.target.select();
+                }}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  if (e.key === "Enter") {
+                    applyInputValue();
+                    e.currentTarget.blur();
+                  }
+                }}
+                className="w-10 h-8 text-center text-[13px] font-bold bg-transparent outline-none"
+                aria-label="수량 입력"
+              />
 
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChangeQty(item.count + 1);
-                }}
+                onClick={increase}
                 className="w-8 h-8 hover:bg-black/5"
                 aria-label="수량 증가"
               >
