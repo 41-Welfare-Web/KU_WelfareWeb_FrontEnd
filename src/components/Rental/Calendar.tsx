@@ -300,7 +300,9 @@ export default function Calendar({
 
           // 선택 스타일은 예약 가능한 날짜에만
           let selectedCls = "";
-          if (!isBlocked && inMonth) {
+          const isOutOfStock = enough === false;
+
+          if (!isBlocked && inMonth && !isOutOfStock) {
             if (inRange) selectedCls = "bg-orange-500 text-white";
             if (isStart || isEnd) selectedCls = "bg-orange-500 text-white";
           }
