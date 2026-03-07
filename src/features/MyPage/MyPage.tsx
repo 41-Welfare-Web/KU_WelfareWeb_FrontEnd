@@ -23,6 +23,7 @@ import {
   type UiPlotterStatus,
 } from "../../utils/statusMapper";
 import { getRentalDetail } from "../../api/rental/rentalApi";
+import { useAuth } from "../../contexts/AuthContext";
 
 type ReservationStatus = UiRentalStatus;
 type PlotterStatus = UiPlotterStatus;
@@ -50,6 +51,7 @@ type PlotterReservation = {
 
 export default function MyPage() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab") as TabType | null;
   const [activeTab, setActiveTab] = useState<TabType>(tabParam || "rental");
@@ -264,8 +266,8 @@ export default function MyPage() {
     try {
       await deleteMyAccount({ password });
       alert("회원 탈퇴가 완료되었습니다.");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      // AuthContext의 logout(): accessToken, refreshToken, me 제거 + React 상태 초기화
+      await logout();
       navigate("/");
     } catch (error) {
       console.error("회원 탈퇴 실패:", error);
