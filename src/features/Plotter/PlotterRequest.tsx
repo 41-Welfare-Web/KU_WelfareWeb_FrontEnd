@@ -211,7 +211,7 @@ export default function PlotterRequest() {
                 }}
                 phone={phoneNumber}
                 purpose={purpose}
-                purposes={purposes}
+                proposes={purposes}
                 onPurposeChange={setPurpose}
                 paperSize={paperSize}
                 paperSizes={paperSizes}
