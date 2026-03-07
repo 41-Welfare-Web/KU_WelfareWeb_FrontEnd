@@ -5,6 +5,7 @@ import ItemCalendar from "./ItemCalendar";
 import type { ItemDetail } from "../../api/rental/types";
 import { getItemDetail } from "../../api/rental/rentalApi";
 import guide from "../../assets/rental/guide.svg";
+import { getItemAvailability } from "../../api/rental/calendar";
 
 type Props = {
   open: boolean;
@@ -42,6 +43,10 @@ export default function ItemDetailModal({
     endDate: string | null;
     quantity: number;
   }>({ startDate: null, endDate: null, quantity: 1 });
+
+  const [calendarKey, setCalendarKey] = useState(0);
+  const checkingRangeRef = useRef(false);
+  const lastInvalidRangeRef = useRef<string | null>(null);
 
   // 담기 버튼 로딩(중복 클릭 방지)
   const [adding] = useState(false);
@@ -84,8 +89,10 @@ export default function ItemDetailModal({
 
   useEffect(() => {
     if (!open) return;
-    // 모달 열릴 때 선택값 초기화
     setPicked({ startDate: null, endDate: null, quantity: 1 });
+    setCalendarKey((prev) => prev + 1);
+    lastInvalidRangeRef.current = null;
+    checkingRangeRef.current = false;
   }, [open, itemId]);
 
   // 상세 로드
@@ -121,6 +128,26 @@ export default function ItemDetailModal({
   }, [open, itemId]);
 
   if (!open) return null;
+
+  // 재고 수량 부족 날짜 선택 시 로직
+  async function hasZeroQuantityInRange(
+    startDate: string,
+    endDate: string,
+    itemId: number,
+  ) {
+    try {
+      const result = await getItemAvailability({
+        itemId,
+        startDate,
+        endDate,
+      });
+
+      return result.some((day) => (day.availableQuantity ?? 0) === 0);
+    } catch (e) {
+      console.error("재고 조회 실패:", e);
+      return false;
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-[80]">
@@ -221,10 +248,59 @@ export default function ItemDetailModal({
                   <div className="min-w-0 order-3 lg:order-none lg:col-start-3 lg:col-span-3">
                     <div className="mt-2">
                       <ItemCalendar
+                        key={calendarKey}
                         itemId={data.id}
                         maxQuantity={data.totalQuantity}
-                        onChange={({ startDate, endDate, quantity }) => {
+                        onChange={async ({ startDate, endDate, quantity }) => {
+                          // 일단 선택값 반영
                           setPicked({ startDate, endDate, quantity });
+
+                          // 기간이 아직 완성 안 됐으면 검사 안 함
+                          if (!startDate || !endDate) {
+                            lastInvalidRangeRef.current = null;
+                            return;
+                          }
+
+                          const rangeKey = `${startDate}_${endDate}_${quantity}`;
+
+                          // 이미 같은 잘못된 기간에 대해 alert 띄웠으면 중복 방지
+                          if (lastInvalidRangeRef.current === rangeKey) {
+                            return;
+                          }
+
+                          // 검사 중복 방지
+                          if (checkingRangeRef.current) {
+                            return;
+                          }
+
+                          checkingRangeRef.current = true;
+
+                          try {
+                            const hasZero = await hasZeroQuantityInRange(
+                              startDate,
+                              endDate,
+                              data.id,
+                            );
+
+                            if (hasZero) {
+                              lastInvalidRangeRef.current = rangeKey;
+
+                              alert("대여 불가능한 날짜가 포함되어 있습니다.");
+
+                              setPicked({
+                                startDate: null,
+                                endDate: null,
+                                quantity,
+                              });
+
+                              setCalendarKey((prev) => prev + 1);
+                              return;
+                            }
+
+                            lastInvalidRangeRef.current = null;
+                          } finally {
+                            checkingRangeRef.current = false;
+                          }
                         }}
                       />
                     </div>

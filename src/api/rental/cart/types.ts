@@ -83,4 +83,8 @@ export type UiCartItem = {
   imageUrl?: string;
   startDate: string | null; // "YYYY-MM-DD"
   endDate: string | null; // "YYYY-MM-DD"
+
+  originalStartDate?: string | null;
+  originalEndDate?: string | null;
+  originalCount?: number;
 };
