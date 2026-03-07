@@ -320,14 +320,15 @@ function AdminDashboard() {
 
     // 검색어 필터
     if (!rentalSearchQuery.trim()) return statusMatch && dateMatch;
-    const query = rentalSearchQuery.toLowerCase();
+    const query = rentalSearchQuery.replace(/\s+/g, '').toLowerCase();
+    const norm = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, '').toLowerCase();
     const departmentName = item.departmentName || item.departmentType || '';
     const searchMatch = (
-      item.user.name.toLowerCase().includes(query) ||
-      item.user.studentId.includes(query) ||
-      departmentName.toLowerCase().includes(query) ||
-      item.itemSummary.toLowerCase().includes(query) ||
-      `RENT-${item.id}`.toLowerCase().includes(query)
+      norm(item.user?.name).includes(query) ||
+      (item.user?.studentId || '').includes(query) ||
+      norm(departmentName).includes(query) ||
+      norm(item.itemSummary).includes(query) ||
+      norm(`RENT-${item.id}`).includes(query)
     );
     return statusMatch && dateMatch && searchMatch;
   });
@@ -342,16 +343,18 @@ function AdminDashboard() {
 
     // 검색어 필터링
     if (!plotterSearchQuery.trim()) return statusMatch;
-    const query = plotterSearchQuery.toLowerCase();
+    const query = plotterSearchQuery.replace(/\s+/g, '').toLowerCase();
+    const norm = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, '').toLowerCase();
     const userName = item.user?.name || '';
     const studentId = item.user?.studentId || '';
     const departmentName = item.departmentName || item.user?.departmentName || item.departmentType || '';
     const searchMatch = (
-      userName.toLowerCase().includes(query) ||
+      norm(userName).includes(query) ||
       studentId.includes(query) ||
-      departmentName.toLowerCase().includes(query) ||
-      item.purpose.toLowerCase().includes(query) ||
-      `PLOT-${item.id}`.toLowerCase().includes(query)
+      norm(departmentName).includes(query) ||
+      norm(item.purpose).includes(query) ||
+      norm(item.paperSize).includes(query) ||
+      norm(`PLOT-${item.id}`).includes(query)
     );
     return statusMatch && searchMatch;
   });
@@ -365,11 +368,12 @@ function AdminDashboard() {
 
     // 검색어 필터링
     if (!itemsSearchQuery.trim()) return categoryMatch;
-    const query = itemsSearchQuery.toLowerCase();
+    const query = itemsSearchQuery.replace(/\s+/g, '').toLowerCase();
+    const norm = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, '').toLowerCase();
     const searchMatch = (
-      item.name.toLowerCase().includes(query) ||
-      item.itemCode.toLowerCase().includes(query) ||
-      (item.description && item.description.toLowerCase().includes(query))
+      norm(item.name).includes(query) ||
+      norm(item.itemCode).includes(query) ||
+      norm(item.description).includes(query)
     );
     return categoryMatch && searchMatch;
   });
@@ -489,7 +493,7 @@ function AdminDashboard() {
                 searchQuery={plotterSearchQuery}
                 onSearchQueryChange={setPlotterSearchQuery}
                 onSearch={handlePlotterSearch}
-                searchPlaceholder="이름, 학과, 물품 검색"
+                searchPlaceholder="이름, 학과 검색"
               />
 
               {/* 테이블 */}
