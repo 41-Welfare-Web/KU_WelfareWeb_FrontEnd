@@ -26,6 +26,8 @@ export default function FindAccount() {
   const [username, setUsername] = useState("");
   const [pwPhone, setPwPhone] = useState("");
   const [code, setCode] = useState("");
+  const passwordRegex =
+    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]).{8,}$/;
 
   // 리프레쉬 토큰
   const [resetToken, setResetToken] = useState<string | null>(null);
