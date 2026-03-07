@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import Calendar from "../../components/Rental/Calendar";
@@ -14,7 +14,11 @@ import type { UiCartItem } from "../../api/rental/cart/types";
 import RentalCartItemRow from "../../components/Rental/RentalCartItemRow";
 import { getItemAvailability } from "../../api/rental/calendar";
 import type { Availability } from "../../api/rental/types";
-import { createRentals } from "../../api/rental/rentalApi";
+import {
+  createRentals,
+  updateRental,
+  getRentalDetail,
+} from "../../api/rental/rentalApi";
 
 import calendar from "../../assets/rental/calendar-orange.svg";
 import RentalConfirmModal from "../../components/Rental/RentalConfirmModal";
@@ -58,8 +62,26 @@ function getApiErrorMessage(err: unknown) {
   };
 }
 
+type EditRentalData = {
+  rentalId: number;
+  departmentType: string;
+  departmentName: string | null;
+  startDate: string;
+  endDate: string;
+  items: { itemId: number; name: string; quantity: number }[];
+};
+
 export default function RentalCart() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [searchParams] = useSearchParams();
+  const editRentalIdParam = searchParams.get("editRentalId");
+  const isEditMode = !!editRentalIdParam;
+
+  const [editRental, setEditRental] = useState<EditRentalData | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
 
   const [cartItems, setCartItems] = useState<UiCartItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -117,19 +139,16 @@ export default function RentalCart() {
   }) => {
     if (!selected) return;
 
-    // 클릭 즉시 UI 반영
     patchLocalCart(selected.cartId, {
       startDate: range.startDate,
       endDate: range.endDate,
     });
 
-    // 상태도 즉시 반영
     if (!range.startDate || !range.endDate) {
       setStatusByCartId((m) => ({ ...m, [selected.cartId]: "WAIT" }));
       return;
     }
 
-    // 기간이 완성되면: 가능/불가 판정 + PUT 저장
     const ok = await checkEnough(
       selected.itemId,
       range.startDate,
@@ -138,19 +157,17 @@ export default function RentalCart() {
     );
     setStatusByCartId((m) => ({ ...m, [selected.cartId]: ok ? "OK" : "NO" }));
 
+    if (isEditMode) return;
+
     try {
       await updateCartItem(selected.cartId, {
         quantity: selected.count,
         startDate: range.startDate,
         endDate: range.endDate,
       });
-
-      // 선택: 서버값으로 다시 동기화하고 싶으면 유지
       await fetchCart();
     } catch (e) {
       alert("기간 저장에 실패했어요.");
-
-      // 실패 시 원복하고 싶으면 fetchCart()로 강제 동기화
       await fetchCart();
     }
   };
@@ -159,6 +176,21 @@ export default function RentalCart() {
     const it = cartItems.find((x) => x.cartId === cartId);
     if (!it) return;
 
+    if (isEditMode) {
+      patchLocalCart(cartId, { count: nextQty });
+
+      if (it.startDate && it.endDate) {
+        const ok = await checkEnough(
+          it.itemId,
+          it.startDate,
+          it.endDate,
+          nextQty,
+        );
+        setStatusByCartId((m) => ({ ...m, [cartId]: ok ? "OK" : "NO" }));
+      }
+      return;
+    }
+
     try {
       const updated = await updateCartItem(cartId, {
         quantity: nextQty,
@@ -166,14 +198,12 @@ export default function RentalCart() {
         endDate: it.endDate,
       });
 
-      // 서버 응답이 정확하니까 이걸로 즉시 반영
       patchLocalCart(cartId, {
         count: updated.quantity,
         startDate: updated.startDate?.slice(0, 10) ?? null,
         endDate: updated.endDate?.slice(0, 10) ?? null,
       });
 
-      // 기간이 있으면 재검증
       if (it.startDate && it.endDate) {
         const ok = await checkEnough(
           it.itemId,
@@ -186,13 +216,14 @@ export default function RentalCart() {
     } catch (e) {
       console.error(e);
       alert("수량 저장에 실패했어요.");
-      // 실패 시에만 서버로 다시 동기화
       await fetchCart();
     }
   };
 
   // 장바구니 목록 조회
   const fetchCart = async () => {
+    if (isEditMode) return;
+
     setLoading(true);
     setError(null);
     try {
@@ -208,6 +239,73 @@ export default function RentalCart() {
   useEffect(() => {
     fetchCart();
   }, []);
+
+  // 예약 수정
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      if (isEditMode) {
+        const rentalId = Number(editRentalIdParam);
+        if (!Number.isFinite(rentalId)) {
+          setEditError("수정할 예약 ID가 올바르지 않아요.");
+          return;
+        }
+
+        setEditLoading(true);
+        setEditError(null);
+
+        try {
+          const detail = await getRentalDetail(rentalId);
+
+          const mappedEditRental: EditRentalData = {
+            rentalId: detail.id,
+            departmentType: detail.departmentType ?? "",
+            departmentName: detail.departmentName ?? "",
+            startDate: String(detail.startDate).slice(0, 10),
+            endDate: String(detail.endDate).slice(0, 10),
+            items: (detail.rentalItems ?? []).map((ri: any) => ({
+              itemId: ri.itemId ?? ri.item?.id,
+              name: ri.item?.name ?? "이름 없음",
+              quantity: ri.quantity ?? 1,
+            })),
+          };
+
+          setEditRental(mappedEditRental);
+
+          const mappedCartItems: UiCartItem[] = mappedEditRental.items.map(
+            (it, idx) => ({
+              cartId: -1000 - idx,
+              itemId: it.itemId,
+              name: it.name,
+              count: it.quantity,
+              startDate: mappedEditRental.startDate,
+              endDate: mappedEditRental.endDate,
+              imageUrl: "",
+              categoryName: "",
+            }),
+          );
+
+          setCartItems(mappedCartItems);
+          setSelectedCartId(mappedCartItems[0]?.cartId ?? null);
+
+          const nextStatus: Record<number, "WAIT" | "OK" | "NO"> = {};
+          mappedCartItems.forEach((it) => {
+            nextStatus[it.cartId] = "OK";
+          });
+          setStatusByCartId(nextStatus);
+        } catch (e: any) {
+          setEditError(e?.message ?? "예약 정보를 불러오지 못했어요.");
+        } finally {
+          setEditLoading(false);
+        }
+
+        return;
+      }
+
+      await fetchCart();
+    };
+
+    fetchInitialData();
+  }, [isEditMode, editRentalIdParam]);
 
   // 대여 가능/불가 판정
   const validateCartItem = async (it: UiCartItem) => {
@@ -227,6 +325,15 @@ export default function RentalCart() {
 
   // 대여 물품 장바구니에서 삭제
   const handleRemove = async (cartId: number) => {
+    if (isEditMode) {
+      setCartItems((prev) => prev.filter((it) => it.cartId !== cartId));
+      if (selectedCartId === cartId) {
+        const rest = cartItems.filter((it) => it.cartId !== cartId);
+        setSelectedCartId(rest[0]?.cartId ?? null);
+      }
+      return;
+    }
+
     try {
       await deleteCartItem(cartId);
       await fetchCart();
@@ -332,12 +439,61 @@ export default function RentalCart() {
                 <RentalConfirmModal
                   open={confirmOpen}
                   onClose={() => setConfirmOpen(false)}
+                  mode={isEditMode ? "edit" : "create"}
+                  editRentalId={
+                    isEditMode ? Number(editRentalIdParam) : undefined
+                  }
+                  editItems={
+                    isEditMode
+                      ? cartItems.map((it) => ({
+                          itemId: it.itemId,
+                          name: it.name,
+                          quantity: it.count,
+                          startDate: it.startDate,
+                          endDate: it.endDate,
+                        }))
+                      : undefined
+                  }
                   onSubmit={async ({
                     departmentType,
                     departmentName,
                     cartItems,
+                    profile,
                   }) => {
                     try {
+                      // 수정 모드: URL에 editRentalId가 있으면 수정 API 호출
+                      if (isEditMode) {
+                        const editRentalId = Number(editRentalIdParam);
+                        if (!Number.isFinite(editRentalId)) {
+                          alert("수정할 예약 ID가 올바르지 않아요.");
+                          return;
+                        }
+
+                        const itemsToSend = cartItems.map((it) => ({
+                          itemId: it.itemId,
+                          quantity: it.quantity,
+                          startDate: String(it.startDate ?? "").slice(0, 10),
+                          endDate: String(it.endDate ?? "").slice(0, 10),
+                        }));
+
+                        if (!itemsToSend.length) {
+                          alert("수정할 물품이 없어요.");
+                          return;
+                        }
+
+                        await updateRental(editRentalId, {
+                          departmentType,
+                          departmentName,
+                          items: itemsToSend,
+                        });
+
+                        alert("예약이 수정되었습니다.");
+                        setConfirmOpen(false);
+                        navigate("/mypage?tab=rental");
+                        return;
+                      }
+
+                      // 신규 예약: create API 호출
                       const result = await createRentals({
                         departmentType,
                         departmentName,
@@ -353,20 +509,16 @@ export default function RentalCart() {
                       setConfirmOpen(false);
                       await fetchCart();
                     } catch (e) {
-                      console.error("대여 신청 실패:", e);
-
+                      console.error("예약 처리 실패:", e);
                       const { status, message } = getApiErrorMessage(e);
 
-                      // 400/409는 서버 이유를 그대로 보여주기
+                      // 400/409는 서버 이유 그대로 alert
                       if (status === 400 || status === 409) {
                         alert(message);
                         return;
                       }
 
-                      // 그 외는 기본 메시지
-                      alert(
-                        message || "대여 신청에 실패했어요. 다시 시도해주세요.",
-                      );
+                      alert(message || "요청에 실패했어요. 다시 시도해주세요.");
                     }
                   }}
                 />
