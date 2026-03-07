@@ -118,7 +118,13 @@ export default function PlotterRequest() {
 
   const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setPdfFile(e.target.files[0]);
+      const file = e.target.files[0];
+      if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+        alert("PDF 파일만 업로드할 수 있습니다.");
+        e.target.value = "";
+        return;
+      }
+      setPdfFile(file);
     }
   };
 
