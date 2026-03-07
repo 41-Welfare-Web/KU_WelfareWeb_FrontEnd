@@ -133,16 +133,19 @@ export default function PlotterFormFields({
 
       {/* 용지 크기 & 인쇄 장수 */}
       <div className="flex flex-col md:flex-row justify-between gap-4 md:gap-6 mb-4 md:mb-6">
-        <div className="w-full md:w-[311px]">
+        <div className="w-full md:flex-1">
           <label className="block text-[16px] md:text-[20px] font-medium text-black mb-2">용지 크기</label>
           <select
             value={paperSize}
             onChange={(e) => onPaperSizeChange(e.target.value)}
-            className="w-full h-[50px] md:h-[71px] px-4 md:px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[16px] md:text-[20px] appearance-none cursor-pointer"
+            className="w-full h-[50px] md:h-[71px] px-4 md:px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[16px] md:text-[20px] appearance-none cursor-pointer overflow-hidden"
             style={{ 
               backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E")`, 
               backgroundRepeat: 'no-repeat', 
-              backgroundPosition: 'right 20px center' 
+              backgroundPosition: 'right 20px center',
+              paddingRight: '50px',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}
           >
             <option value="">용지를 선택하세요</option>
@@ -153,7 +156,7 @@ export default function PlotterFormFields({
             ))}
           </select>
         </div>
-        <div className="w-full">
+        <div className="w-full md:flex-1">
           <label className="block text-[16px] md:text-[20px] font-medium text-black mb-2">인쇄 장수</label>
           <div className="flex items-center gap-3 md:gap-5">
             <input
