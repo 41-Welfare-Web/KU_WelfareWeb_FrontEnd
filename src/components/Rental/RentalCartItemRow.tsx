@@ -126,19 +126,20 @@ export default function RentalCartItemRow({
           onRemove();
         }}
         className="
-          absolute top-3 right-2
-          w-8 h-8
-          flex items-center justify-center
-          rounded-full
-          hover:bg-black/10
-          transition
-        "
+    absolute top-2 right-2
+    grid place-items-center
+    w-9 h-9
+    rounded-full
+    hover:bg-black/10
+    transition
+    z-10
+  "
         aria-label="삭제"
       >
         <img
           src={cancel}
           alt="취소"
-          className="w-3.5 h-3.5 pointer-events-none"
+          className="block w-4 h-4 pointer-events-none"
         />
       </button>
 
