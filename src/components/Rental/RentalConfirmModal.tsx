@@ -26,6 +26,9 @@ type Props = {
   editRentalId?: number;
   editItems?: ConfirmItem[];
 
+  initialDepartmentType?: string;
+  initialDepartmentName?: string;
+
   onSubmit?: (payload: {
     departmentType: string;
     departmentName: string;
@@ -43,6 +46,8 @@ export default function RentalConfirmModal({
   mode = "create",
   editRentalId,
   editItems,
+  initialDepartmentType = "",
+  initialDepartmentName = "",
 }: Props) {
   const { deptGroups, loading: metaLoading } = useMetadata();
 
@@ -139,20 +144,46 @@ export default function RentalConfirmModal({
   // 프로필 로드 후: 기본 소속 세팅 (한 번만)
   useEffect(() => {
     if (!open) return;
-    if (!profile) return;
     if (!deptTypeOptions.length) return;
-    if (department.departmentType) return;
+
+    const initialType = initialDepartmentType?.trim?.() ?? "";
+    const initialName = initialDepartmentName?.trim?.() ?? "";
+
+    // 1순위: 부모가 넘겨준 초기값 (수정 모드)
+    if (initialType || initialName) {
+      setDepartment({
+        departmentType: initialType,
+        departmentName: initialName,
+      });
+      return;
+    }
+
+    // 2순위: 내 프로필 소속 (신규 모드)
+    if (!profile) return;
 
     const profileDeptType = (profile as any).departmentType?.trim?.() ?? "";
     const profileDeptName = (profile as any).departmentName?.trim?.() ?? "";
 
-    if (profileDeptType || profileDeptName) {
-      setDepartment({
-        departmentType: profileDeptType,
-        departmentName: profileDeptName,
-      });
-    }
-  }, [open, profile, deptTypeOptions, department.departmentType]);
+    setDepartment({
+      departmentType: profileDeptType,
+      departmentName: profileDeptName,
+    });
+  }, [
+    open,
+    profile,
+    deptTypeOptions,
+    initialDepartmentType,
+    initialDepartmentName,
+  ]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    setDepartment({
+      departmentType: "",
+      departmentName: "",
+    });
+  }, [open]);
 
   const cartItems = items;
 
