@@ -1,9 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { getCommonMetadata } from "../api/signup/signupApi";
 import {
-  loadDeptGroupsCache,
   parseDepartmentGroups,
-  saveDeptGroupsCache,
   type DepartmentGroup,
 } from "../utils/department";
 
@@ -16,9 +14,7 @@ type MetadataState = {
 const MetadataContext = createContext<MetadataState | null>(null);
 
 export function MetadataProvider({ children }: { children: React.ReactNode }) {
-  const [deptGroups, setDeptGroups] = useState<DepartmentGroup[]>(() => {
-    return loadDeptGroupsCache() ?? [];
-  });
+  const [deptGroups, setDeptGroups] = useState<DepartmentGroup[]>([]);
   const [loading, setLoading] = useState(false);
 
   const refresh = async () => {
@@ -27,14 +23,13 @@ export function MetadataProvider({ children }: { children: React.ReactNode }) {
       const meta = await getCommonMetadata();
       const groups = parseDepartmentGroups(meta.departments);
       setDeptGroups(groups);
-      saveDeptGroupsCache(groups);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (deptGroups.length === 0) void refresh();
+    void refresh();
   }, []);
 
   const value = useMemo(
