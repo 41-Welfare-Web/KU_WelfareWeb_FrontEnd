@@ -99,6 +99,85 @@ const PLOTTER_STATUS_MAP_REVERSE: Record<
   COMPLETED: 'completed',
 };
 
+function Pagination({
+  total,
+  page,
+  pageSize,
+  onPageChange,
+}: {
+  total: number;
+  page: number;
+  pageSize: number;
+  onPageChange: (p: number) => void;
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  if (totalPages <= 1 && total === 0) return null;
+
+  // 현재 그룹(10개 단위)
+  const groupSize = 10;
+  const groupStart = Math.floor((page - 1) / groupSize) * groupSize + 1;
+  const groupEnd = Math.min(groupStart + groupSize - 1, totalPages);
+  const pages = Array.from({ length: groupEnd - groupStart + 1 }, (_, i) => groupStart + i);
+
+  return (
+    <div className="flex flex-col items-center gap-2 mt-[18px] mb-[10px]">
+      <p className="text-sm text-gray-500">
+        총 <span className="font-semibold text-gray-700">{total}</span>건 &nbsp;|&nbsp; 현재 페이지{' '}
+        <span className="font-semibold text-gray-700">{page}</span> / {totalPages}
+      </p>
+      <div className="flex items-center gap-1">
+        {/* 처음 */}
+        <button
+          onClick={() => onPageChange(1)}
+          disabled={page === 1}
+          className="px-2 py-1 text-sm rounded disabled:opacity-30 hover:bg-gray-100"
+        >
+          {'<<'}
+        </button>
+        {/* 이전 */}
+        <button
+          onClick={() => onPageChange(page - 1)}
+          disabled={page === 1}
+          className="px-2 py-1 text-sm rounded disabled:opacity-30 hover:bg-gray-100"
+        >
+          {'<'}
+        </button>
+
+        {pages.map((p) => (
+          <button
+            key={p}
+            onClick={() => onPageChange(p)}
+            className={`w-8 h-8 text-sm rounded font-medium transition-colors ${
+              p === page
+                ? 'bg-[#fe6949] text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+
+        {/* 다음 */}
+        <button
+          onClick={() => onPageChange(page + 1)}
+          disabled={page === totalPages}
+          className="px-2 py-1 text-sm rounded disabled:opacity-30 hover:bg-gray-100"
+        >
+          {'>'}
+        </button>
+        {/* 마지막 */}
+        <button
+          onClick={() => onPageChange(totalPages)}
+          disabled={page === totalPages}
+          className="px-2 py-1 text-sm rounded disabled:opacity-30 hover:bg-gray-100"
+        >
+          {'>>'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AdminDashboard() {
   const rejectHandlerRef = useRef<PlotterRejectHandlerRef>(null);
   const { exportCSV } = useExportCSV();
@@ -118,6 +197,11 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const PAGE_SIZE = 20;
+  const [rentalPage, setRentalPage] = useState(1);
+  const [plotterPage, setPlotterPage] = useState(1);
+  const [itemsPage, setItemsPage] = useState(1);
+
   const fetchRentals = async () => {
     try {
       setLoading(true);
@@ -126,7 +210,7 @@ function AdminDashboard() {
       console.log('[Admin] 대여 목록 조회 시작');
       const response = await getRentals({
         page: 1,
-        pageSize: 100
+        pageSize: 1000
       });
       console.log('[Admin] 대여 목록 조회 성공:', response);
       
@@ -153,7 +237,7 @@ function AdminDashboard() {
       console.log('[Admin] 플로터 목록 조회 시작');
       const response = await getPlotterOrders({
         page: 1,
-        pageSize: 100
+        pageSize: 1000
       });
       console.log('[Admin] 플로터 목록 조회 성공:', response);
       
@@ -215,6 +299,11 @@ function AdminDashboard() {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  // 필터/검색 변경 시 페이지 리셋
+  useEffect(() => { setRentalPage(1); }, [rentalStatusFilter, rentalSearchQuery, rentalStartDate, rentalEndDate]);
+  useEffect(() => { setPlotterPage(1); }, [plotterStatusFilter, plotterSearchQuery]);
+  useEffect(() => { setItemsPage(1); }, [itemsCategoryFilter, itemsSearchQuery]);
 
   const handleRentalStatusChange = async (rentalId: number, newStatus: string) => {
     try {
@@ -320,14 +409,15 @@ function AdminDashboard() {
 
     // 검색어 필터
     if (!rentalSearchQuery.trim()) return statusMatch && dateMatch;
-    const query = rentalSearchQuery.toLowerCase();
+    const query = rentalSearchQuery.replace(/\s+/g, '').toLowerCase();
+    const norm = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, '').toLowerCase();
     const departmentName = item.departmentName || item.departmentType || '';
     const searchMatch = (
-      item.user.name.toLowerCase().includes(query) ||
-      item.user.studentId.includes(query) ||
-      departmentName.toLowerCase().includes(query) ||
-      item.itemSummary.toLowerCase().includes(query) ||
-      `RENT-${item.id}`.toLowerCase().includes(query)
+      norm(item.user?.name).includes(query) ||
+      (item.user?.studentId || '').includes(query) ||
+      norm(departmentName).includes(query) ||
+      norm(item.itemSummary).includes(query) ||
+      norm(`RENT-${item.id}`).includes(query)
     );
     return statusMatch && dateMatch && searchMatch;
   });
@@ -342,16 +432,18 @@ function AdminDashboard() {
 
     // 검색어 필터링
     if (!plotterSearchQuery.trim()) return statusMatch;
-    const query = plotterSearchQuery.toLowerCase();
+    const query = plotterSearchQuery.replace(/\s+/g, '').toLowerCase();
+    const norm = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, '').toLowerCase();
     const userName = item.user?.name || '';
     const studentId = item.user?.studentId || '';
     const departmentName = item.departmentName || item.user?.departmentName || item.departmentType || '';
     const searchMatch = (
-      userName.toLowerCase().includes(query) ||
+      norm(userName).includes(query) ||
       studentId.includes(query) ||
-      departmentName.toLowerCase().includes(query) ||
-      item.purpose.toLowerCase().includes(query) ||
-      `PLOT-${item.id}`.toLowerCase().includes(query)
+      norm(departmentName).includes(query) ||
+      norm(item.purpose).includes(query) ||
+      norm(item.paperSize).includes(query) ||
+      norm(`PLOT-${item.id}`).includes(query)
     );
     return statusMatch && searchMatch;
   });
@@ -365,14 +457,19 @@ function AdminDashboard() {
 
     // 검색어 필터링
     if (!itemsSearchQuery.trim()) return categoryMatch;
-    const query = itemsSearchQuery.toLowerCase();
+    const query = itemsSearchQuery.replace(/\s+/g, '').toLowerCase();
+    const norm = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, '').toLowerCase();
     const searchMatch = (
-      item.name.toLowerCase().includes(query) ||
-      item.itemCode.toLowerCase().includes(query) ||
-      (item.description && item.description.toLowerCase().includes(query))
+      norm(item.name).includes(query) ||
+      norm(item.itemCode).includes(query) ||
+      norm(item.description).includes(query)
     );
     return categoryMatch && searchMatch;
   });
+
+  const paginatedRentalData = filteredRentalData.slice((rentalPage - 1) * PAGE_SIZE, rentalPage * PAGE_SIZE);
+  const paginatedPlotterData = filteredPlotterData.slice((plotterPage - 1) * PAGE_SIZE, plotterPage * PAGE_SIZE);
+  const paginatedItemsData = filteredItemsData.slice((itemsPage - 1) * PAGE_SIZE, itemsPage * PAGE_SIZE);
 
   return (
     <>
@@ -449,7 +546,7 @@ function AdminDashboard() {
                         <span className="text-gray-500">{rentalSearchQuery ? '검색 결과가 없습니다.' : '대여 내역이 없습니다.'}</span>
                       </div>
                     ) : (
-                      filteredRentalData.map((rental) => {
+                      paginatedRentalData.map((rental) => {
                         // status 매핑: RENTED -> renting
                         return (
                           <AdminRentalRow
@@ -457,7 +554,7 @@ function AdminDashboard() {
                             rentalCode={`R-${rental.id}`}
                             userName={rental.user.name}
                             department={rental.departmentName || rental.departmentType || '-'}
-                            itemName={rental.itemSummary}
+                            itemName={rental.itemSummary?.replace(/\s*외\s*0건$/, '') || '-'}
                             startDate={rental.startDate}
                             endDate={rental.endDate}
                             status={RENTAL_STATUS_MAP_REVERSE[rental.status] as 'reserved' | 'renting' | 'returned' | 'overdue' | 'canceled' | 'defective'}
@@ -475,6 +572,14 @@ function AdminDashboard() {
                   </div>
                 )}
               </div>
+              {!loading && !error && filteredRentalData.length > 0 && (
+                <Pagination
+                  total={filteredRentalData.length}
+                  page={rentalPage}
+                  pageSize={PAGE_SIZE}
+                  onPageChange={setRentalPage}
+                />
+              )}
             </div>
           )}
 
@@ -489,7 +594,7 @@ function AdminDashboard() {
                 searchQuery={plotterSearchQuery}
                 onSearchQueryChange={setPlotterSearchQuery}
                 onSearch={handlePlotterSearch}
-                searchPlaceholder="이름, 학과, 물품 검색"
+                searchPlaceholder="이름, 학과 검색"
               />
 
               {/* 테이블 */}
@@ -528,7 +633,7 @@ function AdminDashboard() {
                         <span className="text-gray-500">{plotterSearchQuery ? '검색 결과가 없습니다.' : '플로터 주문 내역이 없습니다.'}</span>
                       </div>
                     ) : (
-                      filteredPlotterData.map((plotter) => {
+                      paginatedPlotterData.map((plotter) => {
                         // status 매핑: PRINTED -> printing, PENDING -> pending
                         return (
                           <AdminPlotterRow
@@ -554,6 +659,14 @@ function AdminDashboard() {
                   </div>
                 )}
               </div>
+              {!loading && !error && filteredPlotterData.length > 0 && (
+                <Pagination
+                  total={filteredPlotterData.length}
+                  page={plotterPage}
+                  pageSize={PAGE_SIZE}
+                  onPageChange={setPlotterPage}
+                />
+              )}
             </div>
           )}
 
@@ -591,7 +704,7 @@ function AdminDashboard() {
 
               {!loading && !error && filteredItemsData.length > 0 && (
                 <div className="grid grid-cols-4 gap-x-[53px] gap-y-[30px]">
-                  {filteredItemsData.map((item) => (
+                  {paginatedItemsData.map((item) => (
                     <AdminItemCard
                       key={item.id}
                       id={item.id}
@@ -605,6 +718,14 @@ function AdminDashboard() {
                     />
                   ))}
                 </div>
+              )}
+              {!loading && !error && filteredItemsData.length > 0 && (
+                <Pagination
+                  total={filteredItemsData.length}
+                  page={itemsPage}
+                  pageSize={PAGE_SIZE}
+                  onPageChange={setItemsPage}
+                />
               )}
             </div>
           )}

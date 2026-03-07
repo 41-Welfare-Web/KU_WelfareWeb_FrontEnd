@@ -161,13 +161,16 @@ export default function PlotterFormFields({
           <div className="flex items-center gap-3 md:gap-5">
             <input
               type="number"
+              min={1}
+              max={20}
               value={quantity === 0 ? '' : quantity}
               onChange={(e) => {
                 const value = e.target.value;
                 if (value === '') {
                   onQuantityChange(0);
                 } else {
-                  onQuantityChange(parseInt(value) || 0);
+                  const num = parseInt(value) || 0;
+                  onQuantityChange(Math.min(num, 20));
                 }
               }}
               onWheel={(e) => e.currentTarget.blur()}
