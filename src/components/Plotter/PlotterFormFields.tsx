@@ -11,7 +11,7 @@ interface PlotterFormFieldsProps {
   onDepartmentChange: (type: string, name: string | null) => void;
   phone: string;
   purpose: string;
-  purposes?: { id: number; name: string }[];
+  proposes?: { id: number; name: string }[];
   onPurposeChange: (value: string) => void;
   paperSize: string;
   paperSizes?: PaperSize[];
@@ -29,7 +29,7 @@ export default function PlotterFormFields({
   onDepartmentChange,
   phone,
   purpose,
-  purposes = [],
+  proposes = [],
   onPurposeChange,
   paperSize,
   paperSizes = [],
@@ -119,8 +119,8 @@ export default function PlotterFormFields({
             backgroundPosition: 'right 20px center' 
           }}
         >
-          {purposes.length > 0 ? (
-            purposes.map((p) => (
+          {proposes.length > 0 ? (
+            proposes.map((p) => (
               <option key={p.id} value={p.name}>
                 {p.name}
               </option>

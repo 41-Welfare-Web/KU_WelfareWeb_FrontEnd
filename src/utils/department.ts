@@ -21,21 +21,4 @@ export function parseDepartmentGroups(departments: unknown): DepartmentGroup[] {
     .filter((g) => g.type.length > 0);
 }
 
-const KEY = "common_metadata_departments_v1";
 
-export function loadDeptGroupsCache(): DepartmentGroup[] | null {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return null;
-    const data = JSON.parse(raw) as unknown;
-    return Array.isArray(data) ? (data as DepartmentGroup[]) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function saveDeptGroupsCache(groups: DepartmentGroup[]) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(groups));
-  } catch {}
-}

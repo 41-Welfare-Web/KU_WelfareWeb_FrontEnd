@@ -9,10 +9,20 @@ import ProfileEditForm from "../../components/MyPage/ProfileEditForm";
 import LoadingState from "../../components/ui/LoadingState";
 import EmptyState from "../../components/ui/EmptyState";
 import myOrangeIcon from "../../assets/mypage/my-orange.svg";
-import { getMyProfile, updateMyProfile, deleteMyAccount } from "../../services/userApi";
+import {
+  getMyProfile,
+  updateMyProfile,
+  deleteMyAccount,
+} from "../../services/userApi";
 import { getRentals, cancelRental } from "../../services/rentalApi";
 import { getPlotterOrders } from "../../services/plotterApi";
-import { mapRentalStatus, mapPlotterStatus, type UiRentalStatus, type UiPlotterStatus } from "../../utils/statusMapper";
+import {
+  mapRentalStatus,
+  mapPlotterStatus,
+  type UiRentalStatus,
+  type UiPlotterStatus,
+} from "../../utils/statusMapper";
+import { getRentalDetail } from "../../api/rental/rentalApi";
 
 type ReservationStatus = UiRentalStatus;
 type PlotterStatus = UiPlotterStatus;
@@ -44,8 +54,10 @@ export default function MyPage() {
   const tabParam = searchParams.get("tab") as TabType | null;
   const [activeTab, setActiveTab] = useState<TabType>(tabParam || "rental");
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [plotterReservations, setPlotterReservations] = useState<PlotterReservation[]>([]);
-  
+  const [plotterReservations, setPlotterReservations] = useState<
+    PlotterReservation[]
+  >([]);
+
   // 사용자 정보 상태
   const [userProfile, setUserProfile] = useState<{
     username: string;
@@ -54,7 +66,7 @@ export default function MyPage() {
     departmentType: string;
     departmentName: string;
   } | null>(null);
-  
+
   // 로딩 상태
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [isLoadingRentals, setIsLoadingRentals] = useState(false);
@@ -86,7 +98,12 @@ export default function MyPage() {
 
   // URL 파라미터가 변경되면 탭 업데이트
   useEffect(() => {
-    if (tabParam && (tabParam === "rental" || tabParam === "plotter" || tabParam === "profile")) {
+    if (
+      tabParam &&
+      (tabParam === "rental" ||
+        tabParam === "plotter" ||
+        tabParam === "profile")
+    ) {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
@@ -100,19 +117,23 @@ export default function MyPage() {
           const response = await getRentals({ pageSize: 100 });
           console.log("대여 내역 API 응답:", response);
           // API 응답을 화면에 맞게 변환
-          const mappedRentals: Reservation[] = response.rentals.map(rental => {
-            console.log("대여 항목:", rental);
-            return {
-              id: rental.id.toString(),
-              title: rental.itemSummary || '대여 항목',
-              status: mapRentalStatus(rental.status),
-              code: `RENT-${rental.id}`,
-              applicationDate: rental.createdAt ? rental.createdAt.split("T")[0] : '',
-              startDate: rental.startDate || '',
-              endDate: rental.endDate || '',
-              totalCount: 1,
-            };
-          });
+          const mappedRentals: Reservation[] = response.rentals.map(
+            (rental) => {
+              console.log("대여 항목:", rental);
+              return {
+                id: rental.id.toString(),
+                title: rental.itemSummary || "대여 항목",
+                status: mapRentalStatus(rental.status),
+                code: `RENT-${rental.id}`,
+                applicationDate: rental.createdAt
+                  ? rental.createdAt.split("T")[0]
+                  : "",
+                startDate: rental.startDate || "",
+                endDate: rental.endDate || "",
+                totalCount: 1,
+              };
+            },
+          );
           setReservations(mappedRentals);
         } catch (error) {
           console.error("대여 내역 조회 실패:", error);
@@ -133,17 +154,19 @@ export default function MyPage() {
           const response = await getPlotterOrders({ pageSize: 100 });
           console.log("플로터 내역 API 응답:", response);
           // API 응답을 화면에 맞게 변환
-          const mappedOrders: PlotterReservation[] = response.orders.map(order => {
-            console.log("플로터 주문:", order);
-            return {
-              id: order.id.toString(),
-              title: order.purpose || '플로터 주문',
-              status: mapPlotterStatus(order.status),
-              code: `PLOT-${order.id}`,
-              applicationDate: order.createdAt || '',
-              printDate: order.pickupDate || '',
-            };
-          });
+          const mappedOrders: PlotterReservation[] = response.orders.map(
+            (order) => {
+              console.log("플로터 주문:", order);
+              return {
+                id: order.id.toString(),
+                title: order.purpose || "플로터 주문",
+                status: mapPlotterStatus(order.status),
+                code: `PLOT-${order.id}`,
+                applicationDate: order.createdAt || "",
+                printDate: order.pickupDate || "",
+              };
+            },
+          );
           setPlotterReservations(mappedOrders);
         } catch (error) {
           console.error("플로터 내역 조회 실패:", error);
@@ -155,8 +178,30 @@ export default function MyPage() {
     }
   }, [activeTab, isLoadingUser]);
 
-  const handleEdit = (id: string) => {
-    console.log("수정:", id);
+  const handleEdit = async (id: string) => {
+    try {
+      const rental = await getRentalDetail(Number(id));
+
+      navigate(`/rental/cart?editRentalId=${id}`, {
+        state: {
+          editRental: {
+            rentalId: rental.id,
+            departmentType: rental.departmentType,
+            departmentName: rental.departmentName,
+            startDate: rental.startDate,
+            endDate: rental.endDate,
+            items: rental.rentalItems.map((ri) => ({
+              itemId: ri.itemId,
+              name: ri.item?.name ?? "",
+              quantity: ri.quantity,
+            })),
+          },
+        },
+      });
+    } catch (e) {
+      console.error("대여 상세 조회 실패:", e);
+      alert("예약 정보를 불러오지 못했어요.");
+    }
   };
 
   const handleCancel = async (id: string) => {
@@ -166,7 +211,7 @@ export default function MyPage() {
         alert("예약이 취소되었습니다.");
         // 목록 다시 불러오기
         const response = await getRentals({ pageSize: 100 });
-        const mappedRentals: Reservation[] = response.rentals.map(rental => ({
+        const mappedRentals: Reservation[] = response.rentals.map((rental) => ({
           id: rental.id.toString(),
           title: rental.itemSummary,
           status: rental.status.toLowerCase() as ReservationStatus,
@@ -179,7 +224,9 @@ export default function MyPage() {
         setReservations(mappedRentals);
       } catch (error) {
         console.error("예약 취소 실패:", error);
-        alert(error instanceof Error ? error.message : "예약 취소에 실패했습니다.");
+        alert(
+          error instanceof Error ? error.message : "예약 취소에 실패했습니다.",
+        );
       }
     }
   };
@@ -207,7 +254,9 @@ export default function MyPage() {
       alert("개인정보가 수정되었습니다.");
     } catch (error) {
       console.error("프로필 수정 실패:", error);
-      alert(error instanceof Error ? error.message : "정보 수정에 실패했습니다.");
+      alert(
+        error instanceof Error ? error.message : "정보 수정에 실패했습니다.",
+      );
     }
   };
 
@@ -220,7 +269,9 @@ export default function MyPage() {
       navigate("/");
     } catch (error) {
       console.error("회원 탈퇴 실패:", error);
-      alert(error instanceof Error ? error.message : "회원 탈퇴에 실패했습니다.");
+      alert(
+        error instanceof Error ? error.message : "회원 탈퇴에 실패했습니다.",
+      );
     }
   };
 
@@ -232,8 +283,14 @@ export default function MyPage() {
         <div className="max-w-[1440px] mx-auto px-4 pt-4 md:pt-8">
           {/* 페이지 타이틀 */}
           <div className="flex items-center gap-4 mb-4 md:mb-8">
-            <img src={myOrangeIcon} alt="user" className="w-7 h-7 md:w-9 md:h-9" />
-            <h1 className="text-[24px] md:text-[32px] font-bold text-[#410f07]">마이페이지</h1>
+            <img
+              src={myOrangeIcon}
+              alt="user"
+              className="w-7 h-7 md:w-9 md:h-9"
+            />
+            <h1 className="text-[24px] md:text-[32px] font-bold text-[#410f07]">
+              마이페이지
+            </h1>
           </div>
 
           {/* 로딩 중 */}
@@ -244,10 +301,7 @@ export default function MyPage() {
             <div className="rounded-[30px] bg-[#f4f4f4] overflow-hidden">
               {/* 탭 헤더 */}
               <div className="bg-[#f4f4f4] flex mr-10">
-                <TabSelector 
-                  activeTab={activeTab} 
-                  onTabChange={setActiveTab}
-                />
+                <TabSelector activeTab={activeTab} onTabChange={setActiveTab} />
               </div>
 
               {/* 탭 컨텐츠 */}
@@ -270,8 +324,16 @@ export default function MyPage() {
                           startDate={reservation.startDate}
                           endDate={reservation.endDate}
                           totalCount={reservation.totalCount}
-                          onEdit={reservation.status === "reserved" ? () => handleEdit(reservation.id) : undefined}
-                          onCancel={reservation.status === "reserved" ? () => handleCancel(reservation.id) : undefined}
+                          onEdit={
+                            reservation.status === "reserved"
+                              ? () => handleEdit(reservation.id)
+                              : undefined
+                          }
+                          onCancel={
+                            reservation.status === "reserved"
+                              ? () => handleCancel(reservation.id)
+                              : undefined
+                          }
                         />
                       ))
                     )}
