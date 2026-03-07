@@ -122,9 +122,11 @@ export default function MyPage() {
           const mappedRentals: Reservation[] = response.rentals.map(
             (rental) => {
               console.log("대여 항목:", rental);
+              const extraMatch = rental.itemSummary?.match(/외\s*(\d+)건/);
+              const extraCount = extraMatch ? parseInt(extraMatch[1]) : 0;
               return {
                 id: rental.id.toString(),
-                title: rental.itemSummary || "대여 항목",
+                title: rental.itemSummary?.replace(/\s*외\s*0건$/, '') || "대여 항목",
                 status: mapRentalStatus(rental.status),
                 code: `RENT-${rental.id}`,
                 applicationDate: rental.createdAt
@@ -132,7 +134,7 @@ export default function MyPage() {
                   : "",
                 startDate: rental.startDate || "",
                 endDate: rental.endDate || "",
-                totalCount: 1,
+                totalCount: extraCount + 1,
               };
             },
           );
@@ -213,16 +215,20 @@ export default function MyPage() {
         alert("예약이 취소되었습니다.");
         // 목록 다시 불러오기
         const response = await getRentals({ pageSize: 100 });
-        const mappedRentals: Reservation[] = response.rentals.map((rental) => ({
-          id: rental.id.toString(),
-          title: rental.itemSummary,
-          status: rental.status.toLowerCase() as ReservationStatus,
-          code: `RENT-${rental.id}`,
-          applicationDate: rental.createdAt.split("T")[0],
-          startDate: rental.startDate,
-          endDate: rental.endDate,
-          totalCount: 1,
-        }));
+        const mappedRentals: Reservation[] = response.rentals.map((rental) => {
+          const extraMatch = rental.itemSummary?.match(/외\s*(\d+)건/);
+          const extraCount = extraMatch ? parseInt(extraMatch[1]) : 0;
+          return {
+            id: rental.id.toString(),
+            title: rental.itemSummary?.replace(/\s*외\s*0건$/, '') || '',
+            status: rental.status.toLowerCase() as ReservationStatus,
+            code: `RENT-${rental.id}`,
+            applicationDate: rental.createdAt.split("T")[0],
+            startDate: rental.startDate,
+            endDate: rental.endDate,
+            totalCount: extraCount + 1,
+          };
+        });
         setReservations(mappedRentals);
       } catch (error) {
         console.error("예약 취소 실패:", error);
