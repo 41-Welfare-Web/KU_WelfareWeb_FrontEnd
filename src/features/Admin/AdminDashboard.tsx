@@ -554,7 +554,7 @@ function AdminDashboard() {
                             rentalCode={`R-${rental.id}`}
                             userName={rental.user.name}
                             department={rental.departmentName || rental.departmentType || '-'}
-                            itemName={rental.itemSummary}
+                            itemName={rental.itemSummary?.replace(/\s*외\s*0건$/, '') || '-'}
                             startDate={rental.startDate}
                             endDate={rental.endDate}
                             status={RENTAL_STATUS_MAP_REVERSE[rental.status] as 'reserved' | 'renting' | 'returned' | 'overdue' | 'canceled' | 'defective'}
