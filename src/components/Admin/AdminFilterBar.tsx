@@ -60,7 +60,14 @@ export default function AdminFilterBar({
             <input
               type="date"
               value={startDate}
-              onChange={(e) => onStartDateChange(e.target.value)}
+              min="2026-01-01"
+              max="2026-12-31"
+              onChange={(e) => {
+                let val = e.target.value;
+                if (val < '2026-01-01') val = '2026-01-01';
+                if (val > '2026-12-31') val = '2026-12-31';
+                onStartDateChange(val);
+              }}
               className="w-[120px] h-[40px] bg-[#e6e6e6] rounded-[5px] px-[7px] text-[16px] font-['Gmarket_Sans'] font-light text-black appearance-none"
               style={{
                 colorScheme: 'light',
@@ -76,7 +83,14 @@ export default function AdminFilterBar({
             <input
               type="date"
               value={endDate}
-              onChange={(e) => onEndDateChange(e.target.value)}
+              min="2026-01-01"
+              max="2026-12-31"
+              onChange={(e) => {
+                let val = e.target.value;
+                if (val < '2026-01-01') val = '2026-01-01';
+                if (val > '2026-12-31') val = '2026-12-31';
+                onEndDateChange(val);
+              }}
               className="w-[120px] h-[40px] bg-[#e6e6e6] rounded-[5px] px-[7px] text-[16px] font-['Gmarket_Sans'] font-light text-black appearance-none"
               style={{
                 colorScheme: 'light',
