@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import Calendar from "../../components/Rental/Calendar";
@@ -73,15 +73,14 @@ type EditRentalData = {
 
 export default function RentalCart() {
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [searchParams] = useSearchParams();
   const editRentalIdParam = searchParams.get("editRentalId");
   const isEditMode = !!editRentalIdParam;
 
-  const [editRental, setEditRental] = useState<EditRentalData | null>(null);
-  const [editLoading, setEditLoading] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
+  const [, setEditRental] = useState<EditRentalData | null>(null);
+  const [, setEditLoading] = useState(false);
+  const [, setEditError] = useState<string | null>(null);
 
   const [cartItems, setCartItems] = useState<UiCartItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -458,7 +457,6 @@ export default function RentalCart() {
                     departmentType,
                     departmentName,
                     cartItems,
-                    profile,
                   }) => {
                     try {
                       // 수정 모드: URL에 editRentalId가 있으면 수정 API 호출
