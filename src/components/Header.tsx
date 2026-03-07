@@ -5,12 +5,15 @@ import my from "../assets/all/my.svg";
 import { useAuth } from "../contexts/AuthContext";
 import menu from "../assets/all/menu.svg";
 import person from "../assets/all/person.svg";
+import { useLockBodyScroll } from "../hooks/useLockBodyScroll";
 
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  useLockBodyScroll(open);
 
   const desktopUserMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileUserMenuRef = useRef<HTMLDivElement | null>(null);
@@ -316,7 +319,7 @@ export default function Header() {
                 }}
                 className="py-4 border-b border-[#C0C0C0] text-left"
               >
-                물품 대여
+                중앙대여사업
               </button>
 
               <button
@@ -326,7 +329,7 @@ export default function Header() {
                 }}
                 className="py-4 border-b border-[#C0C0C0] text-left"
               >
-                플로터 인쇄
+                플로터인쇄사업
               </button>
             </div>
 

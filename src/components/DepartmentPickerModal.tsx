@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMetadata } from "../contexts/MetadataContext";
 import cancel from "../assets/rental/cancel-white.svg";
+import { useLockBodyScroll } from "../hooks/useLockBodyScroll";
 
 type Props = {
   open: boolean;
@@ -29,6 +30,8 @@ export default function DepartmentPickerModal({
 
   // 오른쪽 직접입력(소분류 없을 때)
   const [customName, setCustomName] = useState("");
+
+  useLockBodyScroll(open);
 
   // 모달 열릴 때 초기 activeType 잡기
   useEffect(() => {
@@ -146,15 +149,6 @@ export default function DepartmentPickerModal({
                     {nm}
                   </button>
                 ))}
-
-                {/* "직접 입력" 옵션도 같이 두고 싶으면 아래 주석 해제 */}
-                {/* <button
-                  type="button"
-                  className="rounded-xl border border-black/15 bg-white px-4 py-3 text-left text-[15px] hover:bg-black/5"
-                  onClick={() => setCustomName("")}
-                >
-                  직접 입력하기
-                </button> */}
               </div>
             ) : (
               <>
