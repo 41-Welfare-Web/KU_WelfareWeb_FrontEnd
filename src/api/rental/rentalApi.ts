@@ -7,6 +7,9 @@ import type {
   ItemDetail,
   RentalCreateRequest,
   RentalCreateResponse,
+  RentalDetail,
+  RentalUpsertRequest,
+  RentalUpsertResponse,
 } from "./types";
 
 function buildQuery(params: ItemsQuery) {
@@ -46,6 +49,24 @@ export async function getItemDetail(itemId: number): Promise<ItemDetail> {
 export async function createRentals(body: RentalCreateRequest) {
   const res = await axiosInstance.post<RentalCreateResponse>(
     "/api/rentals",
+    body,
+  );
+  return res.data;
+}
+
+// 대여 예약 상세조회 (GET /api/rentals/{id})
+export async function getRentalDetail(rentalId: number) {
+  const res = await axiosInstance.get<RentalDetail>(`/api/rentals/${rentalId}`);
+  return res.data;
+}
+
+// 대여 예약 수정 (PUT /api/rentals/{id})
+export async function updateRental(
+  rentalId: number,
+  body: RentalUpsertRequest,
+) {
+  const res = await axiosInstance.put<RentalUpsertResponse>(
+    `/api/rentals/${rentalId}`,
     body,
   );
   return res.data;
