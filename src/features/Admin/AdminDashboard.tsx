@@ -55,6 +55,8 @@ interface PlotterData {
   pickupDate: string;
   status: string;
   createdAt: string;
+  fileUrl?: string;
+  originalFilename?: string;
 }
 
 // ItemData와 CategoryData는 API 타입 사용
@@ -611,7 +613,7 @@ function AdminDashboard() {
                     { label: '소속', width: 'w-[12%] min-w-0' },
                     { label: '파일명', width: 'flex-1 min-w-0' },
                     { label: '용지/장수', width: 'w-[10%] min-w-0' },
-                    { label: '날짜', width: 'w-[10%] min-w-0' },
+                    { label: '수령일', width: 'w-[10%] min-w-0' },
                     { label: '상태', width: 'w-[9%] min-w-0' },
                     { label: '비고', width: 'w-[13%] min-w-0' },
                   ]}
@@ -649,6 +651,7 @@ function AdminDashboard() {
                             paperSizeAndCount={`${plotter.paperSize} / ${plotter.pageCount}장`}
                             orderDate={plotter.pickupDate}
                             status={PLOTTER_STATUS_MAP_REVERSE[plotter.status as keyof typeof PLOTTER_STATUS_MAP_REVERSE] as 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'}
+                            fileUrl={plotter.fileUrl}
                             onStatusChange={(newStatus) => {
                               handlePlotterStatusChange(
                                 plotter.id,

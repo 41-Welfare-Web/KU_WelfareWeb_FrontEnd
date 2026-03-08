@@ -27,6 +27,8 @@ export interface PlotterOrderResponse {
   pickupDate: string;
   status: string;
   createdAt: string;
+  fileUrl?: string;
+  originalFilename?: string;
 }
 
 // POST 응답용 (더 많은 정보 포함)

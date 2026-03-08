@@ -136,6 +136,14 @@ export default function PlotterRequest() {
   };
 
   const handleSubmit = async () => {
+    if (!departmentType) {
+      alert("소속 단위를 선택해 주세요.");
+      return;
+    }
+    if (!departmentName) {
+      alert("소속을 입력/선택해 주세요.");
+      return;
+    }
     if (!paperSize) {
       alert("용지 크기를 선택해 주세요.");
       return;
