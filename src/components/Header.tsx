@@ -340,7 +340,7 @@ export default function Header() {
                 }}
                 className="py-4 border-b border-[#C0C0C0] text-left"
               >
-                물품 대여
+                중앙대여사업
               </button>
 
               <button
@@ -350,8 +350,20 @@ export default function Header() {
                 }}
                 className="py-4 border-b border-[#C0C0C0] text-left"
               >
-                플로터 인쇄
+                플로터인쇄사업
               </button>
+
+              {user?.role === "ADMIN" && (
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/admin");
+                  }}
+                  className="py-4 border-b border-[#C0C0C0] text-left text-[#FE6949]"
+                >
+                  관리자
+                </button>
+              )}
             </div>
 
             {/* 하단 로그아웃 */}
