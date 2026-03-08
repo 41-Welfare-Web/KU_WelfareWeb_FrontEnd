@@ -335,7 +335,9 @@ export default function Calendar({
                 )}
 
                 {inMonth && isWeekendDay && (
-                  <div className="mt-1 text-[10px] text-black/40">주말</div>
+                  <div className="mt-1 text-[10px] text-black/40 whitespace-nowrap">
+                    주말
+                  </div>
                 )}
               </div>
             </button>
@@ -346,12 +348,21 @@ export default function Calendar({
       <div className="mt-5 rounded-2xl bg-black/5 p-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="text-center">
-            <div className="text-[13px] text-black/60">대여일</div>
-            <div className="mt-1 text-[18px] font-bold">{startDate ?? "—"}</div>
+            <div className="text-[11px] sm:text-[13px] text-black/60">
+              대여일
+            </div>
+            <div className="mt-1 text-[15px] sm:text-[18px] font-bold">
+              {startDate ?? "—"}
+            </div>
           </div>
+
           <div className="text-center border-l border-black">
-            <div className="text-[13px] text-black/60">반납일</div>
-            <div className="mt-1 text-[18px] font-bold">{endDate ?? "—"}</div>
+            <div className="text-[11px] sm:text-[13px] text-black/60">
+              반납일
+            </div>
+            <div className="mt-1 text-[15px] sm:text-[18px] font-bold">
+              {endDate ?? "—"}
+            </div>
           </div>
         </div>
       </div>

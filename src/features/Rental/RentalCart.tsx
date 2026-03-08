@@ -112,7 +112,14 @@ type EditRentalData = {
   departmentName: string | null;
   startDate: string;
   endDate: string;
-  items: { itemId: number; name: string; quantity: number }[];
+  items: {
+    itemId: number;
+    name: string;
+    quantity: number;
+    totalQuantity: number;
+    imageUrl?: string;
+    categoryName?: string;
+  }[];
 };
 
 export default function RentalCart() {
@@ -168,13 +175,36 @@ export default function RentalCart() {
     );
   };
 
-  useEffect(() => {
-    const next: Record<number, "WAIT" | "OK" | "NO"> = {};
-    cartItems.forEach((it) => {
-      next[it.cartId] = it.startDate && it.endDate ? "WAIT" : "WAIT";
-    });
-    setStatusByCartId(next);
-  }, [cartItems]);
+  // 초기 전체 판정 함수
+  const buildInitialStatusMap = async (items: UiCartItem[]) => {
+    const entries = await Promise.all(
+      items.map(async (it) => {
+        if (!it.startDate || !it.endDate) {
+          return [it.cartId, "WAIT"] as const;
+        }
+
+        const ok =
+          isEditMode &&
+          it.originalStartDate &&
+          it.originalEndDate &&
+          typeof it.originalCount === "number"
+            ? await checkEnoughForEdit(
+                it.itemId,
+                it.startDate,
+                it.endDate,
+                it.count,
+                it.originalStartDate,
+                it.originalEndDate,
+                it.originalCount,
+              )
+            : await checkEnough(it.itemId, it.startDate, it.endDate, it.count);
+
+        return [it.cartId, ok ? "OK" : "NO"] as const;
+      }),
+    );
+
+    return Object.fromEntries(entries) as Record<number, "WAIT" | "OK" | "NO">;
+  };
 
   const onCalendarChange = async (range: {
     startDate: string | null;
@@ -293,9 +323,15 @@ export default function RentalCart() {
 
     setLoading(true);
     setError(null);
+
     try {
       const data = await getMyCart();
-      setCartItems(toUiCartItems(data));
+      const mapped = toUiCartItems(data);
+
+      setCartItems(mapped);
+
+      const initialStatus = await buildInitialStatusMap(mapped);
+      setStatusByCartId(initialStatus);
     } catch (e: any) {
       setError(e?.message ?? "장바구니를 불러오지 못했어요.");
     } finally {
@@ -333,6 +369,9 @@ export default function RentalCart() {
               itemId: ri.itemId ?? ri.item?.id,
               name: ri.item?.name ?? "이름 없음",
               quantity: ri.quantity ?? 1,
+              totalQuantity: ri.item?.totalQuantity ?? 1,
+              imageUrl: ri.item?.imageUrl ?? undefined,
+              categoryName: ri.item?.category?.name ?? undefined,
             })),
           };
 
@@ -344,24 +383,22 @@ export default function RentalCart() {
               itemId: it.itemId,
               name: it.name,
               count: it.quantity,
+              totalQuantity: it.totalQuantity,
               startDate: mappedEditRental.startDate,
               endDate: mappedEditRental.endDate,
               originalStartDate: mappedEditRental.startDate,
               originalEndDate: mappedEditRental.endDate,
               originalCount: it.quantity,
-              imageUrl: "",
-              categoryName: "",
+              imageUrl: it.imageUrl,
+              categoryName: it.categoryName,
             }),
           );
 
           setCartItems(mappedCartItems);
           setSelectedCartId(mappedCartItems[0]?.cartId ?? null);
 
-          const nextStatus: Record<number, "WAIT" | "OK" | "NO"> = {};
-          mappedCartItems.forEach((it) => {
-            nextStatus[it.cartId] = "OK";
-          });
-          setStatusByCartId(nextStatus);
+          const initialStatus = await buildInitialStatusMap(mappedCartItems);
+          setStatusByCartId(initialStatus);
         } catch (e: any) {
           setEditError(e?.message ?? "예약 정보를 불러오지 못했어요.");
         } finally {
@@ -376,38 +413,6 @@ export default function RentalCart() {
 
     fetchInitialData();
   }, [isEditMode, editRentalIdParam]);
-
-  // 대여 가능/불가 판정
-  const validateCartItem = async (it: UiCartItem) => {
-    if (!it.startDate || !it.endDate) {
-      setStatusByCartId((m) => ({ ...m, [it.cartId]: "WAIT" }));
-      return;
-    }
-
-    const ok =
-      isEditMode &&
-      it.originalStartDate &&
-      it.originalEndDate &&
-      typeof it.originalCount === "number"
-        ? await checkEnoughForEdit(
-            it.itemId,
-            it.startDate,
-            it.endDate,
-            it.count,
-            it.originalStartDate,
-            it.originalEndDate,
-            it.originalCount,
-          )
-        : await checkEnough(it.itemId, it.startDate, it.endDate, it.count);
-
-    setStatusByCartId((m) => ({ ...m, [it.cartId]: ok ? "OK" : "NO" }));
-  };
-
-  useEffect(() => {
-    cartItems.forEach((it) => {
-      if (it.startDate && it.endDate) validateCartItem(it);
-    });
-  }, [cartItems]);
 
   // 대여 물품 장바구니에서 삭제
   const handleRemove = async (cartId: number) => {
