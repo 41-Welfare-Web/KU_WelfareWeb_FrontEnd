@@ -26,10 +26,10 @@ export default function AdminItemCard({
 }: AdminItemCardProps) {
   return (
     <div
-      className={`bg-white border border-[#d72002] rounded-[11px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.2)] overflow-clip relative w-[224px] h-[280px] ${className}`}
+      className={`bg-white border border-[#d72002] rounded-[11px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.2)] overflow-clip relative w-full aspect-[224/280] ${className}`}
     >
       {/* 이미지 영역 */}
-      <div className="w-full h-[193px] bg-gradient-to-br from-blue-400 to-blue-600 relative">
+      <div className="w-full h-[69%] bg-gradient-to-br from-blue-400 to-blue-600 relative">
         {imageUrl ? (
           <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
         ) : (
@@ -60,25 +60,22 @@ export default function AdminItemCard({
       </div>
 
       {/* 정보 영역 */}
-      <div className="absolute top-[203px] left-[11px] right-[11px]">
-        <p className="font-['Signika'] font-medium text-[13px] text-[#fe6949] leading-normal mb-0">
+      <div className="absolute top-[72%] left-[11px] right-[11px] flex items-center justify-between">
+        <p className="font-['Signika'] font-medium text-[11px] sm:text-[13px] text-[#fe6949] leading-normal">
           {category}
         </p>
-      </div>
-
-      <div className="absolute top-[203px] right-[11px]">
-        <div className="bg-[#d9d9d9] rounded-[10px] h-[24px] px-2 flex items-center">
-          <span className="font-['Signika'] font-medium text-[11px] text-black tracking-[0.33px]">
+        <div className="bg-[#d9d9d9] rounded-[10px] h-[20px] sm:h-[24px] px-2 flex items-center flex-shrink-0">
+          <span className="font-['Signika'] font-medium text-[9px] sm:text-[11px] text-black">
             수량 {quantity}개
           </span>
         </div>
       </div>
 
-      <h3 className="absolute top-[227px] left-[11px] font-['Noto_Sans'] font-semibold text-[20px] text-[#410f07] leading-normal tracking-[-0.4px]">
+      <h3 className="absolute top-[82%] left-[11px] right-[11px] font-['Noto_Sans'] font-semibold text-[14px] sm:text-[18px] text-[#410f07] leading-tight truncate">
         {name}
       </h3>
 
-      <p className="absolute top-[249px] left-[11px] right-[11px] font-['Gmarket_Sans'] font-light text-[12px] text-[#410f07] leading-normal line-clamp-2">
+      <p className="absolute top-[91%] left-[11px] right-[11px] font-['Gmarket_Sans'] font-light text-[10px] sm:text-[12px] text-[#410f07] leading-normal line-clamp-1">
         {description}
       </p>
     </div>
