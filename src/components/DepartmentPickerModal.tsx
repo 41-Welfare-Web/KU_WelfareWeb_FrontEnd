@@ -45,15 +45,13 @@ export default function DepartmentPickerModal({
   }, [open, value?.departmentType, value?.departmentName, deptGroups]);
 
   const groups = useMemo(() => {
-    // DepartmentGroup 형태가 { type, names } 또는 { name, items } 등일 수 있어서 안전처리
+    // DepartmentGroup 형태로 변환
     return deptGroups
       .map((g: any) => ({
-        type: String(g.type ?? g.name ?? "").trim(),
-        names: Array.isArray(g.names)
-          ? (g.names as string[])
-          : Array.isArray(g.items)
-            ? (g.items as string[])
-            : [],
+        type: String(g.type ?? "").trim(),
+        names: Array.isArray(g.names) ? (g.names as string[]) : [],
+        requiresInput: Boolean(g.requiresInput),
+        placeholder: g.placeholder ? String(g.placeholder).trim() : "소속명을 입력하세요",
       }))
       .filter((g) => g.type);
   }, [deptGroups]);
@@ -68,12 +66,12 @@ export default function DepartmentPickerModal({
 
   return (
     <div
-      className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 px-4"
+      className="fixed inset-0 z-[2000] flex items-start justify-center bg-black/40 px-4 pt-[8vh]"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-[min(820px,96vw)] max-h-[86dvh] overflow-hidden rounded-2xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
+      <div className="w-[min(820px,96vw)] overflow-hidden rounded-2xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
         {/* Header */}
         <div className="flex items-center justify-between bg-[#001A37] px-6 py-4">
           <div className="text-[clamp(18px,2.2vw,24px)] font-bold text-white">
@@ -85,7 +83,7 @@ export default function DepartmentPickerModal({
         </div>
 
         {/* Body */}
-        <div className="flex max-h-[calc(86dvh-64px)] min-h-[360px]">
+        <div className="flex h-[500px]">
           {/* Left: 대분류 */}
           <div className="w-[44%] border-r border-black/10 p-4 overflow-y-auto">
             {loading && (
@@ -159,13 +157,15 @@ export default function DepartmentPickerModal({
             ) : (
               <>
                 <div className="text-sm text-black/50 mb-3">
-                  이 대분류는 소분류 목록이 없어서 직접 입력해야 해요.
+                  {activeGroup?.requiresInput 
+                    ? "소속명을 직접 입력해주세요." 
+                    : "이 대분류는 소분류 목록이 없어서 직접 입력해야 해요."}
                 </div>
 
                 <input
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="소속명을 입력하세요"
+                  placeholder={activeGroup?.placeholder || "소속명을 입력하세요"}
                   className="w-full h-12 rounded-xl bg-[#EFEFEF] px-4 text-[15px] outline-none focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                 />
 
