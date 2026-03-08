@@ -41,8 +41,16 @@ export type RegisterResponse = {
 
 export type Unit = { id: number; name: string };
 
+export interface DepartmentCategory {
+  category: string;
+  requiresInput: boolean;
+  options?: string[];
+  placeholder?: string;
+}
+
 export type CommonMetadataResponse = {
-  departments: string[][];
-  freePurposes?: unknown[];
-  prices?: Record<string, unknown>;
+  departments: DepartmentCategory[];
+  purposes: string[];
+  freePurposes: string[];
+  prices: Record<string, number>;
 };
