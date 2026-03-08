@@ -589,15 +589,15 @@ function AdminDashboard() {
                 />
 
                 {/* 테이블 */}
-                <div className="overflow-x-auto mt-4 md:mt-6">
+                <div className="overflow-x-auto overflow-y-visible mt-4 md:mt-6">
                   <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible md:min-w-[680px]">
                     {/* 테이블 헤더 */}
                     <AdminTableHeader
-                      columns={[
-                        { label: "신청번호", width: "w-[7%] min-w-0" },
-                        { label: "신청자", width: "w-[8%] min-w-0" },
-                        { label: "소속", width: "w-[12%] min-w-0" },
-                        { label: "대여 품목", width: "flex-1 min-w-0" },
+                    columns={[
+                      { label: "신청번호", width: "w-[7%] min-w-0" },
+                      { label: "신청자", width: "w-[8%] min-w-0" },
+                      { label: "소속", width: "w-[12%] min-w-0" },
+                      { label: "대여 품목", width: "flex-1 min-w-0" },
                         { label: "대여 날짜", width: "w-[10%] min-w-0" },
                         { label: "반납 날짜", width: "w-[10%] min-w-0" },
                         { label: "상태", width: "w-[9%] min-w-0" },
@@ -680,9 +680,10 @@ function AdminDashboard() {
                         )}
                       </div>
                     )}
+
                   </div>
                 </div>
-                {/* overflow-x-auto */}
+
                 {!loading && !error && filteredRentalData.length > 0 && (
                   <Pagination
                     total={filteredRentalData.length}
@@ -703,7 +704,7 @@ function AdminDashboard() {
                     "전체 상태",
                     "예약 대기",
                     "예약 확정",
-                    "인쇄 완료",
+                    "출력 완료",
                     "예약 반려",
                     "수령 완료",
                   ]}
@@ -716,17 +717,17 @@ function AdminDashboard() {
                 />
 
                 {/* 테이블 */}
-                <div className="overflow-x-auto mt-4 md:mt-6">
+                <div className="overflow-x-auto overflow-y-visible mt-4 md:mt-6">
                   <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible md:min-w-[680px]">
                     {/* 테이블 헤더 */}
                     <AdminTableHeader
-                      columns={[
-                        { label: "신청번호", width: "w-[7%] min-w-0" },
-                        { label: "신청자", width: "w-[8%] min-w-0" },
-                        { label: "소속", width: "w-[12%] min-w-0" },
-                        { label: "파일명", width: "flex-1 min-w-0" },
-                        { label: "용지/장수", width: "w-[10%] min-w-0" },
-                        { label: "수령일", width: "w-[10%] min-w-0" },
+                    columns={[
+                      { label: "신청번호", width: "w-[7%] min-w-0" },
+                      { label: "신청자", width: "w-[8%] min-w-0" },
+                      { label: "소속", width: "w-[12%] min-w-0" },
+                      { label: "파일명", width: "flex-1 min-w-0" },
+                      { label: "용지/장수", width: "w-[10%] min-w-0" },
+                      { label: "수령일", width: "w-[10%] min-w-0" },
                         { label: "상태", width: "w-[9%] min-w-0" },
                         { label: "비고", width: "w-[13%] min-w-0" },
                       ]}
@@ -804,6 +805,7 @@ function AdminDashboard() {
                         )}
                       </div>
                     )}
+
                   </div>
                 </div>
 
