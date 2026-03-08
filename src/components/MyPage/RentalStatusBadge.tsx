@@ -40,13 +40,13 @@ const RentalStatusBadge = ({ status, className = '' }: RentalStatusBadgeProps) =
 
   return (
     <div
-      className={`flex items-center justify-center w-[97px] h-[33px] rounded-[11px] ${className}`}
+      className={`flex items-center justify-center w-[90px] md:w-[97px] max-w-full h-[30px] md:h-[33px] rounded-[11px] ${className}`}
       style={{
         backgroundColor: config.bgColor,
         color: config.textColor,
       }}
     >
-      <span className="text-[15px] font-medium leading-normal whitespace-nowrap">
+      <span className="text-[13px] md:text-[15px] font-medium leading-normal truncate px-2">
         {config.text}
       </span>
     </div>

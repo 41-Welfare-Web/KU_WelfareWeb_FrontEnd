@@ -168,7 +168,7 @@ export default function AdminPlotterRow({
           <span>{formatDate(orderDate)}</span>
         </div>
         {/* 비고 */}
-        <div className="flex items-center gap-2 mt-2">
+        <div className="flex items-center gap-2 mt-2 min-w-0">
           <input
             ref={inputRef}
             type="text"
@@ -178,7 +178,7 @@ export default function AdminPlotterRow({
             onKeyDown={handleNoteKeyDown}
             disabled={!isEditing}
             placeholder="비고"
-            className="flex-1 h-[30px] px-2 text-[13px] font-medium text-black border border-gray-300 rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none focus:border-blue-500"
+            className="flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border border-gray-300 rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none focus:border-blue-500"
           />
           <button onClick={handleEditClick} className="w-4 h-4 hover:opacity-70 transition-opacity flex-shrink-0" aria-label="비고 수정">
             <img src={editIcon} alt="수정" className="w-4 h-4" />
