@@ -1,7 +1,7 @@
 interface ApplicationSummaryProps {
   paperSize?: string;
   quantity?: number;
-  expectedDate: string;
+  expectedDate?: string; // YYYY-MM-DD 형식으로 받음
   isFree?: boolean;
   totalAmount: number;
   onSubmit: () => void;
@@ -19,6 +19,13 @@ export default function ApplicationSummary({
   className = "",
   isSubmitting = false,
 }: ApplicationSummaryProps) {
+  // 날짜 포맷팅: YYYY-MM-DD -> M월 D일
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return '수령일을 선택하세요';
+    const date = new Date(dateStr);
+    return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+  };
+
   return (
     <div className={`bg-white rounded-[30px] p-4 md:p-8 shadow-lg ${className}`}>
       <h2 className="text-[24px] md:text-[32px] font-bold text-[#410f07] mb-4 md:mb-8">신청 요약</h2>
@@ -32,8 +39,8 @@ export default function ApplicationSummary({
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-[16px] md:text-[20px] text-[#606060]">수령 가능일</span>
-          <span className="text-[16px] md:text-[20px] text-[#f72] font-medium">{expectedDate}</span>
+          <span className="text-[16px] md:text-[20px] text-[#606060]">수령일</span>
+          <span className="text-[16px] md:text-[20px] text-[#f72] font-medium">{formatDate(expectedDate)}</span>
         </div>
 
         <div className="flex justify-between items-center">

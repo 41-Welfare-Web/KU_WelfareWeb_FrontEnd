@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import PlotterStatusBadge from '../Plotter/PlotterStatusBadge';
 import editIcon from '../../assets/admin/pencil.svg';
+import downloadIcon from '../../assets/admin/download.svg';
 
 // 텍스트가 실제로 잘렸을 때만 호버 시 위쪽에 풀 텍스트 툴팁을 보여주는 셀
 function TruncatedCell({ text, className }: { text: string; className: string }) {
@@ -49,6 +50,7 @@ interface AdminPlotterRowProps {
   orderDate: string;
   status: 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed';
   note?: string;
+  fileUrl?: string;
   onStatusChange?: (newStatus: 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed') => void;
   onNoteChange?: (note: string) => void;
 }
@@ -62,6 +64,7 @@ export default function AdminPlotterRow({
   orderDate,
   status,
   note = '',
+  fileUrl,
   onStatusChange,
   onNoteChange
 }: AdminPlotterRowProps) {
@@ -130,6 +133,17 @@ export default function AdminPlotterRow({
     }
   };
 
+  // 파일 다운로드 핸들러
+  const handleDownload = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!fileUrl) return;
+    
+    console.log('다운로드 URL:', fileUrl);
+    
+    // 새 탭에서 열어서 다운로드
+    window.open(fileUrl, '_blank');
+  };
+
   return (
     <>
       {/* 모바일 카드 뷰 */}
@@ -161,7 +175,18 @@ export default function AdminPlotterRow({
           <span className="text-[14px] font-semibold text-black">{userName}</span>
           <span className="text-[13px] text-gray-500">{club}</span>
         </div>
-        <p className="text-[13px] text-gray-700 mb-2 truncate">{purpose}</p>
+        <div className="flex items-center gap-2 mb-2">
+          <p className="text-[13px] text-gray-700 truncate flex-1">{purpose}</p>
+          {fileUrl && (
+            <button
+              onClick={handleDownload}
+              className="flex-shrink-0 w-4 h-4 hover:opacity-70 transition-opacity cursor-pointer"
+              aria-label="파일 다운로드"
+            >
+              <img src={downloadIcon} alt="다운로드" className="w-4 h-4" />
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-3 text-[12px] text-gray-500">
           <span>{paperSizeAndCount}</span>
           <span>·</span>
@@ -194,11 +219,22 @@ export default function AdminPlotterRow({
         <TruncatedCell text={userName} className="w-[8%] min-w-0 text-center shrink" />
         {/* 소속 */}
         <TruncatedCell text={club} className="w-[12%] min-w-0 text-center shrink" />
-        {/* 파일명 */}
-        <TruncatedCell text={purpose} className="flex-1 min-w-0 text-center" />
+        {/* 파일명 + 다운로드 */}
+        <div className="flex-1 min-w-0 flex items-center justify-center gap-2">
+          <TruncatedCell text={purpose} className="flex-1 min-w-0 text-center" />
+          {fileUrl && (
+            <button
+              onClick={handleDownload}
+              className="flex-shrink-0 w-4 h-4 hover:opacity-70 transition-opacity cursor-pointer"
+              aria-label="파일 다운로드"
+            >
+              <img src={downloadIcon} alt="다운로드" className="w-4 h-4" />
+            </button>
+          )}
+        </div>
         {/* 용지 규격 및 매수 */}
         <TruncatedCell text={paperSizeAndCount} className="w-[10%] min-w-0 text-center shrink" />
-        {/* 날짜 */}
+        {/* 수령일 */}
         <span className="text-[14px] font-medium text-black w-[10%] min-w-0 text-center shrink">{formatDate(orderDate)}</span>
 
         {/* 상태 배지 */}
