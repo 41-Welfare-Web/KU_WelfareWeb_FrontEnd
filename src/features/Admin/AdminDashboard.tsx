@@ -513,7 +513,7 @@ function AdminDashboard() {
 
               {/* 테이블 */}
               <div className="overflow-x-auto mt-4 md:mt-6">
-              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible min-w-[680px]">
+              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible md:min-w-[680px]">
                 {/* 테이블 헤더 */}
                 <AdminTableHeader
                   columns={[
@@ -602,7 +602,7 @@ function AdminDashboard() {
 
               {/* 테이블 */}
               <div className="overflow-x-auto mt-4 md:mt-6">
-              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible min-w-[680px]">
+              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible md:min-w-[680px]">
                 {/* 테이블 헤더 */}
                 <AdminTableHeader
                   columns={[

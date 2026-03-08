@@ -67,8 +67,8 @@ export default function AdminFilterBar({
               if (val > '2026-12-31') val = '2026-12-31';
               onStartDateChange(val);
             }}
-            className="flex-1 sm:w-[120px] h-[38px] md:h-[40px] bg-[#e6e6e6] rounded-[5px] px-[7px] text-[13px] md:text-[16px] font-['Gmarket_Sans'] font-light text-black appearance-none"
-            style={{ colorScheme: 'light' }}
+            className="flex-1 min-w-0 sm:w-[120px] h-[38px] md:h-[40px] bg-[#e6e6e6] rounded-[5px] px-[7px] text-[13px] md:text-[16px] font-['Gmarket_Sans'] font-light text-black appearance-none"
+            style={{ colorScheme: 'light', minWidth: 0 }}
           />
 
           {/* 구분자 */}
@@ -86,14 +86,14 @@ export default function AdminFilterBar({
               if (val > '2026-12-31') val = '2026-12-31';
               onEndDateChange(val);
             }}
-            className="flex-1 sm:w-[120px] h-[38px] md:h-[40px] bg-[#e6e6e6] rounded-[5px] px-[7px] text-[13px] md:text-[16px] font-['Gmarket_Sans'] font-light text-black appearance-none"
-            style={{ colorScheme: 'light' }}
+            className="flex-1 min-w-0 sm:w-[120px] h-[38px] md:h-[40px] bg-[#e6e6e6] rounded-[5px] px-[7px] text-[13px] md:text-[16px] font-['Gmarket_Sans'] font-light text-black appearance-none"
+            style={{ colorScheme: 'light', minWidth: 0 }}
           />
         </div>
 
         {/* 검색창 + 버튼 */}
-        <div className="flex items-center gap-2 flex-1">
-          <div className="flex-1 bg-[#eaeaea] rounded-[10px] h-[38px] md:h-[40px] flex items-center px-[7px] gap-[7px]">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="flex-1 min-w-0 bg-[#eaeaea] rounded-[10px] h-[38px] md:h-[40px] flex items-center px-[7px] gap-[7px]">
             <img src={searchIcon} alt="검색" className="w-5 h-5 md:w-[28px] md:h-[28px] flex-shrink-0" />
             <input
               type="text"
@@ -108,7 +108,7 @@ export default function AdminFilterBar({
           </div>
           <button
             onClick={onSearch}
-            className="bg-black text-white rounded-[10px] h-[38px] md:h-[40px] w-[60px] md:w-[69px] font-['HanbatGothic'] font-medium text-[14px] md:text-[20px] flex-shrink-0"
+            className="bg-black text-white rounded-[10px] h-[38px] md:h-[40px] min-w-[50px] w-[60px] md:w-[69px] font-['HanbatGothic'] font-medium text-[14px] md:text-[20px]"
           >
             검색
           </button>
