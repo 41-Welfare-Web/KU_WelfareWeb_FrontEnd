@@ -2,6 +2,44 @@ import { useState, useRef, useEffect } from 'react';
 import PlotterStatusBadge from '../Plotter/PlotterStatusBadge';
 import editIcon from '../../assets/admin/pencil.svg';
 
+// 텍스트가 실제로 잘렸을 때만 호버 시 위쪽에 풀 텍스트 툴팁을 보여주는 셀
+function TruncatedCell({ text, className }: { text: string; className: string }) {
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const spanRef = useRef<HTMLSpanElement>(null);
+
+  const handleMouseEnter = () => {
+    const el = spanRef.current;
+    if (el && el.scrollWidth > el.clientWidth) {
+      const rect = el.getBoundingClientRect();
+      setPos({ x: rect.left + rect.width / 2, y: rect.top });
+    }
+  };
+
+  return (
+    <div className={className}>
+      <span
+        ref={spanRef}
+        className="block truncate text-[14px] font-medium text-black"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setPos(null)}
+      >
+        {text}
+      </span>
+      {pos && (
+        <div
+          className="fixed z-[9999] pointer-events-none"
+          style={{ left: pos.x, top: pos.y - 8, transform: 'translate(-50%, -100%)' }}
+        >
+          <div className="bg-gray-800 text-white text-xs rounded px-2 py-1.5 max-w-[280px] break-words text-center shadow-lg">
+            {text}
+          </div>
+          <div className="w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800 mx-auto" />
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface AdminPlotterRowProps {
   orderCode: string;
   userName: string;
@@ -151,15 +189,15 @@ export default function AdminPlotterRow({
       {/* 데스크톱 테이블 행 뷰 */}
       <div className="hidden md:flex w-full h-[52px] bg-white border-b border-[#e5e5e5] items-center px-4 gap-2">
         {/* 주문 코드 */}
-        <span className="text-[14px] font-medium text-black w-[7%] min-w-0 text-center truncate shrink">{orderCode}</span>
+        <TruncatedCell text={orderCode} className="w-[7%] min-w-0 text-center shrink" />
         {/* 신청자 */}
-        <span className="text-[14px] font-medium text-black w-[8%] min-w-0 text-center truncate shrink">{userName}</span>
+        <TruncatedCell text={userName} className="w-[8%] min-w-0 text-center shrink" />
         {/* 소속 */}
-        <span className="text-[14px] font-medium text-black w-[12%] min-w-0 text-center truncate shrink">{club}</span>
+        <TruncatedCell text={club} className="w-[12%] min-w-0 text-center shrink" />
         {/* 파일명 */}
-        <span className="text-[14px] font-medium text-black flex-1 min-w-0 text-center truncate">{purpose}</span>
+        <TruncatedCell text={purpose} className="flex-1 min-w-0 text-center" />
         {/* 용지 규격 및 매수 */}
-        <span className="text-[14px] font-medium text-black w-[10%] min-w-0 text-center truncate shrink">{paperSizeAndCount}</span>
+        <TruncatedCell text={paperSizeAndCount} className="w-[10%] min-w-0 text-center shrink" />
         {/* 날짜 */}
         <span className="text-[14px] font-medium text-black w-[10%] min-w-0 text-center shrink">{formatDate(orderDate)}</span>
 
