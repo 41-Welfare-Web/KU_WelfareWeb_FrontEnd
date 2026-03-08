@@ -6,6 +6,43 @@ import { useAuth } from "../contexts/AuthContext";
 import menu from "../assets/all/menu.svg";
 import person from "../assets/all/person.svg";
 
+function UserName({ name, className }: { name: string; className?: string }) {
+  const spanRef = useRef<HTMLSpanElement | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+
+  const handleMouseEnter = () => {
+    const el = spanRef.current;
+    if (el && el.scrollWidth > el.clientWidth) {
+      const rect = el.getBoundingClientRect();
+      setTooltipPos({ x: rect.left + rect.width / 2, y: rect.top });
+    }
+  };
+
+  return (
+    <>
+      <span
+        ref={spanRef}
+        className={`truncate ${className ?? ""}`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setTooltipPos(null)}
+      >
+        {name}
+      </span>
+      {tooltipPos && (
+        <div
+          className="fixed z-9999 pointer-events-none"
+          style={{ left: tooltipPos.x, top: tooltipPos.y - 8, transform: "translate(-50%, -100%)" }}
+        >
+          <div className="bg-gray-800 text-white text-xs rounded px-2 py-1.5 whitespace-nowrap shadow-lg">
+            {name}
+          </div>
+          <div className="w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800 mx-auto" />
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -16,7 +53,6 @@ export default function Header() {
   const mobileUserMenuRef = useRef<HTMLDivElement | null>(null);
 
   const { isLoggedIn, user, logout } = useAuth();
-  const isAdmin = isLoggedIn && user?.role === "ADMIN";
 
   const closeAll = () => {
     setOpen(false);
@@ -110,18 +146,6 @@ export default function Header() {
             플로터인쇄사업
           </button>
 
-          {/* ========================= */}
-          {isAdmin && (
-            <button
-              type="button"
-              onClick={() => navigate("/admin")}
-              className={menuClass("/admin")}
-            >
-              admin
-            </button>
-          )}
-          {/* ========================= */}
-
           {!isLoggedIn ? (
             <button
               type="button"
@@ -136,10 +160,10 @@ export default function Header() {
                 type="button"
                 onClick={() => setUserMenuOpen((v) => !v)}
                 onMouseEnter={() => setUserMenuOpen(true)}
-                className="flex items-center gap-3 rounded-full bg-[#FD8060] px-4 py-2 text-black text-sm hover:opacity-90"
+                className="flex items-center gap-3 rounded-full bg-[#FD8060] px-4 py-2 text-black text-sm hover:opacity-90 max-w-55"
               >
-                <img src={my} alt="사용자" />
-                {user?.name ?? "사용자"}님
+                <img src={my} alt="사용자" className="shrink-0" />
+                <UserName name={`${user?.name ?? "사용자"}님`} className="max-w-30" />
               </button>
 
               {userMenuOpen && (
@@ -185,12 +209,12 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-full bg-[#FD8060] px-3 py-2 text-black text-[10px] hover:opacity-90"
+                className="flex items-center gap-2 rounded-full bg-[#FD8060] px-3 py-2 text-black text-[10px] hover:opacity-90 max-w-35"
                 aria-label="사용자 메뉴"
                 aria-expanded={userMenuOpen}
               >
-                <img src={my} alt="사용자" />
-                {user?.name ?? "사용자"}님
+                <img src={my} alt="사용자" className="shrink-0" />
+                <UserName name={`${user?.name ?? "사용자"}님`} className="max-w-17.5" />
               </button>
 
               {userMenuOpen && (
@@ -292,7 +316,7 @@ export default function Header() {
                   <div className="w-7 h-7 flex justify-center items-center rounded-full bg-white">
                     <img src={person} alt="프로필" />
                   </div>
-                  <p className="font-semibold text-[#410F07]">{user?.name}님</p>
+                  <UserName name={`${user?.name ?? ""}님`} className="max-w-40 font-semibold text-[#410F07]" />
                 </div>
               )}
             </div>
