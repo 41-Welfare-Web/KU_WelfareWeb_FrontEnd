@@ -12,8 +12,15 @@ export interface PaperSize {
 }
 
 // API 응답 인터페이스 (실제 API 형식)
+export interface DepartmentCategory {
+  category: string;
+  requiresInput: boolean;
+  options?: string[];
+  placeholder?: string;
+}
+
 interface CommonMetadataResponse {
-  departments: string[][];
+  departments: DepartmentCategory[];
   purposes: string[];
   freePurposes: string[];
   prices: {
@@ -23,7 +30,7 @@ interface CommonMetadataResponse {
 
 // 프론트엔드에서 사용하는 형식
 export interface CommonMetadata {
-  departments: string[][];
+  departments: DepartmentCategory[];
   plotterPurposes: PlotterPurpose[];
   plotterFreePurposes: string[];
   plotterPaperSizes: PaperSize[];

@@ -6,6 +6,7 @@ export interface PlotterOrderRequest {
   pageCount: number;
   departmentType: string;
   departmentName?: string;
+  pickupDate: string;
   pdfFile: File;
   paymentReceiptImage?: File;
 }
@@ -55,6 +56,7 @@ export async function createPlotterOrder(
   formData.append("paperSize", data.paperSize);
   formData.append("pageCount", data.pageCount.toString());
   formData.append("departmentType", data.departmentType);
+  formData.append("pickupDate", data.pickupDate);
   
   if (data.departmentName) {
     formData.append("departmentName", data.departmentName);
