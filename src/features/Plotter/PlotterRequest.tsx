@@ -12,7 +12,7 @@ import { createPlotterOrder } from "../../services/plotterApi";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMyProfile } from "../../services/userApi";
 import { getCommonMetadata, type PaperSize } from "../../services/commonApi";
-import { getExpectedDateKorean, validateDesiredDate } from "../../utils/dateUtils";
+import { validateDesiredDate } from "../../utils/dateUtils";
 
 interface Purpose {
   id: number;
@@ -22,7 +22,7 @@ interface Purpose {
 export default function PlotterRequest() {
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
-  const [departmentType, setDepartmentType] = useState("학생복지위원회");
+  const [departmentType, setDepartmentType] = useState("");
   const [departmentName, setDepartmentName] = useState<string | null>(null);
   const [purposes, setPurposes] = useState<Purpose[]>([]);
   const [freePurposes, setFreePurposes] = useState<string[]>([]);
@@ -136,6 +136,14 @@ export default function PlotterRequest() {
   };
 
   const handleSubmit = async () => {
+    if (!departmentType) {
+      alert("소속 단위를 선택해 주세요.");
+      return;
+    }
+    if (!departmentName) {
+      alert("소속을 입력/선택해 주세요.");
+      return;
+    }
     if (!paperSize) {
       alert("용지 크기를 선택해 주세요.");
       return;
@@ -273,7 +281,7 @@ export default function PlotterRequest() {
               <ApplicationSummary
                 paperSize={paperSize}
                 quantity={quantity}
-                expectedDate={getExpectedDateKorean(2)}
+                expectedDate={desiredDate}
                 isFree={isFreePurpose}
                 totalAmount={totalPrice}
                 onSubmit={handleSubmit}

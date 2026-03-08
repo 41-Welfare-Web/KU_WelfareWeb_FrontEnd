@@ -132,7 +132,7 @@ export default function PlotterFormFields({
         />
       </div>
 
-      {/* 목적 & 수령 희망일 */}
+      {/* 목적 & 수령일 */}
       <div className="flex flex-col md:flex-row justify-between gap-4 md:gap-6 mb-4 md:mb-6">
         <div className="w-full md:flex-[2]">
           <label className="block text-[16px] md:text-[20px] font-medium text-black mb-2">목적</label>
@@ -158,7 +158,7 @@ export default function PlotterFormFields({
           </select>
         </div>
         <div className="w-full md:flex-1">
-          <label className="block text-[16px] md:text-[20px] font-medium text-black mb-2">수령 희망일</label>
+          <label className="block text-[16px] md:text-[20px] font-medium text-black mb-2">수령일</label>
           <input
             type="date"
             value={desiredDate}
