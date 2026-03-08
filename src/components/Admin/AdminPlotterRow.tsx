@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import PlotterStatusBadge from '../Plotter/PlotterStatusBadge';
 import editIcon from '../../assets/admin/pencil.svg';
 import downloadIcon from '../../assets/admin/download.svg';
@@ -69,9 +70,11 @@ export default function AdminPlotterRow({
   onNoteChange
 }: AdminPlotterRowProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const [isEditing, setIsEditing] = useState(false);
   const [noteValue, setNoteValue] = useState(note);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const badgeBtnRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // status 변환: pending -> waiting, printed -> printing으로 매핑
@@ -94,19 +97,33 @@ export default function AdminPlotterRow({
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(target) &&
+        badgeBtnRef.current && !badgeBtnRef.current.contains(target)
+      ) {
         setIsDropdownOpen(false);
       }
     };
-
     if (isDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isDropdownOpen]);
+
+  const handleToggleDropdown = () => {
+    if (!isDropdownOpen && badgeBtnRef.current) {
+      const rect = badgeBtnRef.current.getBoundingClientRect();
+      const dropdownHeight = 220;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      if (spaceBelow >= dropdownHeight) {
+        setDropdownStyle({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX });
+      } else {
+        setDropdownStyle({ top: rect.top + window.scrollY - dropdownHeight - 4, left: rect.left + window.scrollX });
+      }
+    }
+    setIsDropdownOpen((prev) => !prev);
+  };
 
   const handleStatusClick = (newStatus: 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed') => {
     if (onStatusChange) {
@@ -150,25 +167,10 @@ export default function AdminPlotterRow({
       <div className="md:hidden w-full bg-white border-b border-[#e5e5e5] p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[13px] font-semibold text-gray-500">{orderCode}</span>
-          <div className="relative" ref={dropdownRef}>
-            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="hover:opacity-80 transition">
+          <div>
+            <button ref={badgeBtnRef} onClick={handleToggleDropdown} className="hover:opacity-80 transition">
               <PlotterStatusBadge status={badgeStatus} />
             </button>
-            {isDropdownOpen && (
-              <div className="absolute top-full mt-1 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] py-2 min-w-[120px] max-h-[300px] overflow-y-auto">
-                {allStatuses.map((statusOption) => {
-                  const displayStatus =
-                    statusOption === 'pending' ? 'waiting' :
-                    statusOption === 'printed' ? 'printing' :
-                    statusOption as 'waiting' | 'confirmed' | 'printing' | 'completed' | 'rejected';
-                  return (
-                    <button key={statusOption} onClick={() => handleStatusClick(statusOption)} className="w-full px-3 py-2 hover:bg-gray-50 transition flex items-center justify-center">
-                      <PlotterStatusBadge status={displayStatus} />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </div>
         </div>
         <div className="flex items-center gap-2 mb-1">
@@ -238,25 +240,10 @@ export default function AdminPlotterRow({
         <span className="text-[14px] font-medium text-black w-[10%] min-w-0 text-center shrink">{formatDate(orderDate)}</span>
 
         {/* 상태 배지 */}
-        <div className="relative w-[9%] min-w-0 shrink" ref={dropdownRef}>
-          <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="w-full hover:opacity-80 transition">
+        <div className="w-[9%] min-w-0 shrink flex items-center justify-center">
+          <button ref={badgeBtnRef} onClick={handleToggleDropdown} className="w-full hover:opacity-80 transition">
             <PlotterStatusBadge status={badgeStatus} />
           </button>
-          {isDropdownOpen && (
-            <div className="absolute top-full mt-1 left-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] py-2 min-w-[120px] max-h-[300px] overflow-y-auto">
-              {allStatuses.map((statusOption) => {
-                const displayStatus =
-                  statusOption === 'pending' ? 'waiting' :
-                  statusOption === 'printed' ? 'printing' :
-                  statusOption as 'waiting' | 'confirmed' | 'printing' | 'completed' | 'rejected';
-                return (
-                  <button key={statusOption} onClick={() => handleStatusClick(statusOption)} className="w-full px-3 py-2 hover:bg-gray-50 transition flex items-center justify-center">
-                    <PlotterStatusBadge status={displayStatus} />
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
 
         {/* 비고 입력 필드 */}
@@ -276,6 +263,32 @@ export default function AdminPlotterRow({
           </button>
         </div>
       </div>
+
+      {/* 포털 드롭다운 – overflow 컨테이너 바깥 body에 렌더링 */}
+      {isDropdownOpen && createPortal(
+        <div
+          ref={dropdownRef}
+          style={{ position: 'absolute', ...dropdownStyle, zIndex: 9999 }}
+          className="bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[120px] max-h-[220px] overflow-y-auto"
+        >
+          {allStatuses.map((statusOption) => {
+            const displayStatus =
+              statusOption === 'pending' ? 'waiting' :
+              statusOption === 'printed' ? 'printing' :
+              statusOption as 'waiting' | 'confirmed' | 'printing' | 'completed' | 'rejected';
+            return (
+              <button
+                key={statusOption}
+                onClick={() => handleStatusClick(statusOption)}
+                className="w-full px-3 py-2 hover:bg-gray-50 transition flex items-center justify-center"
+              >
+                <PlotterStatusBadge status={displayStatus} />
+              </button>
+            );
+          })}
+        </div>,
+        document.body
+      )}
     </>
   );
 }
