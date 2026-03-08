@@ -273,7 +273,7 @@ export default function PlotterRequest() {
               <ApplicationSummary
                 paperSize={paperSize}
                 quantity={quantity}
-                expectedDate={getExpectedDateKorean(2)}
+                expectedDate={desiredDate}
                 isFree={isFreePurpose}
                 totalAmount={totalPrice}
                 onSubmit={handleSubmit}
