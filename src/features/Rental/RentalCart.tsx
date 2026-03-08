@@ -175,14 +175,6 @@ export default function RentalCart() {
     );
   };
 
-  // useEffect(() => {
-  //   const next: Record<number, "WAIT" | "OK" | "NO"> = {};
-  //   cartItems.forEach((it) => {
-  //     next[it.cartId] = it.startDate && it.endDate ? "WAIT" : "WAIT";
-  //   });
-  //   setStatusByCartId(next);
-  // }, [cartItems]);
-
   // 초기 전체 판정 함수
   const buildInitialStatusMap = async (items: UiCartItem[]) => {
     const entries = await Promise.all(
@@ -421,38 +413,6 @@ export default function RentalCart() {
 
     fetchInitialData();
   }, [isEditMode, editRentalIdParam]);
-
-  // 대여 가능/불가 판정
-  const validateCartItem = async (it: UiCartItem) => {
-    if (!it.startDate || !it.endDate) {
-      setStatusByCartId((m) => ({ ...m, [it.cartId]: "WAIT" }));
-      return;
-    }
-
-    const ok =
-      isEditMode &&
-      it.originalStartDate &&
-      it.originalEndDate &&
-      typeof it.originalCount === "number"
-        ? await checkEnoughForEdit(
-            it.itemId,
-            it.startDate,
-            it.endDate,
-            it.count,
-            it.originalStartDate,
-            it.originalEndDate,
-            it.originalCount,
-          )
-        : await checkEnough(it.itemId, it.startDate, it.endDate, it.count);
-
-    setStatusByCartId((m) => ({ ...m, [it.cartId]: ok ? "OK" : "NO" }));
-  };
-
-  // useEffect(() => {
-  //   cartItems.forEach((it) => {
-  //     if (it.startDate && it.endDate) validateCartItem(it);
-  //   });
-  // }, [cartItems]);
 
   // 대여 물품 장바구니에서 삭제
   const handleRemove = async (cartId: number) => {
