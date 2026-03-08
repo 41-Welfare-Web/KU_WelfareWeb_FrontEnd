@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import CartContent from "./CartContent";
+import { useLockBodyScroll } from "../../hooks/useLockBodyScroll";
 
 type Props = {
   open: boolean;
@@ -22,6 +23,8 @@ export default function CartDrawer({
   onGoCheckout,
   onRemove,
 }: Props) {
+  useLockBodyScroll(open);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {

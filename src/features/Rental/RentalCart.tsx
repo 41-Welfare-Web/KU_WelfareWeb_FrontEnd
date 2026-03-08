@@ -45,6 +45,50 @@ async function checkEnough(
   return min >= qty;
 }
 
+function isBetweenInclusive(date: string, start: string, end: string) {
+  return date >= start && date <= end;
+}
+
+async function checkEnoughForEdit(
+  itemId: number,
+  startDate: string,
+  endDate: string,
+  qty: number,
+  originalStartDate: string,
+  originalEndDate: string,
+  originalQty: number,
+) {
+  const rows: Availability[] = await getItemAvailability({
+    itemId,
+    startDate,
+    endDate,
+  });
+
+  if (!rows || rows.length === 0) return false;
+
+  const adjustedRows = rows.map((row) => {
+    const inOriginalRange = isBetweenInclusive(
+      row.date,
+      originalStartDate,
+      originalEndDate,
+    );
+
+    return {
+      ...row,
+      availableQuantity: inOriginalRange
+        ? (row.availableQuantity ?? 0) + originalQty
+        : (row.availableQuantity ?? 0),
+    };
+  });
+
+  const min = adjustedRows.reduce<number>(
+    (acc, r) => Math.min(acc, r.availableQuantity ?? 0),
+    Infinity,
+  );
+
+  return min >= qty;
+}
+
 function getApiErrorMessage(err: unknown) {
   const anyErr = err as any;
 
@@ -68,7 +112,14 @@ type EditRentalData = {
   departmentName: string | null;
   startDate: string;
   endDate: string;
-  items: { itemId: number; name: string; quantity: number }[];
+  items: {
+    itemId: number;
+    name: string;
+    quantity: number;
+    totalQuantity: number;
+    imageUrl?: string;
+    categoryName?: string;
+  }[];
 };
 
 export default function RentalCart() {
@@ -78,7 +129,7 @@ export default function RentalCart() {
   const editRentalIdParam = searchParams.get("editRentalId");
   const isEditMode = !!editRentalIdParam;
 
-  const [, setEditRental] = useState<EditRentalData | null>(null);
+  const [editRental, setEditRental] = useState<EditRentalData | null>(null);
   const [, setEditLoading] = useState(false);
   const [, setEditError] = useState<string | null>(null);
 
@@ -124,13 +175,36 @@ export default function RentalCart() {
     );
   };
 
-  useEffect(() => {
-    const next: Record<number, "WAIT" | "OK" | "NO"> = {};
-    cartItems.forEach((it) => {
-      next[it.cartId] = it.startDate && it.endDate ? "WAIT" : "WAIT";
-    });
-    setStatusByCartId(next);
-  }, [cartItems]);
+  // 초기 전체 판정 함수
+  const buildInitialStatusMap = async (items: UiCartItem[]) => {
+    const entries = await Promise.all(
+      items.map(async (it) => {
+        if (!it.startDate || !it.endDate) {
+          return [it.cartId, "WAIT"] as const;
+        }
+
+        const ok =
+          isEditMode &&
+          it.originalStartDate &&
+          it.originalEndDate &&
+          typeof it.originalCount === "number"
+            ? await checkEnoughForEdit(
+                it.itemId,
+                it.startDate,
+                it.endDate,
+                it.count,
+                it.originalStartDate,
+                it.originalEndDate,
+                it.originalCount,
+              )
+            : await checkEnough(it.itemId, it.startDate, it.endDate, it.count);
+
+        return [it.cartId, ok ? "OK" : "NO"] as const;
+      }),
+    );
+
+    return Object.fromEntries(entries) as Record<number, "WAIT" | "OK" | "NO">;
+  };
 
   const onCalendarChange = async (range: {
     startDate: string | null;
@@ -148,12 +222,27 @@ export default function RentalCart() {
       return;
     }
 
-    const ok = await checkEnough(
-      selected.itemId,
-      range.startDate,
-      range.endDate,
-      selected.count,
-    );
+    const ok =
+      isEditMode &&
+      selected.originalStartDate &&
+      selected.originalEndDate &&
+      typeof selected.originalCount === "number"
+        ? await checkEnoughForEdit(
+            selected.itemId,
+            range.startDate,
+            range.endDate,
+            selected.count,
+            selected.originalStartDate,
+            selected.originalEndDate,
+            selected.originalCount,
+          )
+        : await checkEnough(
+            selected.itemId,
+            range.startDate,
+            range.endDate,
+            selected.count,
+          );
+
     setStatusByCartId((m) => ({ ...m, [selected.cartId]: ok ? "OK" : "NO" }));
 
     if (isEditMode) return;
@@ -179,12 +268,21 @@ export default function RentalCart() {
       patchLocalCart(cartId, { count: nextQty });
 
       if (it.startDate && it.endDate) {
-        const ok = await checkEnough(
-          it.itemId,
-          it.startDate,
-          it.endDate,
-          nextQty,
-        );
+        const ok =
+          it.originalStartDate &&
+          it.originalEndDate &&
+          typeof it.originalCount === "number"
+            ? await checkEnoughForEdit(
+                it.itemId,
+                it.startDate,
+                it.endDate,
+                nextQty,
+                it.originalStartDate,
+                it.originalEndDate,
+                it.originalCount,
+              )
+            : await checkEnough(it.itemId, it.startDate, it.endDate, nextQty);
+
         setStatusByCartId((m) => ({ ...m, [cartId]: ok ? "OK" : "NO" }));
       }
       return;
@@ -225,9 +323,15 @@ export default function RentalCart() {
 
     setLoading(true);
     setError(null);
+
     try {
       const data = await getMyCart();
-      setCartItems(toUiCartItems(data));
+      const mapped = toUiCartItems(data);
+
+      setCartItems(mapped);
+
+      const initialStatus = await buildInitialStatusMap(mapped);
+      setStatusByCartId(initialStatus);
     } catch (e: any) {
       setError(e?.message ?? "장바구니를 불러오지 못했어요.");
     } finally {
@@ -265,6 +369,9 @@ export default function RentalCart() {
               itemId: ri.itemId ?? ri.item?.id,
               name: ri.item?.name ?? "이름 없음",
               quantity: ri.quantity ?? 1,
+              totalQuantity: ri.item?.totalQuantity ?? 1,
+              imageUrl: ri.item?.imageUrl ?? undefined,
+              categoryName: ri.item?.category?.name ?? undefined,
             })),
           };
 
@@ -276,21 +383,22 @@ export default function RentalCart() {
               itemId: it.itemId,
               name: it.name,
               count: it.quantity,
+              totalQuantity: it.totalQuantity,
               startDate: mappedEditRental.startDate,
               endDate: mappedEditRental.endDate,
-              imageUrl: "",
-              categoryName: "",
+              originalStartDate: mappedEditRental.startDate,
+              originalEndDate: mappedEditRental.endDate,
+              originalCount: it.quantity,
+              imageUrl: it.imageUrl,
+              categoryName: it.categoryName,
             }),
           );
 
           setCartItems(mappedCartItems);
           setSelectedCartId(mappedCartItems[0]?.cartId ?? null);
 
-          const nextStatus: Record<number, "WAIT" | "OK" | "NO"> = {};
-          mappedCartItems.forEach((it) => {
-            nextStatus[it.cartId] = "OK";
-          });
-          setStatusByCartId(nextStatus);
+          const initialStatus = await buildInitialStatusMap(mappedCartItems);
+          setStatusByCartId(initialStatus);
         } catch (e: any) {
           setEditError(e?.message ?? "예약 정보를 불러오지 못했어요.");
         } finally {
@@ -305,22 +413,6 @@ export default function RentalCart() {
 
     fetchInitialData();
   }, [isEditMode, editRentalIdParam]);
-
-  // 대여 가능/불가 판정
-  const validateCartItem = async (it: UiCartItem) => {
-    if (!it.startDate || !it.endDate) {
-      setStatusByCartId((m) => ({ ...m, [it.cartId]: "WAIT" }));
-      return;
-    }
-    const ok = await checkEnough(it.itemId, it.startDate, it.endDate, it.count);
-    setStatusByCartId((m) => ({ ...m, [it.cartId]: ok ? "OK" : "NO" }));
-  };
-
-  useEffect(() => {
-    cartItems.forEach((it) => {
-      if (it.startDate && it.endDate) validateCartItem(it);
-    });
-  }, [cartItems]);
 
   // 대여 물품 장바구니에서 삭제
   const handleRemove = async (cartId: number) => {
@@ -369,6 +461,15 @@ export default function RentalCart() {
                     startDate: selected.startDate,
                     endDate: selected.endDate,
                   }}
+                  editAdjust={
+                    isEditMode
+                      ? {
+                          originalStartDate: selected.originalStartDate ?? null,
+                          originalEndDate: selected.originalEndDate ?? null,
+                          originalCount: selected.originalCount ?? 0,
+                        }
+                      : null
+                  }
                   onChange={onCalendarChange}
                 />
               ) : (
@@ -439,6 +540,12 @@ export default function RentalCart() {
                   open={confirmOpen}
                   onClose={() => setConfirmOpen(false)}
                   mode={isEditMode ? "edit" : "create"}
+                  initialDepartmentType={
+                    isEditMode ? (editRental?.departmentType ?? "") : ""
+                  }
+                  initialDepartmentName={
+                    isEditMode ? (editRental?.departmentName ?? "") : ""
+                  }
                   editRentalId={
                     isEditMode ? Number(editRentalIdParam) : undefined
                   }

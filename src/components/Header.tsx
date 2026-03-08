@@ -5,6 +5,7 @@ import my from "../assets/all/my.svg";
 import { useAuth } from "../contexts/AuthContext";
 import menu from "../assets/all/menu.svg";
 import person from "../assets/all/person.svg";
+import { useLockBodyScroll } from "../hooks/useLockBodyScroll";
 
 function UserName({ name, className }: { name: string; className?: string }) {
   const spanRef = useRef<HTMLSpanElement | null>(null);
@@ -48,6 +49,8 @@ export default function Header() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  useLockBodyScroll(open);
 
   const desktopUserMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileUserMenuRef = useRef<HTMLDivElement | null>(null);

@@ -10,6 +10,11 @@ type Props = {
     startDate: string | null;
     endDate: string | null;
   }) => void;
+  editAdjust?: {
+    originalStartDate: string | null;
+    originalEndDate: string | null;
+    originalCount: number;
+  } | null;
 };
 
 function pad2(n: number) {
@@ -59,11 +64,16 @@ function isSameDate(a: Date, b: Date) {
   );
 }
 
+function isBetweenInclusive(date: string, start: string, end: string) {
+  return date >= start && date <= end;
+}
+
 export default function Calendar({
   itemId,
   requestedQty,
   value,
   onChange,
+  editAdjust,
 }: Props) {
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
@@ -121,11 +131,36 @@ export default function Calendar({
     };
   }, [itemId, monthStartYmd, monthEndYmd]);
 
+  const adjustedData = useMemo(() => {
+    const originalStartDate = editAdjust?.originalStartDate;
+    const originalEndDate = editAdjust?.originalEndDate;
+    const originalCount = editAdjust?.originalCount ?? 0;
+
+    if (!originalStartDate || !originalEndDate || !originalCount) {
+      return data;
+    }
+
+    return data.map((row) => {
+      const inOriginalRange = isBetweenInclusive(
+        row.date,
+        originalStartDate,
+        originalEndDate,
+      );
+
+      if (!inOriginalRange) return row;
+
+      return {
+        ...row,
+        availableQuantity: (row.availableQuantity ?? 0) + originalCount,
+      };
+    });
+  }, [data, editAdjust]);
+
   const mapByDate = useMemo(() => {
     const m = new Map<string, Availability>();
-    data.forEach((row) => m.set(row.date, row));
+    adjustedData.forEach((row) => m.set(row.date, row));
     return m;
-  }, [data]);
+  }, [adjustedData]);
 
   const commit = (next: {
     startDate: string | null;
@@ -265,7 +300,9 @@ export default function Calendar({
 
           // 선택 스타일은 예약 가능한 날짜에만
           let selectedCls = "";
-          if (!isBlocked && inMonth) {
+          const isOutOfStock = enough === false;
+
+          if (!isBlocked && inMonth && !isOutOfStock) {
             if (inRange) selectedCls = "bg-orange-500 text-white";
             if (isStart || isEnd) selectedCls = "bg-orange-500 text-white";
           }
@@ -298,7 +335,9 @@ export default function Calendar({
                 )}
 
                 {inMonth && isWeekendDay && (
-                  <div className="mt-1 text-[10px] text-black/40">주말</div>
+                  <div className="mt-1 text-[10px] text-black/40 whitespace-nowrap">
+                    주말
+                  </div>
                 )}
               </div>
             </button>
@@ -309,12 +348,21 @@ export default function Calendar({
       <div className="mt-5 rounded-2xl bg-black/5 p-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="text-center">
-            <div className="text-[13px] text-black/60">대여일</div>
-            <div className="mt-1 text-[18px] font-bold">{startDate ?? "—"}</div>
+            <div className="text-[11px] sm:text-[13px] text-black/60">
+              대여일
+            </div>
+            <div className="mt-1 text-[15px] sm:text-[18px] font-bold">
+              {startDate ?? "—"}
+            </div>
           </div>
+
           <div className="text-center border-l border-black">
-            <div className="text-[13px] text-black/60">반납일</div>
-            <div className="mt-1 text-[18px] font-bold">{endDate ?? "—"}</div>
+            <div className="text-[11px] sm:text-[13px] text-black/60">
+              반납일
+            </div>
+            <div className="mt-1 text-[15px] sm:text-[18px] font-bold">
+              {endDate ?? "—"}
+            </div>
           </div>
         </div>
       </div>
