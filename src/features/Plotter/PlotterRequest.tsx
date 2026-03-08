@@ -173,6 +173,7 @@ export default function PlotterRequest() {
         pageCount: quantity,
         departmentType,
         departmentName: departmentName || undefined,
+        pickupDate: desiredDate,
         pdfFile,
         paymentReceiptImage: receiptFile || undefined,
       });
