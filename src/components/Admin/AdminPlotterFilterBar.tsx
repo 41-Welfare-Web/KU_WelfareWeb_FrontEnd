@@ -35,23 +35,23 @@ const AdminPlotterFilterBar: React.FC<AdminPlotterFilterBarProps> = ({
   };
 
   return (
-    <div className="relative w-full h-[77px] flex items-center gap-2 px-6 bg-white border border-[#c3c3c3] rounded-[10px]">
-      {/* Filter icon */}
-      <div className="w-[20px] h-[20px] flex items-center justify-center">
+    <div className="relative w-full flex items-center gap-2 px-4 md:px-6 py-3 md:py-0 md:h-[77px] bg-white border border-[#c3c3c3] rounded-[10px]">
+      {/* Filter icon - hide on mobile */}
+      <div className="hidden md:flex w-[20px] h-[20px] items-center justify-center flex-shrink-0">
         <img alt="filter" className="w-[20px] h-[20px]" src={filterIcon} />
       </div>
 
       {/* Status dropdown */}
-      <div className="relative h-[31px] w-[98px] flex items-center">
+      <div className="relative h-[36px] md:h-[31px] w-[100px] md:w-[98px] flex items-center flex-shrink-0">
         <button
           onClick={() => setShowDropdown(!showDropdown)}
-          className="bg-white border border-[#a6a6a6] border-solid h-[31px] w-[98px] flex items-center justify-between px-[9px] rounded-[10px] cursor-pointer hover:bg-gray-50"
+          className="bg-white border border-[#a6a6a6] h-[36px] md:h-[31px] w-full flex items-center justify-between px-[9px] rounded-[10px] cursor-pointer hover:bg-gray-50"
         >
-          <span className="font-['Gmarket_Sans'] font-medium text-[15px] text-black">
+          <span className="font-['Gmarket_Sans'] font-medium text-[13px] md:text-[15px] text-black truncate">
             {selectedStatus || '전체 상태'}
           </span>
           <svg
-            className="w-[12px] h-[12px] transform rotate-90"
+            className="w-[10px] h-[10px] md:w-[12px] md:h-[12px] transform rotate-90 flex-shrink-0"
             viewBox="0 0 12 24"
             fill="none"
           >
@@ -61,12 +61,12 @@ const AdminPlotterFilterBar: React.FC<AdminPlotterFilterBarProps> = ({
         
         {/* Dropdown menu */}
         {showDropdown && (
-          <div className="absolute top-[35px] left-0 w-[98px] bg-white border border-[#a6a6a6] rounded-[10px] shadow-lg z-10 max-h-[200px] overflow-y-auto">
+          <div className="absolute top-[40px] left-0 w-[120px] bg-white border border-[#a6a6a6] rounded-[10px] shadow-lg z-10 max-h-[200px] overflow-y-auto">
             {statusOptions.map((status) => (
               <button
                 key={status}
                 onClick={() => handleStatusSelect(status)}
-                className="w-full text-left px-[9px] py-2 text-[15px] font-['Gmarket_Sans'] font-medium hover:bg-gray-100 first:rounded-t-[10px] last:rounded-b-[10px]"
+                className="w-full text-left px-[9px] py-2 text-[13px] md:text-[15px] font-['Gmarket_Sans'] font-medium hover:bg-gray-100 first:rounded-t-[10px] last:rounded-b-[10px]"
               >
                 {status}
               </button>
@@ -76,24 +76,24 @@ const AdminPlotterFilterBar: React.FC<AdminPlotterFilterBarProps> = ({
       </div>
 
       {/* Search input area */}
-      <div className="flex items-center bg-[#d9d9d9] rounded-[10px] h-[40px] px-3 flex-1 min-w-0 ml-2">
-        <img alt="search" className="block w-[20px] h-[20px] mr-2" src={searchIcon} />
+      <div className="flex items-center bg-[#d9d9d9] rounded-[10px] h-[36px] md:h-[40px] px-3 flex-1 min-w-0 ml-1 md:ml-2">
+        <img alt="search" className="block w-[18px] h-[18px] md:w-[20px] md:h-[20px] mr-2 flex-shrink-0" src={searchIcon} />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchQueryChange(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder={searchPlaceholder}
-          className="flex-1 bg-transparent border-none outline-none font-['HanbatGothic'] font-medium text-[20px] text-black placeholder:text-[#8e8e8e] tracking-[0.6px] min-w-0"
+          className="flex-1 bg-transparent border-none outline-none font-['HanbatGothic'] font-medium text-[14px] md:text-[20px] text-black placeholder:text-[#8e8e8e] min-w-0"
         />
       </div>
 
       {/* Search button */}
       <button
         onClick={onSearch}
-        className="h-[40px] w-[69px] bg-black rounded-[10px] flex items-center justify-center cursor-pointer hover:bg-gray-800 transition-colors"
+        className="h-[36px] md:h-[40px] w-[60px] md:w-[69px] bg-black rounded-[10px] flex items-center justify-center cursor-pointer hover:bg-gray-800 transition-colors flex-shrink-0"
       >
-        <span className="font-['HanbatGothic'] font-medium text-[20px] text-white tracking-[0.6px]">
+        <span className="font-['HanbatGothic'] font-medium text-[14px] md:text-[20px] text-white">
           검색
         </span>
       </button>

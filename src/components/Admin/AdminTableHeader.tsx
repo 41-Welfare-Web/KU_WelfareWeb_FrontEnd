@@ -14,7 +14,7 @@ export default function AdminTableHeader({
   className = '',
 }: AdminTableHeaderProps) {
   return (
-    <div className={`bg-[#EDEDED] border-b border-[#C2C2C2] h-[52px] flex items-center px-8 gap-4 font-['HanbatGothic'] font-medium text-[16px] text-black ${className}`}>
+    <div className={`hidden md:flex bg-[#EDEDED] border-b border-[#C2C2C2] h-[52px] items-center px-4 gap-2 font-['HanbatGothic'] font-medium text-[16px] text-black ${className}`}>
       {columns.map((column, index) => (
         <div
           key={index}
