@@ -149,7 +149,7 @@ export default function Header() {
           {user?.role === "ADMIN" && (
             <button
               type="button"
-              onClick={() => navigate("/admin")}
+              onClick={() => navigate("/admin", { state: { fromHeader: true } })}
               className={menuClass("/admin")}
             >
               관리자
@@ -367,7 +367,7 @@ export default function Header() {
                 <button
                   onClick={() => {
                     setOpen(false);
-                    navigate("/admin");
+                    navigate("/admin", { state: { fromHeader: true } });
                   }}
                   className="py-4 border-b border-[#C0C0C0] text-left"
                 >
