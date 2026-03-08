@@ -39,17 +39,17 @@ export default function PlotterStatusBadge({ status, className = "" }: PlotterSt
   if (!config) {
     console.warn(`Unknown plotter status: ${status}`);
     return (
-      <div className={`flex items-center justify-center w-[97px] h-[33px] rounded-[11px] bg-gray-200 ${className}`}>
-        <p className="text-[15px] font-medium text-gray-600">알 수 없음</p>
+      <div className={`flex items-center justify-center w-[90px] md:w-[97px] max-w-full h-[30px] md:h-[33px] rounded-[11px] bg-gray-200 ${className}`}>
+        <p className="text-[13px] md:text-[15px] font-medium text-gray-600 truncate px-2">알 수 없음</p>
       </div>
     );
   }
 
   return (
     <div
-      className={`flex items-center justify-center w-[97px] h-[33px] rounded-[11px] ${config.bgColor} ${className}`}
+      className={`flex items-center justify-center w-[90px] md:w-[97px] max-w-full h-[30px] md:h-[33px] rounded-[11px] ${config.bgColor} ${className}`}
     >
-      <p className={`text-[15px] font-medium ${config.textColor}`}>
+      <p className={`text-[13px] md:text-[15px] font-medium ${config.textColor} truncate px-2`}>
         {config.text}
       </p>
     </div>
