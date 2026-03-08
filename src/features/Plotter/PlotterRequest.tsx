@@ -12,7 +12,7 @@ import { createPlotterOrder } from "../../services/plotterApi";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMyProfile } from "../../services/userApi";
 import { getCommonMetadata, type PaperSize } from "../../services/commonApi";
-import { getExpectedDateKorean, validateDesiredDate } from "../../utils/dateUtils";
+import { validateDesiredDate } from "../../utils/dateUtils";
 
 interface Purpose {
   id: number;
