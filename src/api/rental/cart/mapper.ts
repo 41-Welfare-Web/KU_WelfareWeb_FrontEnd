@@ -8,12 +8,17 @@ function toYmdFromIso(iso: string | null | undefined): string | null {
 export function toUiCartItems(data: CartGetResponse): UiCartItem[] {
   return (data.items ?? []).map((row) => ({
     cartId: row.id,
-    itemId: row.item?.id ?? row.itemId,
+    itemId: row.itemId,
     name: row.item?.name ?? "(이름 없음)",
     categoryName: row.item?.category?.name,
     count: row.quantity,
+    totalQuantity: row.item?.totalQuantity ?? 1,
     imageUrl: row.item?.imageUrl ?? undefined,
     startDate: toYmdFromIso(row.startDate),
     endDate: toYmdFromIso(row.endDate),
+
+    originalStartDate: toYmdFromIso(row.startDate),
+    originalEndDate: toYmdFromIso(row.endDate),
+    originalCount: row.quantity,
   }));
 }
