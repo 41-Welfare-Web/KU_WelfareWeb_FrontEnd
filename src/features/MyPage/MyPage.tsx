@@ -372,7 +372,7 @@ export default function MyPage() {
                 {activeTab === "profile" && (
                   <div className="w-full">
                     <ProfileEditForm
-                      userId={userProfile.studentId}
+                      userId={userProfile.username}
                       initialDepartmentType={userProfile.departmentType}
                       initialDepartmentName={userProfile.departmentName}
                       onUpdate={handleProfileUpdate}
