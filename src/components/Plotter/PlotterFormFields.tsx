@@ -2,6 +2,7 @@ import { useState } from "react";
 import FileOrangeIcon from "../../assets/plotter/file-orange.svg";
 import DepartmentPickerModal from "../DepartmentPickerModal";
 import type { PaperSize } from "../../services/commonApi";
+import { isWeekend, isHoliday } from "../../utils/dateUtils";
 
 interface PlotterFormFieldsProps {
   studentNo: string;
@@ -13,6 +14,8 @@ interface PlotterFormFieldsProps {
   purpose: string;
   proposes?: { id: number; name: string }[];
   onPurposeChange: (value: string) => void;
+  desiredDate: string;
+  onDesiredDateChange: (value: string) => void;
   paperSize: string;
   paperSizes?: PaperSize[];
   onPaperSizeChange: (value: string) => void;
@@ -31,6 +34,8 @@ export default function PlotterFormFields({
   purpose,
   proposes = [],
   onPurposeChange,
+  desiredDate,
+  onDesiredDateChange,
   paperSize,
   paperSizes = [],
   onPaperSizeChange,
@@ -39,6 +44,27 @@ export default function PlotterFormFields({
   className = "",
 }: PlotterFormFieldsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleDesiredDateChange = (value: string) => {
+    if (!value) {
+      onDesiredDateChange(value);
+      return;
+    }
+
+    if (isWeekend(value)) {
+      alert('주말은 선택할 수 없습니다. 평일을 선택해주세요.');
+      onDesiredDateChange('');
+      return;
+    }
+
+    if (isHoliday(value)) {
+      alert('공휴일은 선택할 수 없습니다. 평일을 선택해주세요.');
+      onDesiredDateChange('');
+      return;
+    }
+
+    onDesiredDateChange(value);
+  };
 
   return (
     <div className={className}>
@@ -106,29 +132,43 @@ export default function PlotterFormFields({
         />
       </div>
 
-      {/* 목적 */}
-      <div className="mb-4 md:mb-6">
-        <label className="block text-[16px] md:text-[20px] font-medium text-black mb-2">목적</label>
-        <select
-          value={purpose}
-          onChange={(e) => onPurposeChange(e.target.value)}
-          className="w-full h-[50px] md:h-[71px] px-4 md:px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[16px] md:text-[20px] appearance-none cursor-pointer"
-          style={{ 
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E")`, 
-            backgroundRepeat: 'no-repeat', 
-            backgroundPosition: 'right 20px center' 
-          }}
-        >
-          {proposes.length > 0 ? (
-            proposes.map((p) => (
-              <option key={p.id} value={p.name}>
-                {p.name}
-              </option>
-            ))
-          ) : (
-            <option value="" disabled>로딩 중...</option>
-          )}
-        </select>
+      {/* 목적 & 수령 희망일 */}
+      <div className="flex flex-col md:flex-row justify-between gap-4 md:gap-6 mb-4 md:mb-6">
+        <div className="w-full md:flex-[2]">
+          <label className="block text-[16px] md:text-[20px] font-medium text-black mb-2">목적</label>
+          <select
+            value={purpose}
+            onChange={(e) => onPurposeChange(e.target.value)}
+            className="w-full h-[50px] md:h-[71px] px-4 md:px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[16px] md:text-[20px] appearance-none cursor-pointer"
+            style={{ 
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E")`, 
+              backgroundRepeat: 'no-repeat', 
+              backgroundPosition: 'right 20px center' 
+            }}
+          >
+            {proposes.length > 0 ? (
+              proposes.map((p) => (
+                <option key={p.id} value={p.name}>
+                  {p.name}
+                </option>
+              ))
+            ) : (
+              <option value="" disabled>로딩 중...</option>
+            )}
+          </select>
+        </div>
+        <div className="w-full md:flex-1">
+          <label className="block text-[16px] md:text-[20px] font-medium text-black mb-2">수령 희망일</label>
+          <input
+            type="date"
+            value={desiredDate}
+            onChange={(e) => handleDesiredDateChange(e.target.value)}
+            min="2026-01-01"
+            max="2026-12-31"
+            className="w-full h-[50px] md:h-[71px] px-4 md:px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[16px] md:text-[20px]"
+            style={{ colorScheme: 'light' }}
+          />
+        </div>
       </div>
 
       {/* 용지 크기 & 인쇄 장수 */}

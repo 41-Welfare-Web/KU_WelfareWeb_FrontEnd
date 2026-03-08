@@ -12,7 +12,7 @@ import { createPlotterOrder } from "../../services/plotterApi";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMyProfile } from "../../services/userApi";
 import { getCommonMetadata, type PaperSize } from "../../services/commonApi";
-import { getExpectedDateKorean } from "../../utils/dateUtils";
+import { getExpectedDateKorean, validateDesiredDate } from "../../utils/dateUtils";
 
 interface Purpose {
   id: number;
@@ -28,6 +28,7 @@ export default function PlotterRequest() {
   const [freePurposes, setFreePurposes] = useState<string[]>([]);
   const [paperSizes, setPaperSizes] = useState<PaperSize[]>([]);
   const [purpose, setPurpose] = useState("");
+  const [desiredDate, setDesiredDate] = useState("");
   const [paperSize, setPaperSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -151,6 +152,13 @@ export default function PlotterRequest() {
       alert("목적을 입력해 주세요.");
       return;
     }
+    
+    // 수령 희망일 검증
+    const dateValidation = validateDesiredDate(desiredDate);
+    if (!dateValidation.valid) {
+      alert(dateValidation.message);
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -225,6 +233,8 @@ export default function PlotterRequest() {
                 purpose={purpose}
                 proposes={purposes}
                 onPurposeChange={setPurpose}
+                desiredDate={desiredDate}
+                onDesiredDateChange={setDesiredDate}
                 paperSize={paperSize}
                 paperSizes={paperSizes}
                 onPaperSizeChange={setPaperSize}
