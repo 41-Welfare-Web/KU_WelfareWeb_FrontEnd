@@ -67,10 +67,20 @@ export async function deleteMyAccount(
   data: DeleteAccountRequest,
 ): Promise<void> {
   try {
+    console.log("탈퇴 요청 데이터:", data);
     await axiosInstance.delete("/api/users/me", {
-      data,
+      data: JSON.stringify(data),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
   } catch (error: any) {
+    console.error("탈퇴 API 에러 상세:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.response?.data?.message,
+      errorCode: error.response?.data?.errorCode,
+    });
     throw new Error(error.response?.data?.message || "회원 탈퇴에 실패했습니다.");
   }
 }
