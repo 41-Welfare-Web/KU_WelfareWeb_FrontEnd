@@ -146,6 +146,16 @@ export default function Header() {
             플로터인쇄사업
           </button>
 
+          {user?.role === "ADMIN" && (
+            <button
+              type="button"
+              onClick={() => navigate("/admin")}
+              className={menuClass("/admin")}
+            >
+              관리자
+            </button>
+          )}
+
           {!isLoggedIn ? (
             <button
               type="button"
@@ -359,7 +369,7 @@ export default function Header() {
                     setOpen(false);
                     navigate("/admin");
                   }}
-                  className="py-4 border-b border-[#C0C0C0] text-left text-[#FE6949]"
+                  className="py-4 border-b border-[#C0C0C0] text-left"
                 >
                   관리자
                 </button>

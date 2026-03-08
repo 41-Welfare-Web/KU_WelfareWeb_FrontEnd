@@ -476,7 +476,7 @@ function AdminDashboard() {
     <>
       <Header />
       
-      <div className="w-full bg-gradient-to-b from-[#ffdcc5] to-white min-h-screen pb-20">
+      <div className="w-full overflow-x-hidden bg-gradient-to-b from-[#ffdcc5] to-white min-h-screen pb-20">
         <div className="max-w-[1440px] mx-auto px-4 md:px-8 pt-4 md:pt-8">
           {/* 상단 영역: 타이틀과 버튼들 */}
           <AdminDashboardHeader
