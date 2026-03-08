@@ -2,6 +2,44 @@ import { useState, useRef, useEffect } from 'react';
 import PlotterStatusBadge from '../Plotter/PlotterStatusBadge';
 import editIcon from '../../assets/admin/pencil.svg';
 
+// 텍스트가 실제로 잘렸을 때만 호버 시 위쪽에 풀 텍스트 툴팁을 보여주는 셀
+function TruncatedCell({ text, className }: { text: string; className: string }) {
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const spanRef = useRef<HTMLSpanElement>(null);
+
+  const handleMouseEnter = () => {
+    const el = spanRef.current;
+    if (el && el.scrollWidth > el.clientWidth) {
+      const rect = el.getBoundingClientRect();
+      setPos({ x: rect.left + rect.width / 2, y: rect.top });
+    }
+  };
+
+  return (
+    <div className={className}>
+      <span
+        ref={spanRef}
+        className="block truncate text-[14px] font-medium text-black"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setPos(null)}
+      >
+        {text}
+      </span>
+      {pos && (
+        <div
+          className="fixed z-[9999] pointer-events-none"
+          style={{ left: pos.x, top: pos.y - 8, transform: 'translate(-50%, -100%)' }}
+        >
+          <div className="bg-gray-800 text-white text-xs rounded px-2 py-1.5 max-w-[280px] break-words text-center shadow-lg">
+            {text}
+          </div>
+          <div className="w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800 mx-auto" />
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface AdminPlotterRowProps {
   orderCode: string;
   userName: string;
@@ -93,89 +131,115 @@ export default function AdminPlotterRow({
   };
 
   return (
-    <div className="w-full h-[52px] bg-white border-b border-[#e5e5e5] flex items-center px-8 gap-4">
-      {/* 주문 코드 */}
-      <span className="text-[16px] font-medium text-black w-[90px] text-center">
-        {orderCode}
-      </span>
-
-      {/* 신청자 */}
-      <span className="text-[16px] font-medium text-black w-[100px] text-center">
-        {userName}
-      </span>
-
-      {/* 소속 */}
-      <span className="text-[16px] font-medium text-black w-[160px] text-center">
-        {club}
-      </span>
-
-      {/* 파일명 */}
-      <span className="text-[16px] font-medium text-black flex-1 text-center">
-        {purpose}
-      </span>
-
-      {/* 용지 규격 및 매수 */}
-      <span className="text-[16px] font-medium text-black w-[110px] text-center">
-        {paperSizeAndCount}
-      </span>
-
-      {/* 날짜 */}
-      <span className="text-[16px] font-medium text-black w-[120px] text-center">
-        {formatDate(orderDate)}
-      </span>
-
-      {/* 상태 배지 - 클릭 가능 */}
-      <div className="relative w-[100px]" ref={dropdownRef}>
-        <button
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="w-full hover:opacity-80 transition"
-        >
-          <PlotterStatusBadge status={badgeStatus} />
-        </button>
-
-        {/* 상태 선택 드롭다운 */}
-        {isDropdownOpen && (
-          <div className="absolute top-full mt-1 left-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] py-2 min-w-[120px] max-h-[300px] overflow-y-auto">
-            {allStatuses.map((statusOption) => {
-              const displayStatus = 
-                statusOption === 'pending' ? 'waiting' :
-                statusOption === 'printed' ? 'printing' :
-                statusOption as 'waiting' | 'confirmed' | 'printing' | 'completed' | 'rejected';
-              return (
-                <button
-                  key={statusOption}
-                  onClick={() => handleStatusClick(statusOption)}
-                  className="w-full px-3 py-2 hover:bg-gray-50 transition flex items-center justify-center"
-                >
-                  <PlotterStatusBadge status={displayStatus} />
-                </button>
-              );
-            })}
+    <>
+      {/* 모바일 카드 뷰 */}
+      <div className="md:hidden w-full bg-white border-b border-[#e5e5e5] p-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[13px] font-semibold text-gray-500">{orderCode}</span>
+          <div className="relative" ref={dropdownRef}>
+            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="hover:opacity-80 transition">
+              <PlotterStatusBadge status={badgeStatus} />
+            </button>
+            {isDropdownOpen && (
+              <div className="absolute top-full mt-1 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] py-2 min-w-[120px] max-h-[300px] overflow-y-auto">
+                {allStatuses.map((statusOption) => {
+                  const displayStatus =
+                    statusOption === 'pending' ? 'waiting' :
+                    statusOption === 'printed' ? 'printing' :
+                    statusOption as 'waiting' | 'confirmed' | 'printing' | 'completed' | 'rejected';
+                  return (
+                    <button key={statusOption} onClick={() => handleStatusClick(statusOption)} className="w-full px-3 py-2 hover:bg-gray-50 transition flex items-center justify-center">
+                      <PlotterStatusBadge status={displayStatus} />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        )}
+        </div>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-[14px] font-semibold text-black">{userName}</span>
+          <span className="text-[13px] text-gray-500">{club}</span>
+        </div>
+        <p className="text-[13px] text-gray-700 mb-2 truncate">{purpose}</p>
+        <div className="flex items-center gap-3 text-[12px] text-gray-500">
+          <span>{paperSizeAndCount}</span>
+          <span>·</span>
+          <span>{formatDate(orderDate)}</span>
+        </div>
+        {/* 비고 */}
+        <div className="flex items-center gap-2 mt-2">
+          <input
+            ref={inputRef}
+            type="text"
+            value={noteValue}
+            onChange={(e) => setNoteValue(e.target.value)}
+            onBlur={handleNoteBlur}
+            onKeyDown={handleNoteKeyDown}
+            disabled={!isEditing}
+            placeholder="비고"
+            className="flex-1 h-[30px] px-2 text-[13px] font-medium text-black border border-gray-300 rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none focus:border-blue-500"
+          />
+          <button onClick={handleEditClick} className="w-4 h-4 hover:opacity-70 transition-opacity flex-shrink-0" aria-label="비고 수정">
+            <img src={editIcon} alt="수정" className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      {/* 비고 입력 필드 */}
-      <div className="w-[120px] flex items-center gap-4">
-        <input
-          ref={inputRef}
-          type="text"
-          value={noteValue}
-          onChange={(e) => setNoteValue(e.target.value)}
-          onBlur={handleNoteBlur}
-          onKeyDown={handleNoteKeyDown}
-          disabled={!isEditing}
-          className="w-[100px] h-[32px] px-2 text-[14px] font-medium text-black border border-gray-300 rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none focus:border-blue-500"
-        />
-        {/* 펜슬 아이콘 */}
-        <button
-          onClick={handleEditClick}
-          className="w-4 h-4 hover:opacity-70 transition-opacity flex-shrink-0"
-          aria-label="비고 수정"
-        >
-          <img src={editIcon} alt="수정" className="w-4 h-4" />
-        </button>
+      {/* 데스크톱 테이블 행 뷰 */}
+      <div className="hidden md:flex w-full h-[52px] bg-white border-b border-[#e5e5e5] items-center px-4 gap-2">
+        {/* 주문 코드 */}
+        <TruncatedCell text={orderCode} className="w-[7%] min-w-0 text-center shrink" />
+        {/* 신청자 */}
+        <TruncatedCell text={userName} className="w-[8%] min-w-0 text-center shrink" />
+        {/* 소속 */}
+        <TruncatedCell text={club} className="w-[12%] min-w-0 text-center shrink" />
+        {/* 파일명 */}
+        <TruncatedCell text={purpose} className="flex-1 min-w-0 text-center" />
+        {/* 용지 규격 및 매수 */}
+        <TruncatedCell text={paperSizeAndCount} className="w-[10%] min-w-0 text-center shrink" />
+        {/* 날짜 */}
+        <span className="text-[14px] font-medium text-black w-[10%] min-w-0 text-center shrink">{formatDate(orderDate)}</span>
+
+        {/* 상태 배지 */}
+        <div className="relative w-[9%] min-w-0 shrink" ref={dropdownRef}>
+          <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="w-full hover:opacity-80 transition">
+            <PlotterStatusBadge status={badgeStatus} />
+          </button>
+          {isDropdownOpen && (
+            <div className="absolute top-full mt-1 left-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] py-2 min-w-[120px] max-h-[300px] overflow-y-auto">
+              {allStatuses.map((statusOption) => {
+                const displayStatus =
+                  statusOption === 'pending' ? 'waiting' :
+                  statusOption === 'printed' ? 'printing' :
+                  statusOption as 'waiting' | 'confirmed' | 'printing' | 'completed' | 'rejected';
+                return (
+                  <button key={statusOption} onClick={() => handleStatusClick(statusOption)} className="w-full px-3 py-2 hover:bg-gray-50 transition flex items-center justify-center">
+                    <PlotterStatusBadge status={displayStatus} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* 비고 입력 필드 */}
+        <div className="w-[13%] min-w-0 shrink flex items-center gap-1">
+          <input
+            ref={inputRef}
+            type="text"
+            value={noteValue}
+            onChange={(e) => setNoteValue(e.target.value)}
+            onBlur={handleNoteBlur}
+            onKeyDown={handleNoteKeyDown}
+            disabled={!isEditing}
+            className="flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border border-gray-300 rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none focus:border-blue-500"
+          />
+          <button onClick={handleEditClick} className="w-4 h-4 hover:opacity-70 transition-opacity flex-shrink-0" aria-label="비고 수정">
+            <img src={editIcon} alt="수정" className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

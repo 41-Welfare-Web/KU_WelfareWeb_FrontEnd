@@ -113,24 +113,25 @@ function Pagination({
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   if (totalPages <= 1 && total === 0) return null;
 
-  // 현재 그룹(10개 단위)
-  const groupSize = 10;
+  // 현재 그룹(데스크톱 10개, 모바일 5개 단위)
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+  const groupSize = isMobile ? 5 : 10;
   const groupStart = Math.floor((page - 1) / groupSize) * groupSize + 1;
   const groupEnd = Math.min(groupStart + groupSize - 1, totalPages);
   const pages = Array.from({ length: groupEnd - groupStart + 1 }, (_, i) => groupStart + i);
 
   return (
     <div className="flex flex-col items-center gap-2 mt-[18px] mb-[10px]">
-      <p className="text-sm text-gray-500">
+      <p className="text-xs sm:text-sm text-gray-500">
         총 <span className="font-semibold text-gray-700">{total}</span>건 &nbsp;|&nbsp; 현재 페이지{' '}
         <span className="font-semibold text-gray-700">{page}</span> / {totalPages}
       </p>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5 sm:gap-1">
         {/* 처음 */}
         <button
           onClick={() => onPageChange(1)}
           disabled={page === 1}
-          className="px-2 py-1 text-sm rounded disabled:opacity-30 hover:bg-gray-100"
+          className="px-1.5 sm:px-2 py-1 text-xs sm:text-sm rounded disabled:opacity-30 hover:bg-gray-100"
         >
           {'<<'}
         </button>
@@ -138,7 +139,7 @@ function Pagination({
         <button
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
-          className="px-2 py-1 text-sm rounded disabled:opacity-30 hover:bg-gray-100"
+          className="px-1.5 sm:px-2 py-1 text-xs sm:text-sm rounded disabled:opacity-30 hover:bg-gray-100"
         >
           {'<'}
         </button>
@@ -147,7 +148,7 @@ function Pagination({
           <button
             key={p}
             onClick={() => onPageChange(p)}
-            className={`w-8 h-8 text-sm rounded font-medium transition-colors ${
+            className={`w-7 h-7 sm:w-8 sm:h-8 text-xs sm:text-sm rounded font-medium transition-colors ${
               p === page
                 ? 'bg-[#fe6949] text-white'
                 : 'text-gray-600 hover:bg-gray-100'
@@ -161,7 +162,7 @@ function Pagination({
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page === totalPages}
-          className="px-2 py-1 text-sm rounded disabled:opacity-30 hover:bg-gray-100"
+          className="px-1.5 sm:px-2 py-1 text-xs sm:text-sm rounded disabled:opacity-30 hover:bg-gray-100"
         >
           {'>'}
         </button>
@@ -169,7 +170,7 @@ function Pagination({
         <button
           onClick={() => onPageChange(totalPages)}
           disabled={page === totalPages}
-          className="px-2 py-1 text-sm rounded disabled:opacity-30 hover:bg-gray-100"
+          className="px-1.5 sm:px-2 py-1 text-xs sm:text-sm rounded disabled:opacity-30 hover:bg-gray-100"
         >
           {'>>'}
         </button>
@@ -476,7 +477,7 @@ function AdminDashboard() {
       <Header />
       
       <div className="w-full bg-gradient-to-b from-[#ffdcc5] to-white min-h-screen pb-20">
-        <div className="max-w-[1440px] mx-auto px-8 pt-8">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8 pt-4 md:pt-8">
           {/* 상단 영역: 타이틀과 버튼들 */}
           <AdminDashboardHeader
             activeTab={activeTab}
@@ -485,7 +486,7 @@ function AdminDashboard() {
           />
 
           {/* 탭과 내용을 감싸는 박스 */}
-          <div className="bg-white rounded-[20px] p-8 shadow-sm">
+          <div className="bg-white rounded-[20px] p-4 md:p-8 shadow-sm">
             {/* 탭 네비게이션 */}
             <AdminTabNavigation
               activeTab={activeTab}
@@ -511,18 +512,19 @@ function AdminDashboard() {
               />
 
               {/* 테이블 */}
-              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible mt-6">
+              <div className="overflow-x-auto mt-4 md:mt-6">
+              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible min-w-[680px]">
                 {/* 테이블 헤더 */}
                 <AdminTableHeader
                   columns={[
-                    { label: '신청번호', width: 'w-[90px]' },
-                    { label: '신청자', width: 'w-[100px]' },
-                    { label: '소속', width: 'w-[150px]' },
-                    { label: '대여 품목', width: 'flex-1' },
-                    { label: '대여 날짜', width: 'w-[120px]' },
-                    { label: '반납 날짜', width: 'w-[120px]' },
-                    { label: '상태', width: 'w-[100px]' },
-                    { label: '비고', width: 'w-[120px]' },
+                    { label: '신청번호', width: 'w-[7%] min-w-0' },
+                    { label: '신청자', width: 'w-[8%] min-w-0' },
+                    { label: '소속', width: 'w-[12%] min-w-0' },
+                    { label: '대여 품목', width: 'flex-1 min-w-0' },
+                    { label: '대여 날짜', width: 'w-[10%] min-w-0' },
+                    { label: '반납 날짜', width: 'w-[10%] min-w-0' },
+                    { label: '상태', width: 'w-[9%] min-w-0' },
+                    { label: '비고', width: 'w-[13%] min-w-0' },
                   ]}
                 />
 
@@ -572,6 +574,7 @@ function AdminDashboard() {
                   </div>
                 )}
               </div>
+              </div>{/* overflow-x-auto */}
               {!loading && !error && filteredRentalData.length > 0 && (
                 <Pagination
                   total={filteredRentalData.length}
@@ -598,18 +601,19 @@ function AdminDashboard() {
               />
 
               {/* 테이블 */}
-              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible mt-6">
+              <div className="overflow-x-auto mt-4 md:mt-6">
+              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible min-w-[680px]">
                 {/* 테이블 헤더 */}
                 <AdminTableHeader
                   columns={[
-                    { label: '신청번호', width: 'w-[90px]' },
-                    { label: '신청자', width: 'w-[100px]' },
-                    { label: '소속', width: 'w-[160px]' },
-                    { label: '파일명', width: 'flex-1' },
-                    { label: '용지/장수', width: 'w-[110px]' },
-                    { label: '날짜', width: 'w-[120px]' },
-                    { label: '상태', width: 'w-[100px]' },
-                    { label: '비고', width: 'w-[120px]' },
+                    { label: '신청번호', width: 'w-[7%] min-w-0' },
+                    { label: '신청자', width: 'w-[8%] min-w-0' },
+                    { label: '소속', width: 'w-[12%] min-w-0' },
+                    { label: '파일명', width: 'flex-1 min-w-0' },
+                    { label: '용지/장수', width: 'w-[10%] min-w-0' },
+                    { label: '날짜', width: 'w-[10%] min-w-0' },
+                    { label: '상태', width: 'w-[9%] min-w-0' },
+                    { label: '비고', width: 'w-[13%] min-w-0' },
                   ]}
                 />
 
@@ -659,6 +663,7 @@ function AdminDashboard() {
                   </div>
                 )}
               </div>
+              </div>{/* overflow-x-auto */}
               {!loading && !error && filteredPlotterData.length > 0 && (
                 <Pagination
                   total={filteredPlotterData.length}
@@ -703,7 +708,7 @@ function AdminDashboard() {
               )}
 
               {!loading && !error && filteredItemsData.length > 0 && (
-                <div className="grid grid-cols-4 gap-x-[53px] gap-y-[30px]">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-[16px] sm:gap-x-[30px] lg:gap-x-[53px] gap-y-[20px] md:gap-y-[30px]">
                   {paginatedItemsData.map((item) => (
                     <AdminItemCard
                       key={item.id}
