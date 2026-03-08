@@ -22,7 +22,7 @@ interface Purpose {
 export default function PlotterRequest() {
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
-  const [departmentType, setDepartmentType] = useState("학생복지위원회");
+  const [departmentType, setDepartmentType] = useState("");
   const [departmentName, setDepartmentName] = useState<string | null>(null);
   const [purposes, setPurposes] = useState<Purpose[]>([]);
   const [freePurposes, setFreePurposes] = useState<string[]>([]);
