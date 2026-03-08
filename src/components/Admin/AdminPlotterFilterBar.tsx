@@ -22,6 +22,26 @@ const AdminPlotterFilterBar: React.FC<AdminPlotterFilterBarProps> = ({
   searchPlaceholder = '이름, 학과, 물품 검색'
 }) => {
   const [showDropdown, setShowDropdown] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown]);
 
   const handleStatusSelect = (status: string) => {
     onStatusChange(status);
@@ -42,16 +62,22 @@ const AdminPlotterFilterBar: React.FC<AdminPlotterFilterBarProps> = ({
       </div>
 
       {/* Status dropdown */}
-      <div className="relative h-[36px] md:h-[31px] w-[100px] md:w-[98px] flex items-center flex-shrink-0">
+      <div ref={dropdownRef} className="relative h-[36px] md:h-[31px] w-[100px] md:w-[98px] flex items-center flex-shrink-0">
         <button
           onClick={() => setShowDropdown(!showDropdown)}
-          className="bg-white border border-[#a6a6a6] h-[36px] md:h-[31px] w-full flex items-center justify-between px-[9px] rounded-[10px] cursor-pointer hover:bg-gray-50"
+          className={`bg-white border h-[36px] md:h-[31px] w-full flex items-center justify-between px-[9px] rounded-[10px] cursor-pointer transition-colors ${
+            showDropdown
+              ? 'border-[#7d7d7d] bg-gray-50'
+              : 'border-[#a6a6a6] hover:bg-gray-50'
+          }`}
         >
           <span className="font-['Gmarket_Sans'] font-medium text-[13px] md:text-[15px] text-black truncate">
             {selectedStatus || '전체 상태'}
           </span>
           <svg
-            className="w-[10px] h-[10px] md:w-[12px] md:h-[12px] transform rotate-90 flex-shrink-0"
+            className={`w-[10px] h-[10px] md:w-[12px] md:h-[12px] flex-shrink-0 ${
+              showDropdown ? '-rotate-90' : 'rotate-90'
+            }`}
             viewBox="0 0 12 24"
             fill="none"
           >
@@ -61,12 +87,14 @@ const AdminPlotterFilterBar: React.FC<AdminPlotterFilterBarProps> = ({
         
         {/* Dropdown menu */}
         {showDropdown && (
-          <div className="absolute top-[40px] left-0 w-[120px] bg-white border border-[#a6a6a6] rounded-[10px] shadow-lg z-10 max-h-[200px] overflow-y-auto">
+          <div className="absolute top-[40px] left-0 w-full min-w-[120px] bg-white border border-[#a6a6a6] rounded-[10px] shadow-lg z-20 max-h-[200px] overflow-y-auto py-1">
             {statusOptions.map((status) => (
               <button
                 key={status}
                 onClick={() => handleStatusSelect(status)}
-                className="w-full text-left px-[9px] py-2 text-[13px] md:text-[15px] font-['Gmarket_Sans'] font-medium hover:bg-gray-100 first:rounded-t-[10px] last:rounded-b-[10px]"
+                className={`w-full text-left px-[9px] py-2 text-[13px] md:text-[15px] font-['Gmarket_Sans'] font-medium hover:bg-gray-100 first:rounded-t-[10px] last:rounded-b-[10px] ${
+                  selectedStatus === status ? 'bg-gray-100' : ''
+                }`}
               >
                 {status}
               </button>
