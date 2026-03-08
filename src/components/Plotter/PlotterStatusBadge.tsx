@@ -17,7 +17,7 @@ const statusConfig = {
     textColor: "text-[#155dfc]",
   },
   printing: {
-    text: "인쇄 완료",
+    text: "출력 완료",
     bgColor: "bg-[#a9ffca]",
     textColor: "text-[#1b811f]",
   },
