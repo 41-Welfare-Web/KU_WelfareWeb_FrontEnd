@@ -692,46 +692,20 @@ function AdminDashboard() {
                   />
                 )}
               </div>
-              </div>{/* overflow-x-auto */}
-              {!loading && !error && filteredRentalData.length > 0 && (
-                <Pagination
-                  total={filteredRentalData.length}
-                  page={rentalPage}
-                  pageSize={PAGE_SIZE}
-                  onPageChange={setRentalPage}
-                />
-              )}
-            </div>
-          )}
+            )}
 
-          {/* 플로터 관리 탭 내용 */}
-          {activeTab === 'plotter' && (
-            <div>
-              {/* 필터 바 */}
-              <AdminPlotterFilterBar
-                statusOptions={['전체 상태', '예약 대기', '예약 확정', '인쇄 완료', '예약 반려', '수령 완료']}
-                selectedStatus={plotterStatusFilter}
-                onStatusChange={setPlotterStatusFilter}
-                searchQuery={plotterSearchQuery}
-                onSearchQueryChange={setPlotterSearchQuery}
-                onSearch={handlePlotterSearch}
-                searchPlaceholder="이름, 학과 검색"
-              />
-
-              {/* 테이블 */}
-              <div className="overflow-x-auto mt-4 md:mt-6">
-              <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible md:min-w-[680px]">
-                {/* 테이블 헤더 */}
-                <AdminTableHeader
-                  columns={[
-                    { label: '신청번호', width: 'w-[7%] min-w-0' },
-                    { label: '신청자', width: 'w-[8%] min-w-0' },
-                    { label: '소속', width: 'w-[12%] min-w-0' },
-                    { label: '파일명', width: 'flex-1 min-w-0' },
-                    { label: '용지/장수', width: 'w-[10%] min-w-0' },
-                    { label: '수령일', width: 'w-[10%] min-w-0' },
-                    { label: '상태', width: 'w-[9%] min-w-0' },
-                    { label: '비고', width: 'w-[13%] min-w-0' },
+            {/* 플로터 관리 탭 내용 */}
+            {activeTab === "plotter" && (
+              <div>
+                {/* 필터 바 */}
+                <AdminPlotterFilterBar
+                  statusOptions={[
+                    "전체 상태",
+                    "예약 대기",
+                    "예약 확정",
+                    "인쇄 완료",
+                    "예약 반려",
+                    "수령 완료",
                   ]}
                   selectedStatus={plotterStatusFilter}
                   onStatusChange={setPlotterStatusFilter}
@@ -752,7 +726,7 @@ function AdminDashboard() {
                         { label: "소속", width: "w-[12%] min-w-0" },
                         { label: "파일명", width: "flex-1 min-w-0" },
                         { label: "용지/장수", width: "w-[10%] min-w-0" },
-                        { label: "날짜", width: "w-[10%] min-w-0" },
+                        { label: "수령일", width: "w-[10%] min-w-0" },
                         { label: "상태", width: "w-[9%] min-w-0" },
                         { label: "비고", width: "w-[13%] min-w-0" },
                       ]}
@@ -788,9 +762,7 @@ function AdminDashboard() {
                               <AdminPlotterRow
                                 key={plotter.id}
                                 orderCode={`P-${plotter.id}`}
-                                userName={
-                                  plotter.user?.name || "사용자 정보 없음"
-                                }
+                                userName={plotter.user?.name || "사용자 정보 없음"}
                                 club={
                                   plotter.departmentName ||
                                   plotter.departmentType ||
@@ -809,6 +781,7 @@ function AdminDashboard() {
                                     | "rejected"
                                     | "completed"
                                 }
+                                fileUrl={plotter.fileUrl}
                                 onStatusChange={(newStatus) => {
                                   handlePlotterStatusChange(
                                     plotter.id,
@@ -830,34 +803,10 @@ function AdminDashboard() {
                           })
                         )}
                       </div>
-                     ) : (
-                      paginatedPlotterData.map((plotter) => {
-                        // status 매핑: PRINTED -> printing, PENDING -> pending
-                        return (
-                          <AdminPlotterRow
-                            key={plotter.id}
-                            orderCode={`P-${plotter.id}`}
-                            userName={plotter.user?.name || '사용자 정보 없음'}
-                            club={plotter.departmentName || plotter.departmentType || '-'}
-                            purpose={plotter.purpose}
-                            paperSizeAndCount={`${plotter.paperSize} / ${plotter.pageCount}장`}
-                            orderDate={plotter.pickupDate}
-                            status={PLOTTER_STATUS_MAP_REVERSE[plotter.status as keyof typeof PLOTTER_STATUS_MAP_REVERSE] as 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'}
-                            fileUrl={plotter.fileUrl}
-                            onStatusChange={(newStatus) => {
-                              handlePlotterStatusChange(
-                                plotter.id,
-                                (Object.keys(PLOTTER_STATUS_MAP_REVERSE) as Array<keyof typeof PLOTTER_STATUS_MAP_REVERSE>)
-                                  .find(k => PLOTTER_STATUS_MAP_REVERSE[k] === newStatus) || 'PENDING'
-                              );
-                            }}
-                          />
-                        );
-                      })
                     )}
                   </div>
                 </div>
-                {/* overflow-x-auto */}
+
                 {!loading && !error && filteredPlotterData.length > 0 && (
                   <Pagination
                     total={filteredPlotterData.length}
