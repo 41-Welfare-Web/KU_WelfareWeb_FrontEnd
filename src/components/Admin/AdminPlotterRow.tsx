@@ -151,14 +151,38 @@ export default function AdminPlotterRow({
   };
 
   // 파일 다운로드 핸들러
-  const handleDownload = (e: React.MouseEvent) => {
+  const handleDownload = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!fileUrl) return;
-    
-    console.log('다운로드 URL:', fileUrl);
-    
-    // 새 탭에서 열어서 다운로드
-    window.open(fileUrl, '_blank');
+
+    // 파일명 생성: mmdd_소속_용지_장수.pdf
+    const rawDate = formatDate(orderDate).replace(/-/g, ''); // "YYYYMMDD"
+    const mmdd = rawDate.length >= 8 ? rawDate.slice(4, 8) : rawDate;
+    const parts = paperSizeAndCount.split(' / ');
+    const paper = parts[0]?.trim() ?? '';
+    const count = parts[1]?.trim() ?? '';
+    const fileName = `${mmdd}_${club}_${paper}_${count}.pdf`;
+
+    try {
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      // CORS 등으로 fetch 실패 시 폴백
+      const a = document.createElement('a');
+      a.href = fileUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   return (
