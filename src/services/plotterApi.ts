@@ -26,6 +26,7 @@ export interface PlotterOrderResponse {
   pageCount: number;
   pickupDate: string;
   status: string;
+  memo: string | null;
   createdAt: string;
   fileUrl?: string;
   originalFilename?: string;

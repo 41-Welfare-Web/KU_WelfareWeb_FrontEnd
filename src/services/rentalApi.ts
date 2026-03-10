@@ -12,6 +12,7 @@ export interface RentalItem {
   endDate: string;
   status: "RESERVED" | "RENTED" | "RETURNED" | "OVERDUE" | "CANCELED";
   itemSummary: string;
+  memo: string | null;
   createdAt: string;
 }
 
