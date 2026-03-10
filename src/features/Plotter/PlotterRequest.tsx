@@ -254,7 +254,7 @@ export default function PlotterRequest() {
               {/* PDF 파일 업로드 */}
               <FileUploadBox
                 label="인쇄 파일 (PDF)"
-                accept=".pdf"
+                accept="application/pdf,.pdf"
                 onChange={handlePdfUpload}
                 onRemove={() => setPdfFile(null)}
                 file={pdfFile}
