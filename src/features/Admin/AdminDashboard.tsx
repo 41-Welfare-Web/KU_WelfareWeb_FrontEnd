@@ -43,6 +43,7 @@ interface RentalData {
     | "CANCELED"
     | "DEFECTIVE";
   itemSummary: string;
+  memo: string | null;
   createdAt: string;
 }
 
@@ -61,6 +62,7 @@ interface PlotterData {
   pageCount: number;
   pickupDate: string;
   status: string;
+  memo: string | null;
   createdAt: string;
   fileUrl?: string;
   originalFilename?: string;
@@ -353,6 +355,28 @@ function AdminDashboard() {
     }
   };
 
+  const handleRentalNoteChange = async (
+    rentalId: number,
+    currentStatus: string,
+    newMemo: string,
+  ) => {
+    try {
+      await axiosInstance.put(`/api/rentals/${rentalId}/status`, {
+        status: currentStatus,
+        memo: newMemo,
+      });
+      // 전체 목록을 다시 가져오지 않고 해당 항목의 memo만 업데이트
+      setRentalData((prev) =>
+        prev.map((rental) =>
+          rental.id === rentalId ? { ...rental, memo: newMemo } : rental
+        )
+      );
+    } catch (err: any) {
+      console.error("비고 변경 실패:", err);
+      alert(err.response?.data?.message || "비고 변경에 실패했습니다.");
+    }
+  };
+
   const handlePlotterStatusChange = async (
     orderId: number,
     newStatus: string,
@@ -382,6 +406,28 @@ function AdminDashboard() {
     } catch (err: any) {
       console.error("상태 변경 실패:", err);
       alert(err.response?.data?.message || "상태 변경에 실패했습니다.");
+    }
+  };
+
+  const handlePlotterNoteChange = async (
+    orderId: number,
+    currentStatus: string,
+    newMemo: string,
+  ) => {
+    try {
+      await axiosInstance.put(`/api/plotter/orders/${orderId}/status`, {
+        status: currentStatus,
+        memo: newMemo,
+      });
+      // 전체 목록을 다시 가져오지 않고 해당 항목의 memo만 업데이트
+      setPlotterData((prev) =>
+        prev.map((plotter) =>
+          plotter.id === orderId ? { ...plotter, memo: newMemo } : plotter
+        )
+      );
+    } catch (err: any) {
+      console.error("비고 변경 실패:", err);
+      alert(err.response?.data?.message || "비고 변경에 실패했습니다.");
     }
   };
 
@@ -658,6 +704,7 @@ function AdminDashboard() {
                                     | "canceled"
                                     | "defective"
                                 }
+                                note={rental.memo || ""}
                                 onStatusChange={(newStatus) => {
                                   handleRentalStatusChange(
                                     rental.id,
@@ -672,6 +719,13 @@ function AdminDashboard() {
                                         RENTAL_STATUS_MAP_REVERSE[k] ===
                                         newStatus,
                                     ) || "RESERVED",
+                                  );
+                                }}
+                                onNoteChange={(newNote) => {
+                                  handleRentalNoteChange(
+                                    rental.id,
+                                    rental.status,
+                                    newNote,
                                   );
                                 }}
                               />
@@ -782,6 +836,7 @@ function AdminDashboard() {
                                     | "rejected"
                                     | "completed"
                                 }
+                                note={plotter.memo || ""}
                                 fileUrl={plotter.fileUrl}
                                 onStatusChange={(newStatus) => {
                                   handlePlotterStatusChange(
@@ -797,6 +852,13 @@ function AdminDashboard() {
                                         PLOTTER_STATUS_MAP_REVERSE[k] ===
                                         newStatus,
                                     ) || "PENDING",
+                                  );
+                                }}
+                                onNoteChange={(newNote) => {
+                                  handlePlotterNoteChange(
+                                    plotter.id,
+                                    plotter.status,
+                                    newNote,
                                   );
                                 }}
                               />
