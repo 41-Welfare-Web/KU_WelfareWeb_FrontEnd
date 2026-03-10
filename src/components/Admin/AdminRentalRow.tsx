@@ -72,6 +72,7 @@ export default function AdminRentalRow({
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const [isEditing, setIsEditing] = useState(false);
   const [noteValue, setNoteValue] = useState(note);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const badgeBtnRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -137,6 +138,8 @@ export default function AdminRentalRow({
     setIsEditing(false);
     if (onNoteChange && noteValue !== note) {
       onNoteChange(noteValue);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 1000);
     }
   };
 
@@ -179,7 +182,9 @@ export default function AdminRentalRow({
             onKeyDown={handleNoteKeyDown}
             disabled={!isEditing}
             placeholder="비고"
-            className="flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border border-gray-300 rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none focus:border-blue-500"
+            className={`flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none transition-colors ${
+              saveSuccess ? 'border-green-500' : isEditing ? 'border-[#FF7A57]' : 'border-gray-300'
+            }`}
           />
           <button onClick={handleEditClick} className="w-4 h-4 hover:opacity-70 transition-opacity flex-shrink-0" aria-label="비고 수정">
             <img src={editIcon} alt="수정" className="w-4 h-4" />
@@ -219,7 +224,9 @@ export default function AdminRentalRow({
             onBlur={handleNoteBlur}
             onKeyDown={handleNoteKeyDown}
             disabled={!isEditing}
-            className="flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border border-gray-300 rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none focus:border-blue-500"
+            className={`flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none transition-colors ${
+              saveSuccess ? 'border-green-500' : isEditing ? 'border-[#FF7A57]' : 'border-gray-300'
+            }`}
           />
           <button onClick={handleEditClick} className="w-4 h-4 hover:opacity-70 transition-opacity flex-shrink-0" aria-label="비고 수정">
             <img src={editIcon} alt="수정" className="w-4 h-4" />
