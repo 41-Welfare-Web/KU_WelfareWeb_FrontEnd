@@ -373,8 +373,8 @@ function AdminDashboard() {
       // 전체 목록을 다시 가져오지 않고 해당 항목의 memo만 업데이트
       setRentalData((prev) =>
         prev.map((rental) =>
-          rental.id === rentalId ? { ...rental, memo: newMemo } : rental
-        )
+          rental.id === rentalId ? { ...rental, memo: newMemo } : rental,
+        ),
       );
     } catch (err: any) {
       console.error("비고 변경 실패:", err);
@@ -427,8 +427,8 @@ function AdminDashboard() {
       // 전체 목록을 다시 가져오지 않고 해당 항목의 memo만 업데이트
       setPlotterData((prev) =>
         prev.map((plotter) =>
-          plotter.id === orderId ? { ...plotter, memo: newMemo } : plotter
-        )
+          plotter.id === orderId ? { ...plotter, memo: newMemo } : plotter,
+        ),
       );
     } catch (err: any) {
       console.error("비고 변경 실패:", err);
@@ -469,30 +469,6 @@ function AdminDashboard() {
 
   const handleDownload = () => {
     exportCSV(activeTab, rentalData, plotterData);
-  };
-
-  // 신규 물품 추가
-  const handleAddItem = async (payload: {
-    name: string;
-    categoryId: number | null;
-    totalQuantity: number;
-    description: string;
-    usageVideoType: "url" | "file";
-    usageVideoUrl: string;
-    usageVideoFile: File | null;
-    imageFiles: File[];
-  }) => {
-    console.log("[임시 신규 물품 등록]", payload);
-
-    alert("신규 물품 등록이 완료되었습니다. (임시)");
-
-    setItemCreateModalOpen(false);
-
-    // 서버 연결 전이라 실제 저장은 안 되지만,
-    // UX상 목록 다시 불러오는 흐름만 맞춰둠
-    if (activeTab === "items") {
-      fetchItems();
-    }
   };
 
   const filteredRentalData = rentalData.filter((item) => {
@@ -644,12 +620,12 @@ function AdminDashboard() {
                   <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible md:min-w-[680px]">
                     {/* 테이블 헤더 */}
                     <AdminTableHeader
-                    columns={[
-                      { label: "신청번호", width: "w-[7%] min-w-0" },
-                      { label: "신청자", width: "w-[8%] min-w-0" },
-                      { label: "소속", width: "w-[12%] min-w-0" },
-                      { label: "대여 품목", width: "flex-1 min-w-0" },
-                      { label: "수량", width: "w-[6%] min-w-0" },
+                      columns={[
+                        { label: "신청번호", width: "w-[7%] min-w-0" },
+                        { label: "신청자", width: "w-[8%] min-w-0" },
+                        { label: "소속", width: "w-[12%] min-w-0" },
+                        { label: "대여 품목", width: "flex-1 min-w-0" },
+                        { label: "수량", width: "w-[6%] min-w-0" },
                         { label: "대여 날짜", width: "w-[10%] min-w-0" },
                         { label: "반납 날짜", width: "w-[10%] min-w-0" },
                         { label: "상태", width: "w-[9%] min-w-0" },
@@ -683,57 +659,64 @@ function AdminDashboard() {
                         ) : (
                           paginatedRentalData.flatMap((rental) => {
                             // status 매핑: RENTED -> renting
-                            const mappedStatus = RENTAL_STATUS_MAP_REVERSE[rental.status] as
+                            const mappedStatus = RENTAL_STATUS_MAP_REVERSE[
+                              rental.status
+                            ] as
                               | "reserved"
                               | "renting"
                               | "returned"
                               | "overdue"
                               | "canceled"
                               | "defective";
-                            
+
                             // rentalItems가 있으면 각 품목별로 분리해서 표시
-                            if (rental.rentalItems && rental.rentalItems.length > 0) {
-                              return rental.rentalItems.map((rentalItem, index) => (
-                                <AdminRentalRow
-                                  key={`${rental.id}-${rentalItem.id || index}`}
-                                  rentalCode={`R-${rental.id}`}
-                                  userName={rental.user.name}
-                                  department={
-                                    rental.departmentName ||
-                                    rental.departmentType ||
-                                    "-"
-                                  }
-                                  itemName={rentalItem.item?.name || "-"}
-                                  quantity={rentalItem.quantity}
-                                  startDate={rental.startDate}
-                                  endDate={rental.endDate}
-                                  status={mappedStatus}
-                                  note={rental.memo || ""}
-                                  onStatusChange={(newStatus) => {
-                                    handleRentalStatusChange(
-                                      rental.id,
-                                      (
-                                        Object.keys(
-                                          RENTAL_STATUS_MAP_REVERSE,
-                                        ) as Array<
-                                          keyof typeof RENTAL_STATUS_MAP_REVERSE
-                                        >
-                                      ).find(
-                                        (k) =>
-                                          RENTAL_STATUS_MAP_REVERSE[k] ===
-                                          newStatus,
-                                      ) || "RESERVED",
-                                    );
-                                  }}
-                                  onNoteChange={(newNote) => {
-                                    handleRentalNoteChange(
-                                      rental.id,
-                                      rental.status,
-                                      newNote,
-                                  );
-                                }}
-                              />
-                              ));
+                            if (
+                              rental.rentalItems &&
+                              rental.rentalItems.length > 0
+                            ) {
+                              return rental.rentalItems.map(
+                                (rentalItem, index) => (
+                                  <AdminRentalRow
+                                    key={`${rental.id}-${rentalItem.id || index}`}
+                                    rentalCode={`R-${rental.id}`}
+                                    userName={rental.user.name}
+                                    department={
+                                      rental.departmentName ||
+                                      rental.departmentType ||
+                                      "-"
+                                    }
+                                    itemName={rentalItem.item?.name || "-"}
+                                    quantity={rentalItem.quantity}
+                                    startDate={rental.startDate}
+                                    endDate={rental.endDate}
+                                    status={mappedStatus}
+                                    note={rental.memo || ""}
+                                    onStatusChange={(newStatus) => {
+                                      handleRentalStatusChange(
+                                        rental.id,
+                                        (
+                                          Object.keys(
+                                            RENTAL_STATUS_MAP_REVERSE,
+                                          ) as Array<
+                                            keyof typeof RENTAL_STATUS_MAP_REVERSE
+                                          >
+                                        ).find(
+                                          (k) =>
+                                            RENTAL_STATUS_MAP_REVERSE[k] ===
+                                            newStatus,
+                                        ) || "RESERVED",
+                                      );
+                                    }}
+                                    onNoteChange={(newNote) => {
+                                      handleRentalNoteChange(
+                                        rental.id,
+                                        rental.status,
+                                        newNote,
+                                      );
+                                    }}
+                                  />
+                                ),
+                              );
                             } else {
                               // fallback: rentalItems가 없으면 기존 방식으로 표시
                               return (
@@ -787,7 +770,6 @@ function AdminDashboard() {
                         )}
                       </div>
                     )}
-
                   </div>
                 </div>
 
@@ -828,13 +810,13 @@ function AdminDashboard() {
                   <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible md:min-w-[680px]">
                     {/* 테이블 헤더 */}
                     <AdminTableHeader
-                    columns={[
-                      { label: "신청번호", width: "w-[7%] min-w-0" },
-                      { label: "신청자", width: "w-[8%] min-w-0" },
-                      { label: "소속", width: "w-[12%] min-w-0" },
-                      { label: "파일명", width: "flex-1 min-w-0" },
-                      { label: "용지/장수", width: "w-[10%] min-w-0" },
-                      { label: "수령일", width: "w-[10%] min-w-0" },
+                      columns={[
+                        { label: "신청번호", width: "w-[7%] min-w-0" },
+                        { label: "신청자", width: "w-[8%] min-w-0" },
+                        { label: "소속", width: "w-[12%] min-w-0" },
+                        { label: "파일명", width: "flex-1 min-w-0" },
+                        { label: "용지/장수", width: "w-[10%] min-w-0" },
+                        { label: "수령일", width: "w-[10%] min-w-0" },
                         { label: "상태", width: "w-[9%] min-w-0" },
                         { label: "비고", width: "w-[13%] min-w-0" },
                       ]}
@@ -870,7 +852,9 @@ function AdminDashboard() {
                               <AdminPlotterRow
                                 key={plotter.id}
                                 orderCode={`P-${plotter.id}`}
-                                userName={plotter.user?.name || "사용자 정보 없음"}
+                                userName={
+                                  plotter.user?.name || "사용자 정보 없음"
+                                }
                                 club={
                                   plotter.departmentName ||
                                   plotter.departmentType ||
@@ -920,7 +904,6 @@ function AdminDashboard() {
                         )}
                       </div>
                     )}
-
                   </div>
                 </div>
 
@@ -1011,7 +994,7 @@ function AdminDashboard() {
       <AdminItemCreateModal
         open={itemCreateModalOpen}
         onClose={() => setItemCreateModalOpen(false)}
-        onSubmit={handleAddItem}
+        onSuccess={fetchItems}
       />
     </>
   );

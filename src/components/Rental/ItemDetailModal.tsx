@@ -51,6 +51,9 @@ export default function ItemDetailModal({
   // 담기 버튼 로딩(중복 클릭 방지)
   const [adding] = useState(false);
 
+  // 이미지 배열
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   // ESC 닫기
   useEffect(() => {
     if (!open) return;
@@ -127,8 +130,6 @@ export default function ItemDetailModal({
     };
   }, [open, itemId]);
 
-  if (!open) return null;
-
   // 재고 수량 부족 날짜 선택 시 로직
   async function hasZeroQuantityInRange(
     startDate: string,
@@ -148,6 +149,43 @@ export default function ItemDetailModal({
       return false;
     }
   }
+
+  // 이미지 인덱스 초기화
+  useEffect(() => {
+    if (!open) return;
+    setPicked({ startDate: null, endDate: null, quantity: 1 });
+    setCalendarKey((prev) => prev + 1);
+    lastInvalidRangeRef.current = null;
+    checkingRangeRef.current = false;
+    setCurrentImageIndex(0);
+  }, [open, itemId]);
+
+  // 이미지 배열 계산
+  const detailImages =
+    data?.itemImages && data.itemImages.length > 0
+      ? [...data.itemImages]
+          .sort((a, b) => a.order - b.order)
+          .map((img) => img.imageUrl)
+      : data?.imageUrl
+        ? [data.imageUrl]
+        : [];
+
+  // 이미지 이전, 다음 함수
+  const handlePrevImage = () => {
+    if (!detailImages.length) return;
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? detailImages.length - 1 : prev - 1,
+    );
+  };
+
+  const handleNextImage = () => {
+    if (!detailImages.length) return;
+    setCurrentImageIndex((prev) =>
+      prev === detailImages.length - 1 ? 0 : prev + 1,
+    );
+  };
+
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-[80]">
@@ -215,13 +253,41 @@ export default function ItemDetailModal({
 
                   {/* 왼쪽: 사진&영상 */}
                   <div className="min-w-0 order-2 lg:order-none lg:col-start-1 lg:col-span-2 lg:row-start-1 lg:row-span-2">
-                    <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-black/5 flex items-center justify-center">
-                      {data.imageUrl ? (
-                        <img
-                          src={data.imageUrl}
-                          alt={data.name}
-                          className="h-full w-full object-cover"
-                        />
+                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-black/5 flex items-center justify-center">
+                      {detailImages.length > 0 ? (
+                        <>
+                          <img
+                            src={detailImages[currentImageIndex]}
+                            alt={`${data.name} 이미지 ${currentImageIndex + 1}`}
+                            className="h-full w-full object-cover"
+                          />
+
+                          {detailImages.length > 1 && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={handlePrevImage}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white text-lg"
+                                aria-label="이전 이미지"
+                              >
+                                ‹
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={handleNextImage}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white text-lg"
+                                aria-label="다음 이미지"
+                              >
+                                ›
+                              </button>
+
+                              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/55 px-3 py-1 text-xs text-white">
+                                {currentImageIndex + 1} / {detailImages.length}
+                              </div>
+                            </>
+                          )}
+                        </>
                       ) : (
                         <div className="text-sm text-black/50">이미지 없음</div>
                       )}
