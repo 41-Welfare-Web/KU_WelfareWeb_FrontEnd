@@ -6,7 +6,7 @@ interface TabSelectorProps {
 
 const TabSelector = ({ activeTab, onTabChange, className = '' }: TabSelectorProps) => {
   const tabs = [
-    { id: 'rental' as const, label: '물품 대여 예약 내역' },
+    { id: 'rental' as const, label: '대여 예약 내역' },
     { id: 'plotter' as const, label: '플로터 예약 내역' },
     { id: 'profile' as const, label: '개인정보 수정' },
   ];
