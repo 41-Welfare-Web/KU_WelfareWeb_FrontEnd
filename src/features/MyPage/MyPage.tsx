@@ -36,6 +36,7 @@ type Reservation = {
   startDate: string;
   endDate: string;
   totalCount: number;
+  items?: Array<{ name: string; quantity: number }>;
 };
 
 type PlotterReservation = {
@@ -119,24 +120,44 @@ export default function MyPage() {
           // 관리자도 마이페이지에서는 본인의 것만 조회
           const response = await getRentals({ userId: userProfile.id, pageSize: 100 });
           console.log("대여 내역 API 응답:", response);
-          // API 응답을 화면에 맞게 변환
-          const mappedRentals: Reservation[] = response.rentals.map(
+          // API 응답을 화면에 맞게 변환 - 품목별로 분리
+          const mappedRentals: Reservation[] = response.rentals.flatMap(
             (rental) => {
               console.log("대여 항목:", rental);
-              const extraMatch = rental.itemSummary?.match(/외\s*(\d+)건/);
-              const extraCount = extraMatch ? parseInt(extraMatch[1]) : 0;
-              return {
-                id: rental.id.toString(),
-                title: rental.itemSummary?.replace(/\s*외\s*0건$/, '') || "대여 항목",
-                status: mapRentalStatus(rental.status),
-                code: `RENT-${rental.id}`,
-                applicationDate: rental.createdAt
-                  ? rental.createdAt.split("T")[0]
-                  : "",
-                startDate: rental.startDate || "",
-                endDate: rental.endDate || "",
-                totalCount: extraCount + 1,
-              };
+              
+              // rentalItems가 있으면 각 품목별로 별도의 reservation 생성
+              if (rental.rentalItems && rental.rentalItems.length > 0) {
+                return rental.rentalItems.map((rentalItem, index) => ({
+                  id: `${rental.id}-${rentalItem.id || index}`,
+                  title: rentalItem.item?.name || "대여 항목",
+                  status: mapRentalStatus(rental.status),
+                  code: `RENT-${rental.id}`,
+                  applicationDate: rental.createdAt
+                    ? rental.createdAt.split("T")[0]
+                    : "",
+                  startDate: rental.startDate || "",
+                  endDate: rental.endDate || "",
+                  totalCount: rentalItem.quantity,
+                  items: [{ name: rentalItem.item?.name || '물품', quantity: rentalItem.quantity }],
+                }));
+              } else {
+                // fallback: rentalItems가 없으면 기존 방식
+                const extraMatch = rental.itemSummary?.match(/외\s*(\d+)건/);
+                const extraCount = extraMatch ? parseInt(extraMatch[1]) : 0;
+                
+                return [{
+                  id: rental.id.toString(),
+                  title: rental.itemSummary?.replace(/\s*외\s*0건$/, '') || "대여 항목",
+                  status: mapRentalStatus(rental.status),
+                  code: `RENT-${rental.id}`,
+                  applicationDate: rental.createdAt
+                    ? rental.createdAt.split("T")[0]
+                    : "",
+                  startDate: rental.startDate || "",
+                  endDate: rental.endDate || "",
+                  totalCount: extraCount + 1,
+                }];
+              }
             },
           );
           setReservations(mappedRentals);
@@ -186,7 +207,8 @@ export default function MyPage() {
 
   const handleEdit = async (id: string) => {
     try {
-      const rentalId = parseInt(id);
+      // id가 "rentalId-itemId" 형식이므로 rentalId만 추출
+      const rentalId = parseInt(id.split('-')[0]);
       const rentalDetail = await getRentalDetail(rentalId);
       
       // 대여 수정 페이지로 이동하면서 데이터 전달
@@ -205,23 +227,39 @@ export default function MyPage() {
     }
 
     try {
-      await cancelRental(parseInt(id));
+      // id가 "rentalId-itemId" 형식이므로 rentalId만 추출
+      const rentalId = parseInt(id.split('-')[0]);
+      await cancelRental(rentalId);
       alert("예약이 취소되었습니다.");
-      // 목록 새로고침
+      // 목록 새로고침 - 품목별로 분리
       const response = await getRentals({ userId: userProfile?.id, pageSize: 100 });
-      const mappedRentals: Reservation[] = response.rentals.map((rental) => {
-        const extraMatch = rental.itemSummary?.match(/외\s*(\d+)건/);
-        const extraCount = extraMatch ? parseInt(extraMatch[1]) : 0;
-        return {
-          id: rental.id.toString(),
-          title: rental.itemSummary?.replace(/\s*외\s*0건$/, '') || "대여 항목",
-          status: mapRentalStatus(rental.status),
-          code: `RENT-${rental.id}`,
-          applicationDate: rental.createdAt ? rental.createdAt.split("T")[0] : "",
-          startDate: rental.startDate || "",
-          endDate: rental.endDate || "",
-          totalCount: extraCount + 1,
-        };
+      const mappedRentals: Reservation[] = response.rentals.flatMap((rental) => {
+        if (rental.rentalItems && rental.rentalItems.length > 0) {
+          return rental.rentalItems.map((rentalItem, index) => ({
+            id: `${rental.id}-${rentalItem.id || index}`,
+            title: rentalItem.item?.name || "대여 항목",
+            status: mapRentalStatus(rental.status),
+            code: `RENT-${rental.id}`,
+            applicationDate: rental.createdAt ? rental.createdAt.split("T")[0] : "",
+            startDate: rental.startDate || "",
+            endDate: rental.endDate || "",
+            totalCount: rentalItem.quantity,
+            items: [{ name: rentalItem.item?.name || '물품', quantity: rentalItem.quantity }],
+          }));
+        } else {
+          const extraMatch = rental.itemSummary?.match(/외\s*(\d+)건/);
+          const extraCount = extraMatch ? parseInt(extraMatch[1]) : 0;
+          return [{
+            id: rental.id.toString(),
+            title: rental.itemSummary?.replace(/\s*외\s*0건$/, '') || "대여 항목",
+            status: mapRentalStatus(rental.status),
+            code: `RENT-${rental.id}`,
+            applicationDate: rental.createdAt ? rental.createdAt.split("T")[0] : "",
+            startDate: rental.startDate || "",
+            endDate: rental.endDate || "",
+            totalCount: extraCount + 1,
+          }];
+        }
       });
       setReservations(mappedRentals);
     } catch (error) {
@@ -327,6 +365,7 @@ export default function MyPage() {
                           startDate={reservation.startDate}
                           endDate={reservation.endDate}
                           totalCount={reservation.totalCount}
+                          items={reservation.items}
                           onEdit={reservation.status === "reserved" ? () => handleEdit(reservation.id) : undefined}
                           onCancel={reservation.status === "reserved" ? () => handleCancel(reservation.id) : undefined}
                         />

@@ -681,67 +681,108 @@ function AdminDashboard() {
                             </span>
                           </div>
                         ) : (
-                          paginatedRentalData.map((rental) => {
+                          paginatedRentalData.flatMap((rental) => {
                             // status 매핑: RENTED -> renting
-                            // 총 수량 계산: rentalItems의 quantity 합계
-                            const totalQuantity = rental.rentalItems
-                              ? rental.rentalItems.reduce((sum, item) => sum + item.quantity, 0)
-                              : undefined;
+                            const mappedStatus = RENTAL_STATUS_MAP_REVERSE[rental.status] as
+                              | "reserved"
+                              | "renting"
+                              | "returned"
+                              | "overdue"
+                              | "canceled"
+                              | "defective";
                             
-                            return (
-                              <AdminRentalRow
-                                key={rental.id}
-                                rentalCode={`R-${rental.id}`}
-                                userName={rental.user.name}
-                                department={
-                                  rental.departmentName ||
-                                  rental.departmentType ||
-                                  "-"
-                                }
-                                itemName={
-                                  rental.itemSummary?.replace(
-                                    /\s*외\s*0건$/,
-                                    "",
-                                  ) || "-"
-                                }
-                                quantity={totalQuantity}
-                                startDate={rental.startDate}
-                                endDate={rental.endDate}
-                                status={
-                                  RENTAL_STATUS_MAP_REVERSE[rental.status] as
-                                    | "reserved"
-                                    | "renting"
-                                    | "returned"
-                                    | "overdue"
-                                    | "canceled"
-                                    | "defective"
-                                }
-                                note={rental.memo || ""}
-                                onStatusChange={(newStatus) => {
-                                  handleRentalStatusChange(
-                                    rental.id,
-                                    (
-                                      Object.keys(
-                                        RENTAL_STATUS_MAP_REVERSE,
-                                      ) as Array<
-                                        keyof typeof RENTAL_STATUS_MAP_REVERSE
-                                      >
-                                    ).find(
-                                      (k) =>
-                                        RENTAL_STATUS_MAP_REVERSE[k] ===
-                                        newStatus,
-                                    ) || "RESERVED",
-                                  );
-                                }}
-                                onNoteChange={(newNote) => {
-                                  handleRentalNoteChange(
-                                    rental.id,
-                                    rental.status,
-                                    newNote,
+                            // rentalItems가 있으면 각 품목별로 분리해서 표시
+                            if (rental.rentalItems && rental.rentalItems.length > 0) {
+                              return rental.rentalItems.map((rentalItem, index) => (
+                                <AdminRentalRow
+                                  key={`${rental.id}-${rentalItem.id || index}`}
+                                  rentalCode={`R-${rental.id}`}
+                                  userName={rental.user.name}
+                                  department={
+                                    rental.departmentName ||
+                                    rental.departmentType ||
+                                    "-"
+                                  }
+                                  itemName={rentalItem.item?.name || "-"}
+                                  quantity={rentalItem.quantity}
+                                  startDate={rental.startDate}
+                                  endDate={rental.endDate}
+                                  status={mappedStatus}
+                                  note={rental.memo || ""}
+                                  onStatusChange={(newStatus) => {
+                                    handleRentalStatusChange(
+                                      rental.id,
+                                      (
+                                        Object.keys(
+                                          RENTAL_STATUS_MAP_REVERSE,
+                                        ) as Array<
+                                          keyof typeof RENTAL_STATUS_MAP_REVERSE
+                                        >
+                                      ).find(
+                                        (k) =>
+                                          RENTAL_STATUS_MAP_REVERSE[k] ===
+                                          newStatus,
+                                      ) || "RESERVED",
+                                    );
+                                  }}
+                                  onNoteChange={(newNote) => {
+                                    handleRentalNoteChange(
+                                      rental.id,
+                                      rental.status,
+                                      newNote,
                                   );
                                 }}
                               />
-                            );
+                              ));
+                            } else {
+                              // fallback: rentalItems가 없으면 기존 방식으로 표시
+                              return (
+                                <AdminRentalRow
+                                  key={rental.id}
+                                  rentalCode={`R-${rental.id}`}
+                                  userName={rental.user.name}
+                                  department={
+                                    rental.departmentName ||
+                                    rental.departmentType ||
+                                    "-"
+                                  }
+                                  itemName={
+                                    rental.itemSummary?.replace(
+                                      /\s*외\s*0건$/,
+                                      "",
+                                    ) || "-"
+                                  }
+                                  quantity={undefined}
+                                  startDate={rental.startDate}
+                                  endDate={rental.endDate}
+                                  status={mappedStatus}
+                                  note={rental.memo || ""}
+                                  onStatusChange={(newStatus) => {
+                                    handleRentalStatusChange(
+                                      rental.id,
+                                      (
+                                        Object.keys(
+                                          RENTAL_STATUS_MAP_REVERSE,
+                                        ) as Array<
+                                          keyof typeof RENTAL_STATUS_MAP_REVERSE
+                                        >
+                                      ).find(
+                                        (k) =>
+                                          RENTAL_STATUS_MAP_REVERSE[k] ===
+                                          newStatus,
+                                      ) || "RESERVED",
+                                    );
+                                  }}
+                                  onNoteChange={(newNote) => {
+                                    handleRentalNoteChange(
+                                      rental.id,
+                                      rental.status,
+                                      newNote,
+                                    );
+                                  }}
+                                />
+                              );
+                            }
                           })
                         )}
                       </div>
