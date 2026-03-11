@@ -45,6 +45,11 @@ interface RentalData {
   itemSummary: string;
   memo: string | null;
   createdAt: string;
+  rentalItems?: Array<{
+    id: number;
+    quantity: number;
+    item?: { name: string };
+  }>;
 }
 
 interface PlotterData {
@@ -644,10 +649,11 @@ function AdminDashboard() {
                       { label: "신청자", width: "w-[8%] min-w-0" },
                       { label: "소속", width: "w-[12%] min-w-0" },
                       { label: "대여 품목", width: "flex-1 min-w-0" },
+                      { label: "수량", width: "w-[6%] min-w-0" },
                         { label: "대여 날짜", width: "w-[10%] min-w-0" },
                         { label: "반납 날짜", width: "w-[10%] min-w-0" },
                         { label: "상태", width: "w-[9%] min-w-0" },
-                        { label: "비고", width: "w-[13%] min-w-0" },
+                        { label: "비고", width: "w-[12%] min-w-0" },
                       ]}
                     />
 
@@ -677,6 +683,11 @@ function AdminDashboard() {
                         ) : (
                           paginatedRentalData.map((rental) => {
                             // status 매핑: RENTED -> renting
+                            // 총 수량 계산: rentalItems의 quantity 합계
+                            const totalQuantity = rental.rentalItems
+                              ? rental.rentalItems.reduce((sum, item) => sum + item.quantity, 0)
+                              : undefined;
+                            
                             return (
                               <AdminRentalRow
                                 key={rental.id}
@@ -693,6 +704,7 @@ function AdminDashboard() {
                                     "",
                                   ) || "-"
                                 }
+                                quantity={totalQuantity}
                                 startDate={rental.startDate}
                                 endDate={rental.endDate}
                                 status={
