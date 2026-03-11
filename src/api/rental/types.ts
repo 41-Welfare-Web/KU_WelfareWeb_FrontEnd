@@ -29,7 +29,41 @@ export type Item = {
 };
 
 // 물품 상세 조회
-export type ItemDetail = Item;
+export type ItemDetailImage = {
+  id: number;
+  itemId: number;
+  imageUrl: string;
+  order: number;
+  createdAt: string;
+};
+
+export type ItemDetail = {
+  id: number;
+  categoryId: number;
+
+  name: string;
+  itemCode: string;
+  description: string | null;
+  rentalCount: number;
+
+  imageUrl: string | null;
+  videoUrl: string | null;
+
+  managementType: "INDIVIDUAL" | "BULK";
+  totalQuantity: number;
+
+  deletedAt: string | null;
+  createdAt: string;
+
+  category: {
+    id: number;
+    name: string;
+    deletedAt: string | null;
+  } | null;
+
+  itemImages: ItemDetailImage[];
+  components: unknown[];
+};
 
 // 물품 목록 쿼리
 export type ItemsQuery = {
