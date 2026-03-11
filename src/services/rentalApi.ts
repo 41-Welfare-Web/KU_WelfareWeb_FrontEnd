@@ -14,6 +14,11 @@ export interface RentalItem {
   itemSummary: string;
   memo: string | null;
   createdAt: string;
+  rentalItems?: Array<{
+    id: number;
+    quantity: number;
+    item?: { name: string };
+  }>;
 }
 
 export interface RentalsResponse {

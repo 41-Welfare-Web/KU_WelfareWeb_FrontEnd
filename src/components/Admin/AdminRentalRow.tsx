@@ -46,6 +46,7 @@ interface AdminRentalRowProps {
   userName: string;
   department: string;
   itemName: string;
+  quantity?: number;
   startDate: string;
   endDate: string;
   status: "reserved" | "renting" | "returned" | "overdue" | "canceled" | "defective";
@@ -60,6 +61,7 @@ export default function AdminRentalRow({
   userName,
   department,
   itemName,
+  quantity,
   startDate,
   endDate,
   status,
@@ -165,7 +167,12 @@ export default function AdminRentalRow({
           <span className="text-[14px] font-semibold text-black">{userName}</span>
           <span className="text-[13px] text-gray-500">{department}</span>
         </div>
-        <p className="text-[13px] text-gray-700 mb-2 truncate">{itemName}</p>
+        <div className="flex items-center gap-2 mb-2">
+          <p className="text-[13px] text-gray-700 truncate flex-1">{itemName}</p>
+          {quantity !== undefined && (
+            <span className="text-[13px] font-medium text-gray-600">수량: {quantity}</span>
+          )}
+        </div>
         <div className="flex items-center gap-2 text-[12px] text-gray-500">
           <span>{formatDate(startDate)}</span>
           <span>~</span>
@@ -202,6 +209,8 @@ export default function AdminRentalRow({
         <TruncatedCell text={department} className="w-[12%] min-w-0 text-center shrink" />
         {/* 물품명 */}
         <TruncatedCell text={itemName} className="flex-1 min-w-0 text-center" />
+        {/* 수량 */}
+        <span className="text-[14px] font-medium text-black w-[6%] min-w-0 text-center shrink">{quantity !== undefined ? quantity : '-'}</span>
         {/* 대여 시작일 */}
         <span className="text-[14px] font-medium text-black w-[10%] min-w-0 text-center shrink">{formatDate(startDate)}</span>
         {/* 대여 종료일 */}
@@ -215,7 +224,7 @@ export default function AdminRentalRow({
         </div>
 
         {/* 비고 입력 필드 */}
-        <div className="w-[13%] min-w-0 shrink flex items-center gap-1">
+        <div className="w-[12%] min-w-0 shrink flex items-center gap-1">
           <input
             ref={inputRef}
             type="text"

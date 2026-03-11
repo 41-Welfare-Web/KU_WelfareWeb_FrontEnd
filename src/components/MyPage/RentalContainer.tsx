@@ -18,7 +18,8 @@ interface RentalContainerProps {
   itemCount: number;
   startDate: string;
   endDate: string;
-  totalCount: number;
+  totalCount?: number;
+  items?: Array<{ name: string; quantity: number }>;
   onEdit?: () => void;
   onCancel?: () => void;
   className?: string;
@@ -32,10 +33,15 @@ const RentalContainer = ({
   startDate,
   endDate,
   totalCount,
+  items,
   onEdit,
   onCancel,
   className = '',
 }: RentalContainerProps) => {
+  // 수량 문자열 생성 (물품명은 title에 이미 있으므로 수량만 표시)
+  const quantityText = items && items.length > 0
+    ? `${items[0].quantity}개`
+    : totalCount !== undefined ? `${totalCount}개` : '';
   return (
     <div
       className={`relative bg-white border border-[#b9b9b9] rounded-[21px] w-full h-[120px] md:h-[149px] ${className}`}
@@ -70,7 +76,7 @@ const RentalContainer = ({
       <div className="absolute left-[16px] md:left-[24px] top-[82px] md:top-[110px] flex items-center gap-[8px] md:gap-[13px]">
         <img src={calendarIcon} alt="calendar" width="14" height="14" className="md:w-4 md:h-4" />
         <p className="text-[12px] md:text-[15px] font-medium text-[#5b5b5b]">
-          {startDate && endDate ? `${formatDate(startDate)} ~ ${formatDate(endDate)}` : '날짜 미정'}   |   총 {totalCount}개
+          {startDate && endDate ? `${formatDate(startDate)} ~ ${formatDate(endDate)}` : '날짜 미정'}{quantityText ? `   |   수량: ${quantityText}` : ''}
         </p>
       </div>
 
