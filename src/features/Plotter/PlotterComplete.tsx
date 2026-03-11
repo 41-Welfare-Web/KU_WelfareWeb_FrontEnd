@@ -1,8 +1,10 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import PlotterRequestSummary from "../../components/Plotter/PlotterRequestSummary";
 import LogoCircle from "../../assets/plotter/logo-circle.svg";
+import { getCommonMetadata } from "../../services/commonApi";
 
 type LocationState = {
   orderId?: number;
@@ -14,6 +16,7 @@ type LocationState = {
   paperSize?: string;
   expectedDate?: string;
   price?: number;
+  isFree?: boolean;
   status?: string;
 };
 
@@ -21,6 +24,7 @@ export default function PlotterComplete() {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as LocationState;
+  const [freePurposes, setFreePurposes] = useState<string[]>([]);
 
   const name = state?.name || "홍길동";
   const studentNo = state?.studentNo || "202112345";
@@ -28,6 +32,35 @@ export default function PlotterComplete() {
   const purpose = state?.purpose || "대자보";
   const quantity = state?.quantity || 1;
   const rawExpectedDate = state?.expectedDate || "2026-01-10";
+  
+  // 메타데이터에서 무료 목적 목록 가져오기
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const metadata = await getCommonMetadata();
+        setFreePurposes(metadata.plotterFreePurposes);
+      } catch (error) {
+        console.error("메타데이터 로드 실패:", error);
+      }
+    };
+    fetchMetadata();
+  }, []);
+  
+  // freePurposes로 무료 여부 판별 (대소문자 및 공백 무시)
+  const isFreePurpose = freePurposes.some(
+    fp => fp.trim().toLowerCase() === purpose.trim().toLowerCase()
+  );
+  
+  // state에서 받은 isFree와 비교 (디버깅용)
+  useEffect(() => {
+    if (freePurposes.length > 0 && state?.isFree !== undefined && state.isFree !== isFreePurpose) {
+      console.warn('무료 여부 불일치:', {
+        purpose,
+        fromState: state.isFree ? '무료' : '유료',
+        fromMetadata: isFreePurpose ? '무료' : '유료'
+      });
+    }
+  }, [freePurposes, isFreePurpose, purpose, state?.isFree]);
   
   // 날짜 포맷팅: ISO 형식에서 YYYY-MM-DD만 추출
   const formatDate = (dateString: string) => {

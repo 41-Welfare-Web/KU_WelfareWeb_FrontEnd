@@ -102,8 +102,10 @@ export default function PlotterRequest() {
     return null;
   }
 
-  // 선택된 목적이 무료 목적인지 확인
-  const isFreePurpose = freePurposes.includes(purpose);
+  // 선택된 목적이 무료 목적인지 확인 (대소문자 및 공백 무시)
+  const isFreePurpose = freePurposes.some(
+    fp => fp.trim().toLowerCase() === purpose.trim().toLowerCase()
+  );
 
   // 용지 크기에 따른 가격 책정
   const getPaperPrice = () => {
@@ -186,6 +188,19 @@ export default function PlotterRequest() {
         paymentReceiptImage: receiptFile || undefined,
       });
 
+      // 백엔드가 판별한 무료/유료 여부 확인
+      const backendIsFree = !response.isPaidService;
+      const frontendIsFree = isFreePurpose;
+      
+      // 판별 결과가 다르면 로그 출력 (디버깅용)
+      if (backendIsFree !== frontendIsFree) {
+        console.warn('무료/유료 판별 불일치:', { 
+          purpose, 
+          backend: backendIsFree ? '무료' : '유료',
+          frontend: frontendIsFree ? '무료' : '유료' 
+        });
+      }
+
       // 신청 완료 페이지로 이동 (응답 데이터 전달)
       navigate("/plotter/complete", {
         state: {
@@ -198,6 +213,7 @@ export default function PlotterRequest() {
           paperSize: response.paperSize,
           expectedDate: response.pickupDate,
           price: response.price,
+          isFree: backendIsFree,
           status: response.status,
         },
       });
