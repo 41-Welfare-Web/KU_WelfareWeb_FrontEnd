@@ -46,6 +46,7 @@ type PlotterReservation = {
   code: string;
   applicationDate: string;
   printDate: string;
+  pageCount: number;
 };
 
 export default function MyPage() {
@@ -191,6 +192,7 @@ export default function MyPage() {
                 code: `PLOT-${order.id}`,
                 applicationDate: order.createdAt || "",
                 printDate: order.pickupDate || "",
+                pageCount: order.pageCount || 0,
               };
             },
           );
@@ -395,6 +397,7 @@ export default function MyPage() {
                           applicationDate={reservation.applicationDate}
                           title={reservation.title}
                           printDate={reservation.printDate}
+                          pageCount={reservation.pageCount}
                         />
                       ))}
                     </div>
