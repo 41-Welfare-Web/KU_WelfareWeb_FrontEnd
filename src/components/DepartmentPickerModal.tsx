@@ -44,7 +44,7 @@ export default function DepartmentPickerModal({
       "";
 
     setActiveType(initial);
-    setCustomName(value?.departmentName ?? "");
+    setCustomName("");
   }, [open, value?.departmentType, value?.departmentName, deptGroups]);
 
   const groups = useMemo(() => {
@@ -159,7 +159,7 @@ export default function DepartmentPickerModal({
                 <input
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  placeholder={activeGroup?.placeholder || "소속명을 입력하세요"}
+                  placeholder=""
                   className="w-full h-12 rounded-xl bg-[#EFEFEF] px-4 text-[15px] outline-none focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                 />
 
