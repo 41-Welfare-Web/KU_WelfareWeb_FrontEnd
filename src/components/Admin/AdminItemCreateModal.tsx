@@ -1,27 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import cancel from "../../assets/rental/cancel-white.svg";
 import { getCategories } from "../../api/rental/rentalApi";
+import { createItem, uploadItemImage } from "../../api/admin/adminApi";
 import type { Category } from "../../api/rental/types";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  onSubmit?: (payload: {
-    name: string;
-    categoryId: number | null;
-    totalQuantity: number;
-    description: string;
-    usageVideoType: "url" | "file";
-    usageVideoUrl: string;
-    usageVideoFile: File | null;
-    imageFiles: File[];
-  }) => void | Promise<void>;
+  onSuccess?: () => void | Promise<void>;
 };
 
 export default function AdminItemCreateModal({
   open,
   onClose,
-  onSubmit,
+  onSuccess,
 }: Props) {
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
@@ -169,19 +161,36 @@ export default function AdminItemCreateModal({
       if (!categoryId) throw new Error("카테고리를 선택해주세요.");
       if (parsedQuantity < 0) throw new Error("총 보유 수량을 확인해주세요.");
       if (!description.trim()) throw new Error("상세 설명을 입력해주세요.");
+      if (imageFiles.length === 0)
+        throw new Error("대표 이미지를 업로드해주세요.");
+
+      if (usageVideoType === "file" && usageVideoFile) {
+        throw new Error(
+          "영상 파일 업로드는 아직 지원되지 않습니다. URL을 입력해주세요.",
+        );
+      }
 
       setSubmitLoading(true);
 
-      await onSubmit?.({
-        name: name.trim(),
+      const uploadedImageUrls = await Promise.all(
+        imageFiles.map((file) => uploadItemImage(file)),
+      );
+
+      await createItem({
         categoryId,
-        totalQuantity: parsedQuantity,
+        name: name.trim(),
+        itemCode: "",
         description: description.trim(),
-        usageVideoType,
-        usageVideoUrl: usageVideoUrl.trim(),
-        usageVideoFile,
-        imageFiles,
+        imageUrl: uploadedImageUrls[0],
+        imageUrls: uploadedImageUrls,
+        videoUrl:
+          usageVideoType === "url" ? usageVideoUrl.trim() || null : null,
+        managementType: "BULK",
+        totalQuantity: parsedQuantity,
       });
+
+      await onSuccess?.();
+      onClose();
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "신규 물품 등록에 실패했습니다.",
@@ -475,7 +484,10 @@ export default function AdminItemCreateModal({
                 <button
                   type="button"
                   disabled={!canSubmit || submitLoading}
-                  onClick={handleSubmit}
+                  onClick={() => {
+                    console.log("✅ 등록 버튼 클릭됨");
+                    handleSubmit();
+                  }}
                   className="w-full rounded-2xl bg-[#FF7A1A] px-5 py-4 sm:py-5 text-[20px] sm:text-[22px] font-extrabold text-white shadow-[0_8px_20px_rgba(255,122,26,0.35)] transition disabled:opacity-40"
                 >
                   {submitLoading ? "등록 중..." : "✓ 신규 물품 등록하기"}

@@ -420,30 +420,6 @@ function AdminDashboard() {
     exportCSV(activeTab, rentalData, plotterData);
   };
 
-  // 신규 물품 추가
-  const handleAddItem = async (payload: {
-    name: string;
-    categoryId: number | null;
-    totalQuantity: number;
-    description: string;
-    usageVideoType: "url" | "file";
-    usageVideoUrl: string;
-    usageVideoFile: File | null;
-    imageFiles: File[];
-  }) => {
-    console.log("[임시 신규 물품 등록]", payload);
-
-    alert("신규 물품 등록이 완료되었습니다. (임시)");
-
-    setItemCreateModalOpen(false);
-
-    // 서버 연결 전이라 실제 저장은 안 되지만,
-    // UX상 목록 다시 불러오는 흐름만 맞춰둠
-    if (activeTab === "items") {
-      fetchItems();
-    }
-  };
-
   const filteredRentalData = rentalData.filter((item) => {
     // 상태 필터링
     let statusMatch = true;
@@ -593,11 +569,11 @@ function AdminDashboard() {
                   <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible md:min-w-[680px]">
                     {/* 테이블 헤더 */}
                     <AdminTableHeader
-                    columns={[
-                      { label: "신청번호", width: "w-[7%] min-w-0" },
-                      { label: "신청자", width: "w-[8%] min-w-0" },
-                      { label: "소속", width: "w-[12%] min-w-0" },
-                      { label: "대여 품목", width: "flex-1 min-w-0" },
+                      columns={[
+                        { label: "신청번호", width: "w-[7%] min-w-0" },
+                        { label: "신청자", width: "w-[8%] min-w-0" },
+                        { label: "소속", width: "w-[12%] min-w-0" },
+                        { label: "대여 품목", width: "flex-1 min-w-0" },
                         { label: "대여 날짜", width: "w-[10%] min-w-0" },
                         { label: "반납 날짜", width: "w-[10%] min-w-0" },
                         { label: "상태", width: "w-[9%] min-w-0" },
@@ -680,7 +656,6 @@ function AdminDashboard() {
                         )}
                       </div>
                     )}
-
                   </div>
                 </div>
 
@@ -721,13 +696,13 @@ function AdminDashboard() {
                   <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible md:min-w-[680px]">
                     {/* 테이블 헤더 */}
                     <AdminTableHeader
-                    columns={[
-                      { label: "신청번호", width: "w-[7%] min-w-0" },
-                      { label: "신청자", width: "w-[8%] min-w-0" },
-                      { label: "소속", width: "w-[12%] min-w-0" },
-                      { label: "파일명", width: "flex-1 min-w-0" },
-                      { label: "용지/장수", width: "w-[10%] min-w-0" },
-                      { label: "수령일", width: "w-[10%] min-w-0" },
+                      columns={[
+                        { label: "신청번호", width: "w-[7%] min-w-0" },
+                        { label: "신청자", width: "w-[8%] min-w-0" },
+                        { label: "소속", width: "w-[12%] min-w-0" },
+                        { label: "파일명", width: "flex-1 min-w-0" },
+                        { label: "용지/장수", width: "w-[10%] min-w-0" },
+                        { label: "수령일", width: "w-[10%] min-w-0" },
                         { label: "상태", width: "w-[9%] min-w-0" },
                         { label: "비고", width: "w-[13%] min-w-0" },
                       ]}
@@ -763,7 +738,9 @@ function AdminDashboard() {
                               <AdminPlotterRow
                                 key={plotter.id}
                                 orderCode={`P-${plotter.id}`}
-                                userName={plotter.user?.name || "사용자 정보 없음"}
+                                userName={
+                                  plotter.user?.name || "사용자 정보 없음"
+                                }
                                 club={
                                   plotter.departmentName ||
                                   plotter.departmentType ||
@@ -805,7 +782,6 @@ function AdminDashboard() {
                         )}
                       </div>
                     )}
-
                   </div>
                 </div>
 
@@ -896,7 +872,7 @@ function AdminDashboard() {
       <AdminItemCreateModal
         open={itemCreateModalOpen}
         onClose={() => setItemCreateModalOpen(false)}
-        onSubmit={handleAddItem}
+        onSuccess={fetchItems}
       />
     </>
   );
