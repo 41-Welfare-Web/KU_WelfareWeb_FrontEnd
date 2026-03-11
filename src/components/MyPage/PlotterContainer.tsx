@@ -16,6 +16,7 @@ interface PlotterContainerProps {
   applicationDate: string;
   title: string;
   printDate: string;
+  pageCount: number;
   className?: string;
 }
 
@@ -25,6 +26,7 @@ const PlotterContainer = ({
   applicationDate,
   title,
   printDate,
+  pageCount,
   className = '',
 }: PlotterContainerProps) => {
   return (
@@ -61,7 +63,7 @@ const PlotterContainer = ({
       <div className="absolute left-[16px] md:left-[24px] top-[82px] md:top-[110px] flex items-center gap-[8px] md:gap-[13px]">
         <img src={calendarIcon} alt="calendar" width="14" height="14" className="md:w-4 md:h-4" />
         <p className="text-[12px] md:text-[15px] font-medium text-[#5b5b5b]">
-          {printDate ? formatDate(printDate) : '수령일 미정'}
+          {printDate ? formatDate(printDate) : '수령일 미정'}   |   장수: {pageCount}장
         </p>
       </div>
     </div>

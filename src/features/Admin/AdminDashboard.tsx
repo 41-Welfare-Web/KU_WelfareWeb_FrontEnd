@@ -43,7 +43,13 @@ interface RentalData {
     | "CANCELED"
     | "DEFECTIVE";
   itemSummary: string;
+  memo: string | null;
   createdAt: string;
+  rentalItems?: Array<{
+    id: number;
+    quantity: number;
+    item?: { name: string };
+  }>;
 }
 
 interface PlotterData {
@@ -61,6 +67,7 @@ interface PlotterData {
   pageCount: number;
   pickupDate: string;
   status: string;
+  memo: string | null;
   createdAt: string;
   fileUrl?: string;
   originalFilename?: string;
@@ -353,6 +360,28 @@ function AdminDashboard() {
     }
   };
 
+  const handleRentalNoteChange = async (
+    rentalId: number,
+    currentStatus: string,
+    newMemo: string,
+  ) => {
+    try {
+      await axiosInstance.put(`/api/rentals/${rentalId}/status`, {
+        status: currentStatus,
+        memo: newMemo,
+      });
+      // 전체 목록을 다시 가져오지 않고 해당 항목의 memo만 업데이트
+      setRentalData((prev) =>
+        prev.map((rental) =>
+          rental.id === rentalId ? { ...rental, memo: newMemo } : rental,
+        ),
+      );
+    } catch (err: any) {
+      console.error("비고 변경 실패:", err);
+      alert(err.response?.data?.message || "비고 변경에 실패했습니다.");
+    }
+  };
+
   const handlePlotterStatusChange = async (
     orderId: number,
     newStatus: string,
@@ -382,6 +411,28 @@ function AdminDashboard() {
     } catch (err: any) {
       console.error("상태 변경 실패:", err);
       alert(err.response?.data?.message || "상태 변경에 실패했습니다.");
+    }
+  };
+
+  const handlePlotterNoteChange = async (
+    orderId: number,
+    currentStatus: string,
+    newMemo: string,
+  ) => {
+    try {
+      await axiosInstance.put(`/api/plotter/orders/${orderId}/status`, {
+        status: currentStatus,
+        memo: newMemo,
+      });
+      // 전체 목록을 다시 가져오지 않고 해당 항목의 memo만 업데이트
+      setPlotterData((prev) =>
+        prev.map((plotter) =>
+          plotter.id === orderId ? { ...plotter, memo: newMemo } : plotter,
+        ),
+      );
+    } catch (err: any) {
+      console.error("비고 변경 실패:", err);
+      alert(err.response?.data?.message || "비고 변경에 실패했습니다.");
     }
   };
 
@@ -574,10 +625,11 @@ function AdminDashboard() {
                         { label: "신청자", width: "w-[8%] min-w-0" },
                         { label: "소속", width: "w-[12%] min-w-0" },
                         { label: "대여 품목", width: "flex-1 min-w-0" },
+                        { label: "수량", width: "w-[6%] min-w-0" },
                         { label: "대여 날짜", width: "w-[10%] min-w-0" },
                         { label: "반납 날짜", width: "w-[10%] min-w-0" },
                         { label: "상태", width: "w-[9%] min-w-0" },
-                        { label: "비고", width: "w-[13%] min-w-0" },
+                        { label: "비고", width: "w-[12%] min-w-0" },
                       ]}
                     />
 
@@ -605,53 +657,115 @@ function AdminDashboard() {
                             </span>
                           </div>
                         ) : (
-                          paginatedRentalData.map((rental) => {
+                          paginatedRentalData.flatMap((rental) => {
                             // status 매핑: RENTED -> renting
-                            return (
-                              <AdminRentalRow
-                                key={rental.id}
-                                rentalCode={`R-${rental.id}`}
-                                userName={rental.user.name}
-                                department={
-                                  rental.departmentName ||
-                                  rental.departmentType ||
-                                  "-"
-                                }
-                                itemName={
-                                  rental.itemSummary?.replace(
-                                    /\s*외\s*0건$/,
-                                    "",
-                                  ) || "-"
-                                }
-                                startDate={rental.startDate}
-                                endDate={rental.endDate}
-                                status={
-                                  RENTAL_STATUS_MAP_REVERSE[rental.status] as
-                                    | "reserved"
-                                    | "renting"
-                                    | "returned"
-                                    | "overdue"
-                                    | "canceled"
-                                    | "defective"
-                                }
-                                onStatusChange={(newStatus) => {
-                                  handleRentalStatusChange(
-                                    rental.id,
-                                    (
-                                      Object.keys(
-                                        RENTAL_STATUS_MAP_REVERSE,
-                                      ) as Array<
-                                        keyof typeof RENTAL_STATUS_MAP_REVERSE
-                                      >
-                                    ).find(
-                                      (k) =>
-                                        RENTAL_STATUS_MAP_REVERSE[k] ===
-                                        newStatus,
-                                    ) || "RESERVED",
-                                  );
-                                }}
-                              />
-                            );
+                            const mappedStatus = RENTAL_STATUS_MAP_REVERSE[
+                              rental.status
+                            ] as
+                              | "reserved"
+                              | "renting"
+                              | "returned"
+                              | "overdue"
+                              | "canceled"
+                              | "defective";
+
+                            // rentalItems가 있으면 각 품목별로 분리해서 표시
+                            if (
+                              rental.rentalItems &&
+                              rental.rentalItems.length > 0
+                            ) {
+                              return rental.rentalItems.map(
+                                (rentalItem, index) => (
+                                  <AdminRentalRow
+                                    key={`${rental.id}-${rentalItem.id || index}`}
+                                    rentalCode={`R-${rental.id}`}
+                                    userName={rental.user.name}
+                                    department={
+                                      rental.departmentName ||
+                                      rental.departmentType ||
+                                      "-"
+                                    }
+                                    itemName={rentalItem.item?.name || "-"}
+                                    quantity={rentalItem.quantity}
+                                    startDate={rental.startDate}
+                                    endDate={rental.endDate}
+                                    status={mappedStatus}
+                                    note={rental.memo || ""}
+                                    onStatusChange={(newStatus) => {
+                                      handleRentalStatusChange(
+                                        rental.id,
+                                        (
+                                          Object.keys(
+                                            RENTAL_STATUS_MAP_REVERSE,
+                                          ) as Array<
+                                            keyof typeof RENTAL_STATUS_MAP_REVERSE
+                                          >
+                                        ).find(
+                                          (k) =>
+                                            RENTAL_STATUS_MAP_REVERSE[k] ===
+                                            newStatus,
+                                        ) || "RESERVED",
+                                      );
+                                    }}
+                                    onNoteChange={(newNote) => {
+                                      handleRentalNoteChange(
+                                        rental.id,
+                                        rental.status,
+                                        newNote,
+                                      );
+                                    }}
+                                  />
+                                ),
+                              );
+                            } else {
+                              // fallback: rentalItems가 없으면 기존 방식으로 표시
+                              return (
+                                <AdminRentalRow
+                                  key={rental.id}
+                                  rentalCode={`R-${rental.id}`}
+                                  userName={rental.user.name}
+                                  department={
+                                    rental.departmentName ||
+                                    rental.departmentType ||
+                                    "-"
+                                  }
+                                  itemName={
+                                    rental.itemSummary?.replace(
+                                      /\s*외\s*0건$/,
+                                      "",
+                                    ) || "-"
+                                  }
+                                  quantity={undefined}
+                                  startDate={rental.startDate}
+                                  endDate={rental.endDate}
+                                  status={mappedStatus}
+                                  note={rental.memo || ""}
+                                  onStatusChange={(newStatus) => {
+                                    handleRentalStatusChange(
+                                      rental.id,
+                                      (
+                                        Object.keys(
+                                          RENTAL_STATUS_MAP_REVERSE,
+                                        ) as Array<
+                                          keyof typeof RENTAL_STATUS_MAP_REVERSE
+                                        >
+                                      ).find(
+                                        (k) =>
+                                          RENTAL_STATUS_MAP_REVERSE[k] ===
+                                          newStatus,
+                                      ) || "RESERVED",
+                                    );
+                                  }}
+                                  onNoteChange={(newNote) => {
+                                    handleRentalNoteChange(
+                                      rental.id,
+                                      rental.status,
+                                      newNote,
+                                    );
+                                  }}
+                                />
+                              );
+                            }
                           })
                         )}
                       </div>
@@ -759,6 +873,7 @@ function AdminDashboard() {
                                     | "rejected"
                                     | "completed"
                                 }
+                                note={plotter.memo || ""}
                                 fileUrl={plotter.fileUrl}
                                 onStatusChange={(newStatus) => {
                                   handlePlotterStatusChange(
@@ -774,6 +889,13 @@ function AdminDashboard() {
                                         PLOTTER_STATUS_MAP_REVERSE[k] ===
                                         newStatus,
                                     ) || "PENDING",
+                                  );
+                                }}
+                                onNoteChange={(newNote) => {
+                                  handlePlotterNoteChange(
+                                    plotter.id,
+                                    plotter.status,
+                                    newNote,
                                   );
                                 }}
                               />

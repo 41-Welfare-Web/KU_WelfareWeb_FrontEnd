@@ -46,6 +46,7 @@ interface AdminRentalRowProps {
   userName: string;
   department: string;
   itemName: string;
+  quantity?: number;
   startDate: string;
   endDate: string;
   status: "reserved" | "renting" | "returned" | "overdue" | "canceled" | "defective";
@@ -60,6 +61,7 @@ export default function AdminRentalRow({
   userName,
   department,
   itemName,
+  quantity,
   startDate,
   endDate,
   status,
@@ -72,6 +74,7 @@ export default function AdminRentalRow({
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const [isEditing, setIsEditing] = useState(false);
   const [noteValue, setNoteValue] = useState(note);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const badgeBtnRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -137,6 +140,8 @@ export default function AdminRentalRow({
     setIsEditing(false);
     if (onNoteChange && noteValue !== note) {
       onNoteChange(noteValue);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 1000);
     }
   };
 
@@ -162,7 +167,12 @@ export default function AdminRentalRow({
           <span className="text-[14px] font-semibold text-black">{userName}</span>
           <span className="text-[13px] text-gray-500">{department}</span>
         </div>
-        <p className="text-[13px] text-gray-700 mb-2 truncate">{itemName}</p>
+        <div className="flex items-center gap-2 mb-2">
+          <p className="text-[13px] text-gray-700 truncate flex-1">{itemName}</p>
+          {quantity !== undefined && (
+            <span className="text-[13px] font-medium text-gray-600">수량: {quantity}</span>
+          )}
+        </div>
         <div className="flex items-center gap-2 text-[12px] text-gray-500">
           <span>{formatDate(startDate)}</span>
           <span>~</span>
@@ -179,7 +189,9 @@ export default function AdminRentalRow({
             onKeyDown={handleNoteKeyDown}
             disabled={!isEditing}
             placeholder="비고"
-            className="flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border border-gray-300 rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none focus:border-blue-500"
+            className={`flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none transition-colors ${
+              saveSuccess ? 'border-green-500' : isEditing ? 'border-[#FF7A57]' : 'border-gray-300'
+            }`}
           />
           <button onClick={handleEditClick} className="w-4 h-4 hover:opacity-70 transition-opacity flex-shrink-0" aria-label="비고 수정">
             <img src={editIcon} alt="수정" className="w-4 h-4" />
@@ -197,6 +209,8 @@ export default function AdminRentalRow({
         <TruncatedCell text={department} className="w-[12%] min-w-0 text-center shrink" />
         {/* 물품명 */}
         <TruncatedCell text={itemName} className="flex-1 min-w-0 text-center" />
+        {/* 수량 */}
+        <span className="text-[14px] font-medium text-black w-[6%] min-w-0 text-center shrink">{quantity !== undefined ? quantity : '-'}</span>
         {/* 대여 시작일 */}
         <span className="text-[14px] font-medium text-black w-[10%] min-w-0 text-center shrink">{formatDate(startDate)}</span>
         {/* 대여 종료일 */}
@@ -210,7 +224,7 @@ export default function AdminRentalRow({
         </div>
 
         {/* 비고 입력 필드 */}
-        <div className="w-[13%] min-w-0 shrink flex items-center gap-1">
+        <div className="w-[12%] min-w-0 shrink flex items-center gap-1">
           <input
             ref={inputRef}
             type="text"
@@ -219,7 +233,9 @@ export default function AdminRentalRow({
             onBlur={handleNoteBlur}
             onKeyDown={handleNoteKeyDown}
             disabled={!isEditing}
-            className="flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border border-gray-300 rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none focus:border-blue-500"
+            className={`flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none transition-colors ${
+              saveSuccess ? 'border-green-500' : isEditing ? 'border-[#FF7A57]' : 'border-gray-300'
+            }`}
           />
           <button onClick={handleEditClick} className="w-4 h-4 hover:opacity-70 transition-opacity flex-shrink-0" aria-label="비고 수정">
             <img src={editIcon} alt="수정" className="w-4 h-4" />
