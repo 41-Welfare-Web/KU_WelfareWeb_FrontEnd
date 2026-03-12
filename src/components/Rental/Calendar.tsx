@@ -169,11 +169,6 @@ export default function Calendar({
     return m;
   }, [adjustedData]);
 
-  const maxRentalEndDate = useMemo(() => {
-    if (!startDate) return null;
-    return addDaysToYmd(startDate, 14); // 시작일 포함 15일
-  }, [startDate]);
-
   const commit = (next: {
     startDate: string | null;
     endDate: string | null;
