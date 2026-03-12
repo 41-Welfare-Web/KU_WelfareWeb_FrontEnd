@@ -18,6 +18,7 @@ export default function Register() {
   const [studentNo, setStudentNo] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
   const usernameRegex = /^[a-z0-9]{5,20}$/;
@@ -308,10 +309,22 @@ export default function Register() {
                 </label>
                 <input
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setName(value);
+
+                    if (value.length > 30) {
+                      setNameError("이름은 30자까지만 입력 가능합니다.");
+                    } else {
+                      setNameError("");
+                    }
+                  }}
                   type="text"
                   className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                 />
+                {nameError && (
+                  <p className="text-[13px] text-red-500">{nameError}</p>
+                )}
               </div>
 
               {/* 소속 단위(대분류) */}

@@ -68,6 +68,13 @@ function isBetweenInclusive(date: string, start: string, end: string) {
   return date >= start && date <= end;
 }
 
+// 대여일 포함 15일 계산
+function addDaysToYmd(ymd: string, days: number) {
+  const d = new Date(ymd);
+  d.setDate(d.getDate() + days);
+  return toYmd(d);
+}
+
 export default function Calendar({
   itemId,
   requestedQty,
@@ -162,6 +169,11 @@ export default function Calendar({
     return m;
   }, [adjustedData]);
 
+  const maxRentalEndDate = useMemo(() => {
+    if (!startDate) return null;
+    return addDaysToYmd(startDate, 14); // 시작일 포함 15일
+  }, [startDate]);
+
   const commit = (next: {
     startDate: string | null;
     endDate: string | null;
@@ -171,19 +183,55 @@ export default function Calendar({
     onChange?.(next);
   };
 
+  // 재고 없음 판단
+  const hasOutOfStockBetween = (start: string, end: string) => {
+    const startObj = new Date(start);
+    const endObj = new Date(end);
+
+    for (let d = new Date(startObj); d <= endObj; d.setDate(d.getDate() + 1)) {
+      const ymd = toYmd(d);
+      const av = mapByDate.get(ymd);
+      const available = av?.availableQuantity ?? 0;
+
+      if (available < requestedQty) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   const onPickDay = (ymd: string) => {
     if (!startDate) {
       commit({ startDate: ymd, endDate: null });
       return;
     }
+
     if (!endDate) {
       if (ymd < startDate) {
         commit({ startDate: ymd, endDate: null });
         return;
       }
+
+      const maxEnd = addDaysToYmd(startDate, 14);
+      if (ymd > maxEnd) {
+        alert("대여 기간은 시작일 포함 최대 15일까지 선택할 수 있습니다.");
+        commit({ startDate: null, endDate: null });
+        return;
+      }
+
+      if (hasOutOfStockBetween(startDate, ymd)) {
+        alert(
+          "선택한 기간 중 재고가 부족한 날짜가 포함되어 있어 선택할 수 없습니다.",
+        );
+        commit({ startDate: null, endDate: null });
+        return;
+      }
+
       commit({ startDate, endDate: ymd });
       return;
     }
+
     commit({ startDate: ymd, endDate: null });
   };
 
@@ -266,9 +314,16 @@ export default function Calendar({
           const afterSix = now.getHours() >= 18; // 18:00 이후면 true
           const isWeekendDay = isWeekend(cell.date);
 
+          const exceedsMaxRange =
+            !!startDate && !endDate && ymd > addDaysToYmd(startDate, 14);
+
           // 예약 불가 조건
           const isBlocked =
-            !inMonth || isPast || isWeekendDay || (isToday && afterSix);
+            !inMonth ||
+            isPast ||
+            isWeekendDay ||
+            (isToday && afterSix) ||
+            exceedsMaxRange;
 
           const av = mapByDate.get(ymd);
           const available = av?.availableQuantity ?? null;
@@ -286,8 +341,11 @@ export default function Calendar({
           if (!inMonth)
             base = "bg-transparent text-black/25 border-transparent";
 
-          // 2) 과거/주말/오늘18시이후 -> 예약 불가 스타일
-          if (inMonth && (isPast || isWeekendDay || (isToday && afterSix))) {
+          // 2) 과거/주말/오늘18시이후/선택일 포함 15일이후 -> 예약 불가 스타일
+          if (
+            inMonth &&
+            (isPast || isWeekendDay || (isToday && afterSix) || exceedsMaxRange)
+          ) {
             base =
               "bg-transparent text-black/30 border-transparent cursor-not-allowed";
           }

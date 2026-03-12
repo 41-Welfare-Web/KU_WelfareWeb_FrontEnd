@@ -54,7 +54,9 @@ export default function DepartmentPickerModal({
         type: String(g.type ?? "").trim(),
         names: Array.isArray(g.names) ? (g.names as string[]) : [],
         requiresInput: Boolean(g.requiresInput),
-        placeholder: g.placeholder ? String(g.placeholder).trim() : "소속명을 입력하세요",
+        placeholder: g.placeholder
+          ? String(g.placeholder).trim()
+          : "소속명을 입력하세요",
       }))
       .filter((g) => g.type);
   }, [deptGroups]);
@@ -106,7 +108,6 @@ export default function DepartmentPickerModal({
                   <button
                     key={g.type}
                     type="button"
-                    onMouseEnter={() => setActiveType(g.type)}
                     onClick={() => setActiveType(g.type)}
                     className={[
                       "w-full text-left rounded-xl px-4 py-3 transition",
@@ -151,8 +152,8 @@ export default function DepartmentPickerModal({
             ) : (
               <>
                 <div className="text-sm text-black/50 mb-3">
-                  {activeGroup?.requiresInput 
-                    ? "소속명을 직접 입력해주세요." 
+                  {activeGroup?.requiresInput
+                    ? "소속명을 직접 입력해주세요."
                     : "이 대분류는 소분류 목록이 없어서 직접 입력해야 해요."}
                 </div>
 
