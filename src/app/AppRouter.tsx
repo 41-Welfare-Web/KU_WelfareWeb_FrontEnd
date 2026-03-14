@@ -11,6 +11,7 @@ import FindAccount from "../features/Login/FindAccount";
 import RentalCart from "../features/Rental/RentalCart";
 import RentalComplete from "../components/Rental/RentalComplete";
 import ProtectedAdminRoute from "../components/Admin/ProtectedAdminRoute";
+import Partnership from "../features/Partnership/Partnership";
 
 export default function AppRouter() {
   return (
@@ -29,14 +30,16 @@ export default function AppRouter() {
 
       <Route path="/mypage" element={<MyPage />} />
 
-      <Route 
-        path="/admin" 
+      <Route
+        path="/admin"
         element={
           <ProtectedAdminRoute>
             <AdminDashboard />
           </ProtectedAdminRoute>
-        } 
+        }
       />
+
+      <Route path="/parnership" element={<Partnership />} />
     </Routes>
   );
 }
