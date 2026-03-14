@@ -102,10 +102,8 @@ export default function PlotterRequest() {
     return null;
   }
 
-  // 선택된 목적이 무료 목적인지 확인 (대소문자 및 공백 무시)
-  const isFreePurpose = freePurposes.some(
-    fp => fp.trim().toLowerCase() === purpose.trim().toLowerCase()
-  );
+  // 선택된 목적이 무료 목적인지 확인
+  const isFreePurpose = freePurposes.includes(purpose);
 
   // 용지 크기에 따른 가격 책정
   const getPaperPrice = () => {
@@ -119,16 +117,12 @@ export default function PlotterRequest() {
 
   const totalPrice = getPaperPrice() * quantity;
 
-  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-        alert("PDF 파일만 업로드할 수 있습니다.");
-        e.target.value = "";
-        return;
-      }
-      setPdfFile(file);
+  const handlePdfUpload = (file: File) => {
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      alert("PDF 파일만 업로드할 수 있습니다.");
+      return;
     }
+    setPdfFile(file);
   };
 
   const handleReceiptUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,19 +182,6 @@ export default function PlotterRequest() {
         paymentReceiptImage: receiptFile || undefined,
       });
 
-      // 백엔드가 판별한 무료/유료 여부 확인
-      const backendIsFree = !response.isPaidService;
-      const frontendIsFree = isFreePurpose;
-      
-      // 판별 결과가 다르면 로그 출력 (디버깅용)
-      if (backendIsFree !== frontendIsFree) {
-        console.warn('무료/유료 판별 불일치:', { 
-          purpose, 
-          backend: backendIsFree ? '무료' : '유료',
-          frontend: frontendIsFree ? '무료' : '유료' 
-        });
-      }
-
       // 신청 완료 페이지로 이동 (응답 데이터 전달)
       navigate("/plotter/complete", {
         state: {
@@ -213,7 +194,6 @@ export default function PlotterRequest() {
           paperSize: response.paperSize,
           expectedDate: response.pickupDate,
           price: response.price,
-          isFree: backendIsFree,
           status: response.status,
         },
       });
@@ -270,7 +250,7 @@ export default function PlotterRequest() {
               {/* PDF 파일 업로드 */}
               <FileUploadBox
                 label="인쇄 파일 (PDF)"
-                accept="application/pdf,.pdf"
+                accept=".pdf"
                 onChange={handlePdfUpload}
                 onRemove={() => setPdfFile(null)}
                 file={pdfFile}
