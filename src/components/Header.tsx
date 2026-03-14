@@ -129,7 +129,11 @@ export default function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden items-center gap-5 md:flex">
-          <button type="button" className={menuClass("/committee")}>
+          <button 
+            type="button" 
+            onClick={() => navigate("/welfare")}
+            className={menuClass("/welfare")}
+          >
             학생복지위원회
           </button>
 
@@ -344,6 +348,16 @@ export default function Header() {
                 className="py-4 border-b border-[#C0C0C0] text-left"
               >
                 홈
+              </button>
+
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/welfare");
+                }}
+                className="py-4 border-b border-[#C0C0C0] text-left"
+              >
+                학생복지위원회
               </button>
 
               <button
