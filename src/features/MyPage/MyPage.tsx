@@ -142,13 +142,10 @@ export default function MyPage() {
                   items: [{ name: rentalItem.item?.name || '물품', quantity: rentalItem.quantity }],
                 }));
               } else {
-                // fallback: rentalItems가 없으면 기존 방식
-                const extraMatch = rental.itemSummary?.match(/외\s*(\d+)건/);
-                const extraCount = extraMatch ? parseInt(extraMatch[1]) : 0;
-                
+                // fallback: rentalItems가 없으면 기본값 사용
                 return [{
                   id: rental.id.toString(),
-                  title: rental.itemSummary?.replace(/\s*외\s*0건$/, '') || "대여 항목",
+                  title: "대여 항목",
                   status: mapRentalStatus(rental.status),
                   code: `RENT-${rental.id}`,
                   applicationDate: rental.createdAt
@@ -156,7 +153,7 @@ export default function MyPage() {
                     : "",
                   startDate: rental.startDate || "",
                   endDate: rental.endDate || "",
-                  totalCount: extraCount + 1,
+                  totalCount: 1,
                 }];
               }
             },
@@ -249,17 +246,15 @@ export default function MyPage() {
             items: [{ name: rentalItem.item?.name || '물품', quantity: rentalItem.quantity }],
           }));
         } else {
-          const extraMatch = rental.itemSummary?.match(/외\s*(\d+)건/);
-          const extraCount = extraMatch ? parseInt(extraMatch[1]) : 0;
           return [{
             id: rental.id.toString(),
-            title: rental.itemSummary?.replace(/\s*외\s*0건$/, '') || "대여 항목",
+            title: "대여 항목",
             status: mapRentalStatus(rental.status),
             code: `RENT-${rental.id}`,
             applicationDate: rental.createdAt ? rental.createdAt.split("T")[0] : "",
             startDate: rental.startDate || "",
             endDate: rental.endDate || "",
-            totalCount: extraCount + 1,
+            totalCount: 1,
           }];
         }
       });

@@ -1,10 +1,10 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import UploadIcon from "../../assets/plotter/upload.svg";
 
 interface FileUploadBoxProps {
   label: string;
   accept?: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (file: File) => void;
   onRemove?: () => void;
   file?: File | null;
   helperText?: string;
@@ -22,12 +22,62 @@ export default function FileUploadBox({
 }: FileUploadBoxProps) {
   const inputId = `file-upload-${label.replace(/\s/g, '-')}`;
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleRemove = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (inputRef.current) inputRef.current.value = "";
     onRemove?.();
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      onChange(e.target.files[0]);
+    }
+  };
+
+  const getAcceptedExtensions = () =>
+    accept
+      .split(",")
+      .map((ext) => ext.trim().replace(".", "").toLowerCase());
+
+  const isFileAccepted = (f: File): boolean => {
+    if (accept === "*") return true;
+    const exts = getAcceptedExtensions();
+    const fileName = f.name.toLowerCase();
+    const mimeType = f.type.toLowerCase();
+    return exts.some(
+      (ext) => fileName.endsWith(`.${ext}`) || mimeType.includes(ext)
+    );
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const droppedFile = e.dataTransfer.files[0];
+    if (!droppedFile) return;
+
+    if (!isFileAccepted(droppedFile)) {
+      alert(`허용되지 않는 파일 형식입니다. (허용: ${accept})`);
+      return;
+    }
+
+    onChange(droppedFile);
   };
 
   return (
@@ -38,7 +88,7 @@ export default function FileUploadBox({
           ref={inputRef}
           type="file"
           accept={accept}
-          onChange={onChange}
+          onChange={handleInputChange}
           className="hidden"
           id={inputId}
         />
@@ -59,7 +109,14 @@ export default function FileUploadBox({
         ) : (
           <label
             htmlFor={inputId}
-            className="flex flex-col items-center justify-center w-full h-[120px] md:h-[145px] border border-dashed border-[#99a1af] rounded-[10px] bg-white cursor-pointer hover:bg-gray-50"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`flex flex-col items-center justify-center w-full h-[120px] md:h-[145px] border border-dashed rounded-[10px] cursor-pointer transition-colors ${
+              isDragging
+                ? "border-[#e05c2a] bg-orange-50"
+                : "border-[#99a1af] bg-white hover:bg-gray-50"
+            }`}
           >
             <img src={UploadIcon} alt="Upload" className="w-6 h-6 md:w-7 md:h-7 mb-2 md:mb-3 mt-2 md:mt-3" />
             <p className="text-[13px] md:text-[15px] text-[#868686] mb-2 md:mb-3 px-4 text-center">
