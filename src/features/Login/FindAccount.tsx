@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Header from "../../components/Login/Header";
 import FindAccountTabs from "../../components/Login/FindAccountTabs";
 import {
@@ -35,9 +35,10 @@ export default function FindAccount() {
   const [newPw2, setNewPw2] = useState("");
   const [pwOk, setPwOk] = useState(false);
 
-  // UI만: 전송/인증 상태 흉내
+  // 전송/인증
   const [sent, setSent] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
 
   const primaryBtnText = useMemo(() => {
     return tab === "findId" ? "아이디 찾기" : "비밀번호 초기화";
@@ -118,10 +119,13 @@ export default function FindAccount() {
       setVerified(false);
       setResetRequested(false);
       setResetToken(null);
-
-      alert("인증번호를 발송했어요.");
+      setTimeLeft(300);
     } catch (e: any) {
-      alert(e?.message ?? "요청에 실패했어요.");
+      if (e?.response?.status === 400) {
+        alert("아이디와 전화번호 정보가 일치하지 않습니다.");
+      } else {
+        alert(e?.message ?? "요청에 실패했어요.");
+      }
     } finally {
       setFinding(false);
     }
@@ -143,6 +147,7 @@ export default function FindAccount() {
       setResetToken(resetToken);
       setVerified(true);
       setResetRequested(true);
+      setTimeLeft(0);
       alert("인증이 완료되었어요. 새 비밀번호를 설정해주세요.");
     } catch (e: any) {
       setVerified(false);
@@ -167,6 +172,26 @@ export default function FindAccount() {
     )}`;
   }
 
+  // 인증코드 남은 시간
+  function formatTimeLeft(seconds: number) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
   const onChangeTab = (next: TabKey) => {
     setTab(next);
 
@@ -176,6 +201,7 @@ export default function FindAccount() {
 
     setSent(false);
     setVerified(false);
+    setTimeLeft(0);
 
     setResetRequested(false);
     setResetToken(null);
@@ -375,14 +401,22 @@ export default function FindAccount() {
                   {/* 인증번호 + 인증 */}
                   <div className="space-y-2">
                     <div className="flex gap-3">
-                      <input
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="인증번호"
-                        className="flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
-                      />
+                      <div className="relative flex-1">
+                        <input
+                          value={code}
+                          onChange={(e) => setCode(e.target.value)}
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="인증번호"
+                          className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 pr-20 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                        />
+                        {timeLeft > 0 && (
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] font-semibold text-[#FD7D5D]">
+                            {formatTimeLeft(timeLeft)}
+                          </span>
+                        )}
+                      </div>
+
                       <button
                         type="button"
                         onClick={onVerify}
@@ -392,6 +426,7 @@ export default function FindAccount() {
                         인증
                       </button>
                     </div>
+
                     {verified && (
                       <p className="text-[13px] text-[#2F9E44] font-semibold">
                         인증이 완료되었어요.
