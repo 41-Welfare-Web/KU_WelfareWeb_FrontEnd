@@ -35,7 +35,7 @@ interface RentalData {
   startDate: string;
   endDate: string;
   status: 'RESERVED' | 'RENTED' | 'RETURNED' | 'OVERDUE' | 'CANCELED' | 'DEFECTIVE';
-  itemSummary: string;
+  itemSummary?: string;
   createdAt: string;
 }
 
@@ -218,7 +218,15 @@ function AdminDashboard() {
       });
       console.log('[Admin] 대여 목록 조회 성공:', response);
       
-      setRentalData(response.rentals || []);
+      // Rental[]을 RentalData[]로 변환
+      const mappedRentals = (response.rentals || []).map((rental) => ({
+        ...rental,
+        itemSummary: rental.rentalItems?.length 
+          ? rental.rentalItems.map(ri => ri.item?.name).filter(Boolean).join(', ')
+          : undefined
+      })) as RentalData[];
+      
+      setRentalData(mappedRentals);
     } catch (err: any) {
       console.error('[Admin] 대여 목록 조회 실패:', err);
       console.error('[Admin] 에러 상세:', {

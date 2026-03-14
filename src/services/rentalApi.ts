@@ -1,5 +1,5 @@
 import axiosInstance from "../api/axiosInstance";
-import type { Rental, RentalDetail } from "../api/rental/types";
+import type { Rental } from "../api/rental/types";
 
 export interface RentalsResponse {
   pagination: {
