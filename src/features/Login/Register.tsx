@@ -21,6 +21,10 @@ export default function Register() {
   const [nameError, setNameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
+  // 비밀번호 확인
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [passwordConfirmError, setPasswordConfirmError] = useState("");
+
   const usernameRegex = /^[a-z0-9]{5,20}$/;
   const passwordRegex =
     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]).{8,}$/;
@@ -31,6 +35,7 @@ export default function Register() {
 
   const [phone, setPhone] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
+  const [timeLeft, setTimeLeft] = useState(0);
 
   const [, setServerIssuedCode] = useState<string>("");
   const [isVerified, setIsVerified] = useState(false);
@@ -97,6 +102,20 @@ export default function Register() {
     void verifySignupCode(pn, code);
   }, [verificationCode, phone]);
 
+  // 인증 남은 시간
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
   const onSendVerification = async () => {
     setErrorMsg("");
 
@@ -115,6 +134,7 @@ export default function Register() {
       setVerificationCode("");
 
       await requestSignupVerification({ phoneNumber });
+      setTimeLeft(300);
     } catch (e: any) {
       setErrorMsg(
         e?.message ?? "인증번호 발송에 실패했어요. 다시 시도해 주세요.",
@@ -162,6 +182,12 @@ export default function Register() {
       return setErrorMsg(
         "비밀번호는 영어, 숫자, 특수문자를 포함한 8자리 이상이어야 합니다.",
       );
+    }
+    if (!passwordConfirm.trim()) {
+      return setErrorMsg("비밀번호 확인을 입력해 주세요.");
+    }
+    if (password !== passwordConfirm) {
+      return setErrorMsg("비밀번호가 다릅니다.");
     }
     if (!name.trim()) return setErrorMsg("이름을 입력해 주세요.");
     if (!studentNo.trim()) return setErrorMsg("학번을 입력해 주세요.");
@@ -211,6 +237,13 @@ export default function Register() {
 
   function normalizePhone(value: string) {
     return value.replace(/\D/g, "");
+  }
+
+  // 인증 남은 시간
+  function formatTimeLeft(seconds: number) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   }
 
   return (
@@ -300,6 +333,36 @@ export default function Register() {
               </div>
               {passwordError && (
                 <p className="text-[13px] text-red-500">{passwordError}</p>
+              )}
+
+              {/* 비밀번호 확인 */}
+              <div className="space-y-2">
+                <label className="block text-[16px] font-semibold text-black">
+                  비밀번호 확인
+                </label>
+                <input
+                  value={passwordConfirm}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPasswordConfirm(value);
+
+                    if (!value) {
+                      setPasswordConfirmError("");
+                    } else if (password !== value) {
+                      setPasswordConfirmError("비밀번호가 다릅니다.");
+                    } else {
+                      setPasswordConfirmError("");
+                    }
+                  }}
+                  type="password"
+                  placeholder="비밀번호를 다시 입력해 주세요"
+                  className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                />
+              </div>
+              {passwordConfirmError && (
+                <p className="text-[13px] text-red-500">
+                  {passwordConfirmError}
+                </p>
               )}
 
               {/* 이름 */}
@@ -393,14 +456,22 @@ export default function Register() {
 
               {/* 인증번호 */}
               <div className="space-y-2">
-                <input
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="인증번호"
-                  className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
-                />
+                <div className="relative">
+                  <input
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="인증번호"
+                    className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 pr-20 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                  />
+
+                  {timeLeft > 0 && (
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] font-semibold text-[#FD7D5D]">
+                      {formatTimeLeft(timeLeft)}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {errorMsg && (
