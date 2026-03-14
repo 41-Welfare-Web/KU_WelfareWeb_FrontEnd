@@ -41,10 +41,11 @@ export default function Home() {
       desc: "학생들을 위한 제휴와 통합구매를 통해\n저렴하게 이용할 수 있습니다",
       icon: cart,
       align: "leftIcon",
+      onClick: () => navigate("/parnership"),
     },
     {
       title: "분실물(학관 식당)",
-      desc: "잃어버린 물품들을 찾을 수 있습니다",
+      desc: "서비스 준비 중...",
       icon: lost,
       align: "rightIcon",
     },
