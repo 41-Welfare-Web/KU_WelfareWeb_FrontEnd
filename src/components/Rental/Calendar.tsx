@@ -109,6 +109,22 @@ export default function Calendar({
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<Availability[]>([]);
 
+  const fetchRange = useMemo(() => {
+    if (startDate && !endDate) {
+      const maxSelectableEnd = addDaysToYmd(startDate, 14);
+
+      return {
+        start: startDate < monthStartYmd ? startDate : monthStartYmd,
+        end: maxSelectableEnd > monthEndYmd ? maxSelectableEnd : monthEndYmd,
+      };
+    }
+
+    return {
+      start: monthStartYmd,
+      end: monthEndYmd,
+    };
+  }, [startDate, endDate, monthStartYmd, monthEndYmd]);
+
   useEffect(() => {
     let alive = true;
 
@@ -118,8 +134,8 @@ export default function Calendar({
       try {
         const result = await getItemAvailability({
           itemId,
-          startDate: monthStartYmd,
-          endDate: monthEndYmd,
+          startDate: fetchRange.start,
+          endDate: fetchRange.end,
         });
         if (!alive) return;
         setData(result);
@@ -136,7 +152,7 @@ export default function Calendar({
     return () => {
       alive = false;
     };
-  }, [itemId, monthStartYmd, monthEndYmd]);
+  }, [itemId, fetchRange.start, fetchRange.end]);
 
   const adjustedData = useMemo(() => {
     const originalStartDate = editAdjust?.originalStartDate;

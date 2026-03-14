@@ -9,7 +9,9 @@ import { useLockBodyScroll } from "../hooks/useLockBodyScroll";
 
 function UserName({ name, className }: { name: string; className?: string }) {
   const spanRef = useRef<HTMLSpanElement | null>(null);
-  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(
+    null,
+  );
 
   const handleMouseEnter = () => {
     const el = spanRef.current;
@@ -32,7 +34,11 @@ function UserName({ name, className }: { name: string; className?: string }) {
       {tooltipPos && (
         <div
           className="fixed z-9999 pointer-events-none"
-          style={{ left: tooltipPos.x, top: tooltipPos.y - 8, transform: "translate(-50%, -100%)" }}
+          style={{
+            left: tooltipPos.x,
+            top: tooltipPos.y - 8,
+            transform: "translate(-50%, -100%)",
+          }}
         >
           <div className="bg-gray-800 text-white text-xs rounded px-2 py-1.5 whitespace-nowrap shadow-lg">
             {name}
@@ -152,7 +158,9 @@ export default function Header() {
           {user?.role === "ADMIN" && (
             <button
               type="button"
-              onClick={() => navigate("/admin", { state: { fromHeader: true } })}
+              onClick={() =>
+                navigate("/admin", { state: { fromHeader: true } })
+              }
               className={menuClass("/admin")}
             >
               관리자
@@ -176,7 +184,10 @@ export default function Header() {
                 className="flex items-center gap-3 rounded-full bg-[#FD8060] px-4 py-2 text-black text-sm hover:opacity-90 max-w-55"
               >
                 <img src={my} alt="사용자" className="shrink-0" />
-                <UserName name={`${user?.name ?? "사용자"}님`} className="max-w-30" />
+                <UserName
+                  name={`${user?.name ?? "사용자"}님`}
+                  className="max-w-30"
+                />
               </button>
 
               {userMenuOpen && (
@@ -227,7 +238,10 @@ export default function Header() {
                 aria-expanded={userMenuOpen}
               >
                 <img src={my} alt="사용자" className="shrink-0" />
-                <UserName name={`${user?.name ?? "사용자"}님`} className="max-w-17.5" />
+                <UserName
+                  name={`${user?.name ?? "사용자"}님`}
+                  className="max-w-17.5"
+                />
               </button>
 
               {userMenuOpen && (
@@ -329,7 +343,10 @@ export default function Header() {
                   <div className="w-7 h-7 flex justify-center items-center rounded-full bg-white">
                     <img src={person} alt="프로필" />
                   </div>
-                  <UserName name={`${user?.name ?? ""}님`} className="max-w-40 font-semibold text-[#410F07]" />
+                  <UserName
+                    name={`${user?.name ?? ""}님`}
+                    className="max-w-40 font-semibold text-[#410F07]"
+                  />
                 </div>
               )}
             </div>
@@ -364,6 +381,16 @@ export default function Header() {
                 className="py-4 border-b border-[#C0C0C0] text-left"
               >
                 플로터인쇄사업
+              </button>
+
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/mypage");
+                }}
+                className="py-4 border-b border-[#C0C0C0] text-left"
+              >
+                마이페이지
               </button>
 
               {user?.role === "ADMIN" && (
