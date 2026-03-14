@@ -29,6 +29,7 @@ export interface PlotterOrderResponse {
   createdAt: string;
   fileUrl?: string;
   originalFilename?: string;
+  memo?: string | null;
 }
 
 // POST 응답용 (더 많은 정보 포함)

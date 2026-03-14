@@ -1,25 +1,5 @@
 import axiosInstance from "../api/axiosInstance";
-
-export interface RentalItem {
-  id: number;
-  user: {
-    name: string;
-    studentId: string;
-    department?: string;
-    departmentName?: string;
-  };
-  startDate: string;
-  endDate: string;
-  status: "RESERVED" | "RENTED" | "RETURNED" | "OVERDUE" | "CANCELED";
-  itemSummary: string;
-  memo: string | null;
-  createdAt: string;
-  rentalItems?: Array<{
-    id: number;
-    quantity: number;
-    item?: { name: string };
-  }>;
-}
+import type { Rental, RentalDetail } from "../api/rental/types";
 
 export interface RentalsResponse {
   pagination: {
@@ -28,7 +8,7 @@ export interface RentalsResponse {
     totalItems: number;
     totalPages: number;
   };
-  rentals: RentalItem[];
+  rentals: Rental[];
 }
 
 export interface ApiError {
