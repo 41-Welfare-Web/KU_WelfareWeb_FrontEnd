@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import DepartmentCard from "../../components/DepartmentCard";
 
 /**
  * 학생복지위원회 소개 페이지
@@ -103,124 +104,71 @@ export default function WelfareIntro() {
                   {/* 각 국별 카드 */}
                   <div className="space-y-6">
                     {/* 홍보디자인국 */}
-                    <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                      <div className="bg-orange-100 h-32 flex items-center px-8">
-                        <div className="bg-white rounded-lg w-20 h-20 flex items-center justify-center shadow-md mr-6">
-                          <span className="text-4xl">📢</span>
-                        </div>
-                        <div>
-                          <h3 className="text-3xl font-bold text-black">홍보디자인국</h3>
-                        </div>
-                      </div>
-                      <div className="p-8">
-                        <p className="text-gray-600 text-lg mb-8">
-                          홍보디자인국은 학생복지위원회가 기획하고 진행하는 모든 사업을 학우분들께 가장 먼저, 그리고 가장 효과적으로 전달하는 부서입니다. 모든 온·오프라인 홍보 및 디자인 프로세스를 총괄합니다.
-                        </p>
-                        
-                        <div className="grid grid-cols-2 gap-6">
-                          <div className="bg-gray-100 rounded-lg p-6">
-                            <h4 className="font-bold text-black text-lg mb-3">SNS 관리</h4>
-                            <p className="text-gray-700 text-sm">
-                              복지 사업들이 학우분들의 일상에 실질적으로 닿을 수 있도록, SNS 운영 전반을 총괄하고 트렌디한 콘텐츠를 기획합니다.
-                            </p>
-                          </div>
-                          <div className="bg-gray-100 rounded-lg p-6">
-                            <h4 className="font-bold text-black text-lg mb-3">홍보물 및 굿즈 디자인</h4>
-                            <p className="text-gray-700 text-sm">
-                              다양한 사업과 행사의 시각적 완성도를 높이기 위해, 포스터, 현수막 등 모든 홍보물의 디자인을 전담합니다.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <DepartmentCard
+                      icon="📢"
+                      name="홍보디자인국"
+                      description="홍보디자인국은 학생복지위원회가 기획하고 진행하는 모든 사업을 학우분들께 가장 먼저, 그리고 가장 효과적으로 전달하는 부서입니다. 모든 온·오프라인 홍보 및 디자인 프로세스를 총괄합니다."
+                      projects={[
+                        {
+                          title: "SNS 관리",
+                          description: "복지 사업들이 학우분들의 일상에 실질적으로 닿을 수 있도록, SNS 운영 전반을 총괄하고 트렌디한 콘텐츠를 기획합니다."
+                        },
+                        {
+                          title: "홍보물 및 굿즈 디자인",
+                          description: "다양한 사업과 행사의 시각적 완성도를 높이기 위해, 포스터, 현수막 등 모든 홍보물의 디자인을 전담합니다."
+                        }
+                      ]}
+                    />
 
                     {/* 복지정책국 */}
-                    <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                      <div className="bg-orange-100 h-32 flex items-center px-8">
-                        <div className="bg-white rounded-lg w-20 h-20 flex items-center justify-center shadow-md mr-6">
-                          <span className="text-4xl">🤝</span>
-                        </div>
-                        <div>
-                          <h3 className="text-3xl font-bold text-black">복지정책국</h3>
-                        </div>
-                      </div>
-                      <div className="p-8">
-                        <p className="text-gray-600 text-lg mb-8">
-                          복지정책국은 학우들이 학교생활 속에서 실질적으로 체감할 수 있는 다양한 복지 서비스를 기획하고 운영하는 중심 부서입니다. '당연하게 누려야 할 권리'를 넘어 '안심하고 누릴 수 있는 일상'을 제공합니다.
-                        </p>
-                        
-                        <div className="grid grid-cols-2 gap-6">
-                          <div className="bg-gray-100 rounded-lg p-6">
-                            <h4 className="font-bold text-black text-lg mb-3">학과 집기 대여 사업</h4>
-                            <p className="text-gray-700 text-sm">
-                              학생들의 원활한 학과 활동 및 행사 지원을 위해 각종 필요 집기를 관리하고 대여합니다.
-                            </p>
-                          </div>
-                          <div className="bg-gray-100 rounded-lg p-6">
-                            <h4 className="font-bold text-black text-lg mb-3">학식 서포터즈</h4>
-                            <p className="text-gray-700 text-sm">
-                              캠퍼스 생활의 큰 즐거움인 '식사'의 질을 높이기 위해 학식 서포터즈를 기획하고 진행합니다.
-                            </p>
-                          </div>
-                          <div className="bg-gray-100 rounded-lg p-6">
-                            <h4 className="font-bold text-black text-lg mb-3">불법 촬영물 탐지</h4>
-                            <p className="text-gray-700 text-sm">
-                              학우들이 교내 화장실 및 편의시설을 안심하고 이용할 수 있도록 정기적인 탐지 점검을 실시합니다.
-                            </p>
-                          </div>
-                          <div className="bg-gray-100 rounded-lg p-6">
-                            <h4 className="font-bold text-black text-lg mb-3">교내 인쇄 사업</h4>
-                            <p className="text-gray-700 text-sm">
-                              대형 인쇄물이 필요한 학우들을 위해 플로터 기기 사용을 지원합니다.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <DepartmentCard
+                      icon="🤝"
+                      name="복지정책국"
+                      description="복지정책국은 학우들이 학교생활 속에서 실질적으로 체감할 수 있는 다양한 복지 서비스를 기획하고 운영하는 중심 부서입니다. '당연하게 누려야 할 권리'를 넘어 '안심하고 누릴 수 있는 일상'을 제공합니다."
+                      projects={[
+                        {
+                          title: "학과 집기 대여 사업",
+                          description: "학생들의 원활한 학과 활동 및 행사 지원을 위해 각종 필요 집기를 관리하고 대여합니다."
+                        },
+                        {
+                          title: "학식 서포터즈",
+                          description: "캠퍼스 생활의 큰 즐거움인 '식사'의 질을 높이기 위해 학식 서포터즈를 기획하고 진행합니다."
+                        },
+                        {
+                          title: "불법 촬영물 탐지",
+                          description: "학우들이 교내 화장실 및 편의시설을 안심하고 이용할 수 있도록 정기적인 탐지 점검을 실시합니다."
+                        },
+                        {
+                          title: "교내 인쇄 사업",
+                          description: "대형 인쇄물이 필요한 학우들을 위해 플로터 기기 사용을 지원합니다."
+                        }
+                      ]}
+                    />
 
                     {/* 총괄국 */}
-                    <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                      <div className="bg-orange-100 h-32 flex items-center px-8">
-                        <div className="bg-white rounded-lg w-20 h-20 flex items-center justify-center shadow-md mr-6">
-                          <span className="text-4xl">💻</span>
-                        </div>
-                        <div>
-                          <h3 className="text-3xl font-bold text-black">총괄국</h3>
-                        </div>
-                      </div>
-                      <div className="p-8">
-                        <p className="text-gray-600 text-lg mb-8">
-                          총괄국은 학생 복지를 위한 '중앙 대여 사업'과 '학생복지위원회 재실 근무'를 총괄하며, 학생복지위원회 내의 물자 관리와 홈페이지 운영 등의 업무를 수행합니다.
-                        </p>
-                        
-                        <div className="grid grid-cols-2 gap-6">
-                          <div className="bg-gray-100 rounded-lg p-6">
-                            <h4 className="font-bold text-black text-lg mb-3">중앙대여사업</h4>
-                            <p className="text-gray-700 text-sm">
-                              학우분들의 학교생활 편의를 위해 다양한 물자를 기획하고 집행하는 총괄국의 핵심 사업입니다. 기존의 정기 물자 관리에서 나아가 물자 개편 및 다각화도 진행합니다.
-                            </p>
-                          </div>
-                          <div className="bg-gray-100 rounded-lg p-6">
-                            <h4 className="font-bold text-black text-lg mb-3">재실근무 총괄</h4>
-                            <p className="text-gray-700 text-sm">
-                              학생복지위원회의 다양한 사업을 효율적으로 운영하기 위해 재실근무를 전반적으로 관리하는 업무를 담당합니다.
-                            </p>
-                          </div>
-                          <div className="bg-gray-100 rounded-lg p-6">
-                            <h4 className="font-bold text-black text-lg mb-3">홈페이지 개발 및 운영</h4>
-                            <p className="text-gray-700 text-sm">
-                              학생복지위원회 자체 홈페이지를 직접 개발하고 원활하게 운영될 수 있도록 관리하는 업무를 담당합니다.
-                            </p>
-                          </div>
-                          <div className="bg-gray-100 rounded-lg p-6">
-                            <h4 className="font-bold text-black text-lg mb-3">녹색지대 지원</h4>
-                            <p className="text-gray-700 text-sm">
-                              건국대학교의 가장 큰 행사인 '녹색지대 축제'가 성공적으로 개최될 수 있도록 주점 및 부스 운영을 지원합니다.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <DepartmentCard
+                      icon="💻"
+                      name="총괄국"
+                      description="총괄국은 학생 복지를 위한 '중앙 대여 사업'과 '학생복지위원회 재실 근무'를 총괄하며, 학생복지위원회 내의 물자 관리와 홈페이지 운영 등의 업무를 수행하는 국입니다."
+                      projects={[
+                        {
+                          title: "중앙대여사업",
+                          description: "학우분들의 학교생활 편의를 위해 다양한 물자를 기획하고 집행하는 총괄국의 핵심 사업입니다. 기존의 정기 물자 관리에서 나아가 물자 개편 및 다각화 또한 진행하고 있습니다."
+                        },
+                        {
+                          title: "재실근무 총괄",
+                          description: "학생복지위원회의 다양한 사업을 효율적으로 운영하기 위해 재실근무를 전반적으로 관리하는 업무를 담당하고 있습니다."
+                        },
+                        {
+                          title: "홈페이지 개발 및 운영",
+                          description: "학생복지위원회 자체 홈페이지를 직접 개발하고 원활하게 운영될 수 있도록 관리하는 업무도 담당하고 있습니다."
+                        },
+                        {
+                          title: "녹색지대 지원",
+                          description: "건국대학교의 가장 큰 행사인 '녹색지대 축제'가 성공적으로 개최될 수 있도록 주점 및 부스 운영에 필요한 물자와 운영 전반을 지원합니다."
+                        }
+                      ]}
+                    />
                   </div>
                 </div>
               )}
