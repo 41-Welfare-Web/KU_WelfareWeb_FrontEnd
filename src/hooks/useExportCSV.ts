@@ -14,7 +14,7 @@ interface RentalData {
   startDate: string;
   endDate: string;
   status: string;
-  itemSummary: string;
+  itemSummary?: string;
   createdAt: string;
 }
 

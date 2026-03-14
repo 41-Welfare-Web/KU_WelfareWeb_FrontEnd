@@ -26,10 +26,10 @@ export interface PlotterOrderResponse {
   pageCount: number;
   pickupDate: string;
   status: string;
-  memo: string | null;
   createdAt: string;
   fileUrl?: string;
   originalFilename?: string;
+  memo?: string | null;
 }
 
 // POST 응답용 (더 많은 정보 포함)
@@ -74,12 +74,7 @@ export async function createPlotterOrder(
   try {
     const response = await axiosInstance.post<PlotterOrderDetailResponse>(
       "/api/plotter/orders",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
+      formData
     );
     return response.data;
   } catch (error: any) {
