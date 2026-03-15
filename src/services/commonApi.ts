@@ -81,3 +81,20 @@ export async function getCommonMetadata(): Promise<CommonMetadata> {
     throw new Error(error.response?.data?.message || "메타데이터 조회에 실패했습니다.");
   }
 }
+
+/**
+ * 공휴일 목록 조회
+ * GET /api/admin/holidays
+ * 시스템에 등록된 공휴일 리스트 (날짜 선택 시 블락처리용)
+ */
+export async function getHolidays(): Promise<string[]> {
+  try {
+    const response = await axiosInstance.get<{ id: number; date: string }[]>("/api/admin/holidays");
+    // date 형식이 YYYY-MM-DD로 반환된다고 가정
+    return response.data.map(item => item.date);
+  } catch (error: any) {
+    console.warn("공휴일 조회 실패, 기본값으로 진행:", error);
+    // 실패 시 빈 배열 반환 (서버 없이도 작동하도록)
+    return [];
+  }
+}

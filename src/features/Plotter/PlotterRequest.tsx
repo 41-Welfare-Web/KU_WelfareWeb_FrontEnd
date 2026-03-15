@@ -11,8 +11,8 @@ import PlotterFormFields from "../../components/Plotter/PlotterFormFields";
 import { createPlotterOrder } from "../../services/plotterApi";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMyProfile } from "../../services/userApi";
-import { getCommonMetadata, type PaperSize } from "../../services/commonApi";
-import { validateDesiredDate } from "../../utils/dateUtils";
+import { getCommonMetadata, getHolidays, type PaperSize } from "../../services/commonApi";
+import { validateDesiredDate, setHolidays } from "../../utils/dateUtils";
 
 interface Purpose {
   id: number;
@@ -94,7 +94,18 @@ export default function PlotterRequest() {
       }
     };
 
+    // 공휴일 목록 로드
+    const fetchHolidays = async () => {
+      try {
+        const holidays = await getHolidays();
+        setHolidays(holidays);
+      } catch (error) {
+        console.error("공휴일 조회 실패, 기본값으로 진행:", error);
+      }
+    };
+
     fetchMetadata();
+    fetchHolidays();
   }, []);
 
   // 로그인 안되어 있거나 프로필 로딩 중이면 null 반환 (빈 화면)

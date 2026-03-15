@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import logo from "../assets/all/logo.svg";
 import my from "../assets/all/my.svg";
 import { useAuth } from "../contexts/AuthContext";
 import menu from "../assets/all/menu.svg";
@@ -119,7 +118,7 @@ export default function Header() {
           className="flex items-center gap-2 sm:gap-3"
         >
           <img
-            src={logo}
+            src="/logo.png"
             alt="로고"
             className="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10"
           />
