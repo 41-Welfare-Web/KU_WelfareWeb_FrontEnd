@@ -1,8 +1,8 @@
 import { useState } from "react";
 import FileOrangeIcon from "../../assets/plotter/file-orange.svg";
 import DepartmentPickerModal from "../DepartmentPickerModal";
+import DatePickerCalendar from "./DatePickerCalendar";
 import type { PaperSize } from "../../services/commonApi";
-import { isWeekend, isHoliday } from "../../utils/dateUtils";
 
 interface PlotterFormFieldsProps {
   studentNo: string;
@@ -44,26 +44,16 @@ export default function PlotterFormFields({
   className = "",
 }: PlotterFormFieldsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const handleDesiredDateChange = (value: string) => {
-    if (!value) {
-      onDesiredDateChange(value);
-      return;
-    }
-
-    if (isWeekend(value)) {
-      alert('주말은 선택할 수 없습니다. 평일을 선택해주세요.');
-      onDesiredDateChange('');
-      return;
-    }
-
-    if (isHoliday(value)) {
-      alert('공휴일은 선택할 수 없습니다. 평일을 선택해주세요.');
-      onDesiredDateChange('');
-      return;
-    }
-
-    onDesiredDateChange(value);
+  // 오늘 + 1일을 YYYY-MM-DD 형식으로 반환
+  const getMinDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   return (
@@ -159,17 +149,46 @@ export default function PlotterFormFields({
         </div>
         <div className="w-full md:flex-1">
           <label className="block text-[16px] md:text-[20px] font-medium text-black mb-2">수령일</label>
-          <input
-            type="date"
-            value={desiredDate}
-            onChange={(e) => handleDesiredDateChange(e.target.value)}
-            min="2026-01-01"
-            max="2026-12-31"
-            className="w-full h-[50px] md:h-[71px] px-4 md:px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[16px] md:text-[20px]"
-            style={{ colorScheme: 'light' }}
-          />
+          <button
+            type="button"
+            onClick={() => setIsCalendarOpen(true)}
+            className="w-full h-[50px] md:h-[71px] px-4 md:px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[16px] md:text-[20px] text-left font-normal hover:bg-[#f9f9f9] transition-colors"
+          >
+            {desiredDate ? new Date(desiredDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '날짜를 선택하세요'}
+          </button>
         </div>
       </div>
+
+      {/* 캘린더 모달 */}
+      {isCalendarOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[10px] shadow-xl max-w-md w-full">
+            <div className="flex items-center justify-between p-4 border-b border-[#e0e0e0]">
+              <h2 className="text-lg font-bold text-black">수령일 선택</h2>
+              <button
+                type="button"
+                onClick={() => setIsCalendarOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4">
+              <DatePickerCalendar
+                selectedDate={desiredDate}
+                onDateChange={(date) => {
+                  onDesiredDateChange(date);
+                  setIsCalendarOpen(false);
+                }}
+                minDate={getMinDate()}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 용지 크기 & 인쇄 장수 */}
       <div className="flex flex-col md:flex-row justify-between gap-4 md:gap-6 mb-4 md:mb-6">
