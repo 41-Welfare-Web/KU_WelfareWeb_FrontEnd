@@ -2,6 +2,7 @@ import { useState } from "react";
 import FileOrangeIcon from "../../assets/plotter/file-orange.svg";
 import DepartmentPickerModal from "../DepartmentPickerModal";
 import DatePickerCalendar from "./DatePickerCalendar";
+import { calculateWorkdaysFromNow } from "../../utils/dateUtils";
 import type { PaperSize } from "../../services/commonApi";
 
 interface PlotterFormFieldsProps {
@@ -46,13 +47,12 @@ export default function PlotterFormFields({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  // 오늘 + 1일을 YYYY-MM-DD 형식으로 반환
+  // 근무일 기준 2일 소요 - 오늘부터 2근무일 후의 날짜부터 예약 가능
   const getMinDate = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const year = tomorrow.getFullYear();
-    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-    const day = String(tomorrow.getDate()).padStart(2, '0');
+    const minDate = calculateWorkdaysFromNow(2);
+    const year = minDate.getFullYear();
+    const month = String(minDate.getMonth() + 1).padStart(2, '0');
+    const day = String(minDate.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
 
@@ -152,7 +152,7 @@ export default function PlotterFormFields({
           <button
             type="button"
             onClick={() => setIsCalendarOpen(true)}
-            className="w-full h-[50px] md:h-[71px] px-4 md:px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[16px] md:text-[20px] text-left font-normal hover:bg-[#f9f9f9] transition-colors"
+            className="w-full h-[50px] md:h-[71px] px-4 md:px-6 rounded-[10px] border border-[#99a1af] bg-white text-black text-[16px] md:text-[16px] text-left font-normal hover:bg-[#f9f9f9] transition-colors"
           >
             {desiredDate ? new Date(desiredDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '날짜를 선택하세요'}
           </button>
