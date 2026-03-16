@@ -104,8 +104,15 @@ export default function FindAccount() {
 
   // 인증번호 발송
   const onSend = async () => {
-    if (!username.trim()) return alert("아이디를 입력해주세요.");
-    if (!pwPhone.trim()) return alert("전화번호를 입력해주세요.");
+    if (!username.trim()) {
+      alert("아이디를 입력해주세요.");
+      return;
+    }
+
+    if (!pwPhone.trim()) {
+      alert("전화번호를 입력해주세요.");
+      return;
+    }
 
     try {
       setFinding(true);
@@ -119,13 +126,16 @@ export default function FindAccount() {
       setVerified(false);
       setResetRequested(false);
       setResetToken(null);
+      setCode("");
       setTimeLeft(300);
     } catch (e: any) {
-      if (e?.response?.status === 400) {
-        alert("아이디와 전화번호 정보가 일치하지 않습니다.");
-      } else {
-        alert(e?.message ?? "요청에 실패했어요.");
-      }
+      setSent(false);
+      setVerified(false);
+      setResetRequested(false);
+      setResetToken(null);
+      setTimeLeft(0);
+
+      alert(e?.message ?? "인증번호 발송에 실패했어요.");
     } finally {
       setFinding(false);
     }
@@ -319,7 +329,7 @@ export default function FindAccount() {
                     <label className="block text-[16px] font-semibold text-black">
                       비밀번호 확인
                     </label>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 sm:gap-3">
                       <input
                         value={newPw2}
                         onChange={(e) => {
@@ -327,20 +337,23 @@ export default function FindAccount() {
                           setPwOk(false);
                         }}
                         type="password"
-                        className="flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                        className="min-w-0 flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                       />
                       <button
                         type="button"
                         onClick={() => {
-                          if (!newPw || !newPw2)
-                            return alert("비밀번호를 입력해 주세요.");
+                          if (!newPw || !newPw2) {
+                            alert("비밀번호를 입력해 주세요.");
+                            return;
+                          }
                           if (newPw !== newPw2) {
                             setPwOk(false);
-                            return alert("비밀번호가 일치하지 않아요.");
+                            alert("비밀번호가 일치하지 않아요.");
+                            return;
                           }
                           setPwOk(true);
                         }}
-                        className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[16px] font-bold active:scale-[0.99] transition"
+                        className="w-[72px] sm:w-[84px] shrink-0 h-12 sm:h-14 rounded-[10px] bg-[#FD7D5D] text-white text-[15px] sm:text-[16px] font-bold active:scale-[0.99] transition"
                       >
                         확인
                       </button>
@@ -372,7 +385,7 @@ export default function FindAccount() {
                     <label className="block text-[16px] font-semibold text-black">
                       전화번호
                     </label>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 sm:gap-3">
                       <input
                         value={pwPhone}
                         onChange={(e) =>
@@ -381,13 +394,13 @@ export default function FindAccount() {
                         type="tel"
                         inputMode="numeric"
                         placeholder="010-1234-5678"
-                        className="flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                        className="min-w-0 flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                       />
                       <button
                         type="button"
                         onClick={onSend}
                         disabled={finding}
-                        className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-60"
+                        className="w-[72px] sm:w-[84px] shrink-0 h-12 sm:h-14 rounded-[10px] bg-[#FD7D5D] text-white text-[15px] sm:text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-60"
                       >
                         발송
                       </button>
@@ -400,8 +413,8 @@ export default function FindAccount() {
                   </div>
                   {/* 인증번호 + 인증 */}
                   <div className="space-y-2">
-                    <div className="flex gap-3">
-                      <div className="relative flex-1">
+                    <div className="flex gap-2 sm:gap-3">
+                      <div className="relative min-w-0 flex-1">
                         <input
                           value={code}
                           onChange={(e) => setCode(e.target.value)}
@@ -421,7 +434,7 @@ export default function FindAccount() {
                         type="button"
                         onClick={onVerify}
                         disabled={!sent}
-                        className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-50"
+                        className="w-[72px] sm:w-[84px] shrink-0 h-12 sm:h-14 rounded-[10px] bg-[#FD7D5D] text-white text-[15px] sm:text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-50"
                       >
                         인증
                       </button>
