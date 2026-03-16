@@ -26,8 +26,7 @@ export default function Register() {
   const [passwordConfirmError, setPasswordConfirmError] = useState("");
 
   const usernameRegex = /^[a-z0-9]{5,20}$/;
-  const passwordRegex =
-    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]).{8,}$/;
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*]{8,}$/;
 
   const [, setDeptSub] = useState<string>("");
   const [, setDeptSubMode] = useState<"select" | "input">("select");
@@ -180,7 +179,7 @@ export default function Register() {
     }
     if (!passwordRegex.test(password)) {
       return setErrorMsg(
-        "비밀번호는 영어, 숫자, 특수문자를 포함한 8자리 이상이어야 합니다.",
+        "비밀번호는 최소 8자 이상이며, 영문과 숫자를 포함해야 합니다. 특수문자는 !@#$%^&* 만 사용할 수 있습니다.",
       );
     }
     if (!passwordConfirm.trim()) {
@@ -320,14 +319,14 @@ export default function Register() {
 
                     if (!passwordRegex.test(value)) {
                       setPasswordError(
-                        "영문, 숫자, 특수문자 포함하여 8자 이상 입력해야합니다.",
+                        "영문, 숫자를 포함하여 8자 이상 입력해야합니다. 특수문자는 !@#$%^&* 만 사용할 수 있습니다.",
                       );
                     } else {
                       setPasswordError("");
                     }
                   }}
                   type="password"
-                  placeholder="영문, 숫자, 특수문자 포함 8자 이상"
+                  placeholder="영문, 숫자 포함 8자 이상"
                   className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                 />
               </div>
@@ -432,7 +431,7 @@ export default function Register() {
                   핸드폰 번호
                 </label>
 
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   <input
                     value={phone}
                     onChange={(e) =>
@@ -441,13 +440,13 @@ export default function Register() {
                     type="tel"
                     inputMode="numeric"
                     placeholder="010-1234-5678"
-                    className="flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                    className="min-w-0 flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                   />
                   <button
                     type="button"
                     onClick={onSendVerification}
                     disabled={loading}
-                    className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-60"
+                    className="w-[70px] sm:w-auto shrink-0 h-12 sm:h-14 px-3 sm:px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[15px] sm:text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-60"
                   >
                     인증
                   </button>

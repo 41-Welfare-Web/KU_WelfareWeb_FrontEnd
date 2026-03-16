@@ -11,7 +11,11 @@ import PlotterFormFields from "../../components/Plotter/PlotterFormFields";
 import { createPlotterOrder } from "../../services/plotterApi";
 import { useAuth } from "../../contexts/AuthContext";
 import { getMyProfile } from "../../services/userApi";
-import { getCommonMetadata, getHolidays, type PaperSize } from "../../services/commonApi";
+import {
+  getCommonMetadata,
+  getHolidays,
+  type PaperSize,
+} from "../../services/commonApi";
 import { validateDesiredDate, setHolidays } from "../../utils/dateUtils";
 
 interface Purpose {
@@ -23,7 +27,7 @@ const MAX_PDF_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 export default function PlotterRequest() {
   const navigate = useNavigate();
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, isLoggingOut } = useAuth();
   const [departmentType, setDepartmentType] = useState("");
   const [departmentName, setDepartmentName] = useState<string | null>(null);
   const [purposes, setPurposes] = useState<Purpose[]>([]);
@@ -42,17 +46,19 @@ export default function PlotterRequest() {
 
   // 로그인 체크
   useEffect(() => {
+    if (isLoggingOut) return;
+
     if (!isLoggedIn) {
-      alert("로그인이 필요한 서비스입니다.");
-      navigate("/login");
+      navigate("/login", { replace: true });
+      return;
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, isLoggingOut, navigate]);
 
   // 사용자 프로필 로드 (전화번호 가져오기)
   useEffect(() => {
     const fetchProfile = async () => {
       if (!isLoggedIn) return;
-      
+
       try {
         const profile = await getMyProfile();
         setPhoneNumber(profile.phoneNumber);
@@ -79,7 +85,7 @@ export default function PlotterRequest() {
     const fetchMetadata = async () => {
       try {
         const metadata = await getCommonMetadata();
-        
+
         // 목적 설정
         setPurposes(metadata.plotterPurposes);
         setFreePurposes(metadata.plotterFreePurposes);
@@ -87,7 +93,7 @@ export default function PlotterRequest() {
         if (metadata.plotterPurposes.length > 0) {
           setPurpose(metadata.plotterPurposes[0].name);
         }
-        
+
         // 용지 크기 설정
         setPaperSizes(metadata.plotterPaperSizes);
       } catch (error) {
@@ -122,16 +128,19 @@ export default function PlotterRequest() {
   const getPaperPrice = () => {
     if (isFreePurpose) return 0;
     if (!paperSize || paperSizes.length === 0) return 0;
-    
+
     // paperSize와 일치하는 항목 찾기
-    const found = paperSizes.find(ps => ps.name === paperSize);
+    const found = paperSizes.find((ps) => ps.name === paperSize);
     return found ? found.price : 0;
   };
 
   const totalPrice = getPaperPrice() * quantity;
 
   const handlePdfUpload = (file: File) => {
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    if (
+      file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
       alert("PDF 파일만 업로드할 수 있습니다.");
       return;
     }
@@ -178,7 +187,7 @@ export default function PlotterRequest() {
       alert("목적을 입력해 주세요.");
       return;
     }
-    
+
     // 수령 희망일 검증
     const dateValidation = validateDesiredDate(desiredDate);
     if (!dateValidation.valid) {
@@ -191,7 +200,7 @@ export default function PlotterRequest() {
     try {
       // 용지 크기에서 실제 값 추출 (예: "A1(594 x 941mm)" -> "A1")
       const extractedPaperSize = paperSize.split("(")[0].trim();
-      
+
       // API 호출
       const response = await createPlotterOrder({
         purpose: purpose.trim(),
@@ -221,12 +230,12 @@ export default function PlotterRequest() {
       });
     } catch (error) {
       console.error("플로터 주문 신청 실패:", error);
-      
+
       // API 에러 코드별 메시지 처리 (문서 기반)
       let errorMessage = "플로터 주문 신청에 실패했습니다. 다시 시도해주세요.";
       if (error instanceof Error) {
         const errorMsg = error.message || "";
-        
+
         if (errorMsg.includes("INVALID_FILE_TYPE")) {
           errorMessage = "PDF 파일만 업로드할 수 있습니다.";
         } else if (errorMsg.includes("PICKUP_DATE_TOO_EARLY")) {
@@ -234,7 +243,8 @@ export default function PlotterRequest() {
         } else if (errorMsg.includes("PICKUP_DATE_ON_HOLIDAY")) {
           errorMessage = "수령 희망일은 휴무일일 수 없습니다.";
         } else if (errorMsg.includes("PAGE_COUNT_MISMATCH")) {
-          errorMessage = "PDF 파일의 페이지 수가 입력한 장수와 일치하지 않습니다.";
+          errorMessage =
+            "PDF 파일의 페이지 수가 입력한 장수와 일치하지 않습니다.";
         } else if (errorMsg.includes("PAYMENT_RECEIPT_REQUIRED")) {
           errorMessage = "유료 서비스는 입금 내역 증빙이 필수입니다.";
         } else {
@@ -250,10 +260,10 @@ export default function PlotterRequest() {
   return (
     <>
       <Header />
-      
+
       <div className="w-full bg-gradient-to-b from-[#ffdcc5] to-white min-h-screen">
         {/* 타이틀 섹션 */}
-        <PageHeader 
+        <PageHeader
           title="플로터 대형 인쇄"
           subtitle="포스터, 현수막 등 대형 출력물을 인쇄해 드립니다."
         />
@@ -301,7 +311,7 @@ export default function PlotterRequest() {
                   accountInfo={{
                     bank: "카카오뱅크",
                     accountNumber: "3333-00-1234567",
-                    accountHolder: "정근녕"
+                    accountHolder: "정근녕",
                   }}
                   onChange={handleReceiptUpload}
                   file={receiptFile}
@@ -326,7 +336,7 @@ export default function PlotterRequest() {
               <NoticeBox
                 items={[
                   "출력물은 근무일 기준 2일 이후에 수령할 수 있습니다.",
-                  "주말 및 공휴일은 인쇄 작업이 진행되지 않습니다."
+                  "주말 및 공휴일은 인쇄 작업이 진행되지 않습니다.",
                 ]}
               />
             </div>
