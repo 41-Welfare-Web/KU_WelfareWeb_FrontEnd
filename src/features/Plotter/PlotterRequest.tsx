@@ -19,6 +19,8 @@ interface Purpose {
   name: string;
 }
 
+const MAX_PDF_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 export default function PlotterRequest() {
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
@@ -133,6 +135,11 @@ export default function PlotterRequest() {
       alert("PDF 파일만 업로드할 수 있습니다.");
       return;
     }
+    if (file.size > MAX_PDF_FILE_SIZE_BYTES) {
+      alert("PDF 파일은 10MB 이하만 업로드할 수 있습니다.");
+      setPdfFile(null);
+      return;
+    }
     setPdfFile(file);
   };
 
@@ -157,6 +164,10 @@ export default function PlotterRequest() {
     }
     if (!pdfFile) {
       alert("PDF 파일을 업로드해 주세요.");
+      return;
+    }
+    if (pdfFile.size > MAX_PDF_FILE_SIZE_BYTES) {
+      alert("PDF 파일은 10MB 이하만 업로드할 수 있습니다.");
       return;
     }
     if (!isFreePurpose && !receiptFile) {
@@ -210,11 +221,27 @@ export default function PlotterRequest() {
       });
     } catch (error) {
       console.error("플로터 주문 신청 실패:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "플로터 주문 신청에 실패했습니다. 다시 시도해주세요."
-      );
+      
+      // API 에러 코드별 메시지 처리 (문서 기반)
+      let errorMessage = "플로터 주문 신청에 실패했습니다. 다시 시도해주세요.";
+      if (error instanceof Error) {
+        const errorMsg = error.message || "";
+        
+        if (errorMsg.includes("INVALID_FILE_TYPE")) {
+          errorMessage = "PDF 파일만 업로드할 수 있습니다.";
+        } else if (errorMsg.includes("PICKUP_DATE_TOO_EARLY")) {
+          errorMessage = "수령 희망일은 최소 영업일 2일 이후여야 합니다.";
+        } else if (errorMsg.includes("PICKUP_DATE_ON_HOLIDAY")) {
+          errorMessage = "수령 희망일은 휴무일일 수 없습니다.";
+        } else if (errorMsg.includes("PAGE_COUNT_MISMATCH")) {
+          errorMessage = "PDF 파일의 페이지 수가 입력한 장수와 일치하지 않습니다.";
+        } else if (errorMsg.includes("PAYMENT_RECEIPT_REQUIRED")) {
+          errorMessage = "유료 서비스는 입금 내역 증빙이 필수입니다.";
+        } else {
+          errorMessage = errorMsg;
+        }
+      }
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -265,7 +292,7 @@ export default function PlotterRequest() {
                 onChange={handlePdfUpload}
                 onRemove={() => setPdfFile(null)}
                 file={pdfFile}
-                helperText="글꼴 깨짐 방지를 위해 PDF 포맷으로 업로드 해주세요"
+                helperText="글꼴 깨짐 방지를 위해 PDF 포맷으로 업로드해 주세요 (최대 10MB)"
               />
 
               {/* 입금 내역 증빙 */}

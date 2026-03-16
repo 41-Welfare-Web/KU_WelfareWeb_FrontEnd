@@ -16,6 +16,7 @@ export interface PlotterOrderResponse {
   user?: {
     name: string;
     studentId: string;
+    phoneNumber?: string;
     department?: string;
     departmentName?: string;
   };
