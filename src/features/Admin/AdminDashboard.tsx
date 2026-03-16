@@ -26,6 +26,7 @@ interface RentalData {
   user: {
     name: string;
     studentId: string;
+    phoneNumber?: string;
     department?: string;
     departmentName?: string;
     departmentType?: string;
@@ -46,6 +47,7 @@ interface PlotterData {
   user?: {
     name: string;
     studentId: string;
+    phoneNumber?: string;
     department?: string;
     departmentName?: string;
   };
@@ -604,6 +606,7 @@ function AdminDashboard() {
                             key={rental.id}
                             rentalCode={`R-${rental.id}`}
                             userName={rental.user.name}
+                            phoneNumber={rental.user.phoneNumber || '-'}
                             department={rental.departmentName || rental.departmentType || '-'}
                             itemName={rental.itemSummary?.replace(/\s*외\s*0건$/, '') || '-'}
                             quantity={rental.quantity}
@@ -698,6 +701,7 @@ function AdminDashboard() {
                             key={plotter.id}
                             orderCode={`P-${plotter.id}`}
                             userName={plotter.user?.name || '사용자 정보 없음'}
+                            phoneNumber={plotter.user?.phoneNumber || '-'}
                             club={plotter.departmentName || plotter.departmentType || '-'}
                             purpose={plotter.purpose}
                             paperSizeAndCount={`${plotter.paperSize} / ${plotter.pageCount}장`}

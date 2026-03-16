@@ -3,14 +3,27 @@ import { createPortal } from "react-dom";
 import RentalStatusBadge from "../MyPage/RentalStatusBadge";
 import editIcon from '../../assets/admin/pencil.svg';
 
-// 텍스트가 실제로 잘렸을 때만 호버 시 위쪽에 풀 텍스트 툴팁을 보여주는 셀
-function TruncatedCell({ text, className }: { text: string; className: string }) {
+// 필요 시 호버 툴팁을 띄우는 셀
+function TruncatedCell({
+  text,
+  className,
+  tooltipText,
+  showTooltipOnOverflowOnly = true,
+}: {
+  text: string;
+  className: string;
+  tooltipText?: string;
+  showTooltipOnOverflowOnly?: boolean;
+}) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const spanRef = useRef<HTMLSpanElement>(null);
 
   const handleMouseEnter = () => {
     const el = spanRef.current;
-    if (el && el.scrollWidth > el.clientWidth) {
+    const shouldShowTooltip = Boolean(tooltipText) || (el && el.scrollWidth > el.clientWidth);
+    const isOverflowing = el && el.scrollWidth > el.clientWidth;
+
+    if (el && shouldShowTooltip && (!showTooltipOnOverflowOnly || isOverflowing)) {
       const rect = el.getBoundingClientRect();
       setPos({ x: rect.left + rect.width / 2, y: rect.top });
     }
@@ -32,7 +45,7 @@ function TruncatedCell({ text, className }: { text: string; className: string })
           style={{ left: pos.x, top: pos.y - 8, transform: 'translate(-50%, -100%)' }}
         >
           <div className="bg-gray-800 text-white text-xs rounded px-2 py-1.5 max-w-[280px] break-words text-center shadow-lg">
-            {text}
+            {tooltipText ?? text}
           </div>
           <div className="w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800 mx-auto" />
         </div>
@@ -44,6 +57,7 @@ function TruncatedCell({ text, className }: { text: string; className: string })
 interface AdminRentalRowProps {
   rentalCode: string;
   userName: string;
+  phoneNumber?: string;
   department: string;
   itemName: string;
   quantity?: number;
@@ -59,6 +73,7 @@ interface AdminRentalRowProps {
 export default function AdminRentalRow({
   rentalCode,
   userName,
+  phoneNumber,
   department,
   itemName,
   quantity,
@@ -168,7 +183,7 @@ export default function AdminRentalRow({
           </div>
         </div>
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[14px] font-semibold text-black">{userName}</span>
+          <span className="text-[14px] font-semibold text-black" title={phoneNumber || '-'}>{userName}</span>
           <span className="text-[13px] text-gray-500">{department}</span>
         </div>
         <div className="flex items-center gap-2 mb-2">
@@ -208,7 +223,7 @@ export default function AdminRentalRow({
         {/* 대여 코드 */}
         <TruncatedCell text={rentalCode} className="w-[7%] min-w-0 text-center shrink" />
         {/* 이름 */}
-        <TruncatedCell text={userName} className="w-[8%] min-w-0 text-center shrink" />
+        <TruncatedCell text={userName} tooltipText={phoneNumber || '-'} showTooltipOnOverflowOnly={false} className="w-[8%] min-w-0 text-center shrink" />
         {/* 소속 */}
         <TruncatedCell text={department} className="w-[12%] min-w-0 text-center shrink" />
         {/* 물품명 */}
