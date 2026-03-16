@@ -84,6 +84,10 @@ export default function AdminPlotterRow({
     status === 'printed' ? 'printing' :
     status as 'waiting' | 'confirmed' | 'printing' | 'completed' | 'rejected';
 
+  useEffect(() => {
+    setNoteValue(note);
+  }, [note]);
+
   // 날짜 포맷팅 함수: ISO 형식에서 YYYY-MM-DD만 추출
   const formatDate = (dateString: string) => {
     if (!dateString) return '';

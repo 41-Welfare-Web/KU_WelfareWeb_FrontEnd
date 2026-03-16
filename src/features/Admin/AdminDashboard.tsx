@@ -37,6 +37,7 @@ interface RentalData {
   status: 'RESERVED' | 'RENTED' | 'RETURNED' | 'OVERDUE' | 'CANCELED' | 'DEFECTIVE';
   itemSummary?: string;
   quantity?: number;
+  memo?: string | null;
   createdAt: string;
 }
 
@@ -333,6 +334,23 @@ function AdminDashboard() {
     }
   };
 
+  const handleRentalNoteChange = async (
+    rentalId: number,
+    currentStatus: RentalData['status'],
+    memo: string
+  ) => {
+    try {
+      await axiosInstance.put(
+        `/api/rentals/${rentalId}/status`,
+        { status: currentStatus, memo }
+      );
+      fetchRentals();
+    } catch (err: any) {
+      console.error('비고 저장 실패:', err);
+      alert(err.response?.data?.message || '비고 저장에 실패했습니다.');
+    }
+  };
+
   const handlePlotterStatusChange = async (orderId: number, newStatus: string, rejectReason?: string) => {
     // 반려(REJECTED) 상태로 변경 시 사유가 없거나 공백일 때만 모달 오픈
     if (newStatus === 'REJECTED' && (!rejectReason || !rejectReason.trim())) {
@@ -361,6 +379,23 @@ function AdminDashboard() {
     } catch (err: any) {
       console.error('상태 변경 실패:', err);
       alert(err.response?.data?.message || '상태 변경에 실패했습니다.');
+    }
+  };
+
+  const handlePlotterNoteChange = async (
+    orderId: number,
+    currentStatus: string,
+    memo: string
+  ) => {
+    try {
+      await axiosInstance.put(
+        `/api/plotter/orders/${orderId}/status`,
+        { status: currentStatus, memo }
+      );
+      fetchPlotterOrders();
+    } catch (err: any) {
+      console.error('비고 저장 실패:', err);
+      alert(err.response?.data?.message || '비고 저장에 실패했습니다.');
     }
   };
 
@@ -574,6 +609,7 @@ function AdminDashboard() {
                             quantity={rental.quantity}
                             startDate={rental.startDate}
                             endDate={rental.endDate}
+                            note={rental.memo || ''}
                             status={RENTAL_STATUS_MAP_REVERSE[rental.status] as 'reserved' | 'renting' | 'returned' | 'overdue' | 'canceled' | 'defective'}
                             onStatusChange={(newStatus) => {
                               handleRentalStatusChange(
@@ -581,6 +617,9 @@ function AdminDashboard() {
                                 (Object.keys(RENTAL_STATUS_MAP_REVERSE) as Array<keyof typeof RENTAL_STATUS_MAP_REVERSE>)
                                   .find(k => RENTAL_STATUS_MAP_REVERSE[k] === newStatus) || 'RESERVED'
                               );
+                            }}
+                            onNoteChange={(note) => {
+                              handleRentalNoteChange(rental.id, rental.status, note);
                             }}
                           />
                         );
@@ -663,6 +702,7 @@ function AdminDashboard() {
                             purpose={plotter.purpose}
                             paperSizeAndCount={`${plotter.paperSize} / ${plotter.pageCount}장`}
                             orderDate={plotter.pickupDate}
+                            note={plotter.memo || ''}
                             status={PLOTTER_STATUS_MAP_REVERSE[plotter.status as keyof typeof PLOTTER_STATUS_MAP_REVERSE] as 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'}
                             fileUrl={plotter.fileUrl}
                             onStatusChange={(newStatus) => {
@@ -670,6 +710,13 @@ function AdminDashboard() {
                                 plotter.id,
                                 (Object.keys(PLOTTER_STATUS_MAP_REVERSE) as Array<keyof typeof PLOTTER_STATUS_MAP_REVERSE>)
                                   .find(k => PLOTTER_STATUS_MAP_REVERSE[k] === newStatus) || 'PENDING'
+                              );
+                            }}
+                            onNoteChange={(note) => {
+                              handlePlotterNoteChange(
+                                plotter.id,
+                                plotter.status,
+                                note
                               );
                             }}
                           />
