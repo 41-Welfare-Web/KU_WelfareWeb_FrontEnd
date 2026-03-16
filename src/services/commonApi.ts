@@ -84,17 +84,29 @@ export async function getCommonMetadata(): Promise<CommonMetadata> {
 
 /**
  * 공휴일 목록 조회
- * GET /api/admin/holidays
+ * GET /api/holidays (새로운 엔드포인트)
+ * 또는 GET /api/admin/holidays (레거시 엔드포인트)
  * 시스템에 등록된 공휴일 리스트 (날짜 선택 시 블락처리용)
  */
 export async function getHolidays(): Promise<string[]> {
   try {
-    const response = await axiosInstance.get<{ id: number; date: string }[]>("/api/admin/holidays");
-    // date 형식이 YYYY-MM-DD로 반환된다고 가정
+    // 먼저 새로운 엔드포인트 시도
+    const response = await axiosInstance.get<{ id: number; date: string }[]>("/api/holidays");
     return response.data.map(item => item.date);
   } catch (error: any) {
+    // 새 엔드포인트가 없으면 레거시 엔드포인트 시도
+    if (error?.response?.status === 404) {
+      try {
+        console.warn("새 휴무일 엔드포인트 미준비, 레거시 엔드포인트 사용");
+        const response = await axiosInstance.get<{ id: number; date: string }[]>("/api/admin/holidays");
+        return response.data.map(item => item.date);
+      } catch (fallbackError: any) {
+        console.warn("공휴일 조회 실패, 기본값으로 진행:", fallbackError);
+        return [];
+      }
+    }
+    
     console.warn("공휴일 조회 실패, 기본값으로 진행:", error);
-    // 실패 시 빈 배열 반환 (서버 없이도 작동하도록)
     return [];
   }
 }
