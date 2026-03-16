@@ -36,6 +36,7 @@ interface RentalData {
   endDate: string;
   status: 'RESERVED' | 'RENTED' | 'RETURNED' | 'OVERDUE' | 'CANCELED' | 'DEFECTIVE';
   itemSummary?: string;
+  quantity?: number;
   createdAt: string;
 }
 
@@ -223,7 +224,8 @@ function AdminDashboard() {
         ...rental,
         itemSummary: rental.rentalItems?.length 
           ? rental.rentalItems.map(ri => ri.item?.name).filter(Boolean).join(', ')
-          : undefined
+          : undefined,
+        quantity: rental.rentalItems?.reduce((sum, ri) => sum + (ri.quantity || 0), 0) ?? 0,
       })) as RentalData[];
       
       setRentalData(mappedRentals);
@@ -532,10 +534,11 @@ function AdminDashboard() {
                     { label: '신청자', width: 'w-[8%] min-w-0' },
                     { label: '소속', width: 'w-[12%] min-w-0' },
                     { label: '대여 품목', width: 'flex-1 min-w-0' },
+                    { label: '수량', width: 'w-[6%] min-w-0' },
                     { label: '대여 날짜', width: 'w-[10%] min-w-0' },
                     { label: '반납 날짜', width: 'w-[10%] min-w-0' },
                     { label: '상태', width: 'w-[9%] min-w-0' },
-                    { label: '비고', width: 'w-[13%] min-w-0' },
+                    { label: '비고', width: 'w-[12%] min-w-0' },
                   ]}
                 />
 
@@ -568,6 +571,7 @@ function AdminDashboard() {
                             userName={rental.user.name}
                             department={rental.departmentName || rental.departmentType || '-'}
                             itemName={rental.itemSummary?.replace(/\s*외\s*0건$/, '') || '-'}
+                            quantity={rental.quantity}
                             startDate={rental.startDate}
                             endDate={rental.endDate}
                             status={RENTAL_STATUS_MAP_REVERSE[rental.status] as 'reserved' | 'renting' | 'returned' | 'overdue' | 'canceled' | 'defective'}
