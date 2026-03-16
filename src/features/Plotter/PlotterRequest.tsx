@@ -19,6 +19,8 @@ interface Purpose {
   name: string;
 }
 
+const MAX_PDF_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 export default function PlotterRequest() {
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
@@ -133,6 +135,11 @@ export default function PlotterRequest() {
       alert("PDF 파일만 업로드할 수 있습니다.");
       return;
     }
+    if (file.size > MAX_PDF_FILE_SIZE_BYTES) {
+      alert("PDF 파일은 10MB 이하만 업로드할 수 있습니다.");
+      setPdfFile(null);
+      return;
+    }
     setPdfFile(file);
   };
 
@@ -157,6 +164,10 @@ export default function PlotterRequest() {
     }
     if (!pdfFile) {
       alert("PDF 파일을 업로드해 주세요.");
+      return;
+    }
+    if (pdfFile.size > MAX_PDF_FILE_SIZE_BYTES) {
+      alert("PDF 파일은 10MB 이하만 업로드할 수 있습니다.");
       return;
     }
     if (!isFreePurpose && !receiptFile) {
@@ -281,7 +292,7 @@ export default function PlotterRequest() {
                 onChange={handlePdfUpload}
                 onRemove={() => setPdfFile(null)}
                 file={pdfFile}
-                helperText="글꼴 깨짐 방지를 위해 PDF 포맷으로 업로드 해주세요"
+                helperText="글꼴 깨짐 방지를 위해 PDF 포맷으로 업로드해 주세요 (최대 10MB)"
               />
 
               {/* 입금 내역 증빙 */}
