@@ -236,7 +236,7 @@ export default function DatePickerCalendar({
                 ${!dayObj.isSelected && dayObj.isBeforeMinDate && dayObj.isCurrentMonth ? 'bg-white text-gray-400 cursor-not-allowed' : ''}
                 ${!dayObj.isSelected && dayObj.isCurrentMonth && !dayObj.isWeekend && !dayObj.isHoliday && !dayObj.isBeforeMinDate ? 'bg-white hover:bg-[#fff5e1] text-black cursor-pointer' : ''}
                 ${!dayObj.isSelected && dayObj.isWeekend && dayObj.isCurrentMonth ? 'bg-white text-gray-400 cursor-not-allowed' : ''}
-                ${!dayObj.isSelected && dayObj.isHoliday && dayObj.isCurrentMonth && !dayObj.isBeforeMinDate ? 'bg-white text-red-500 cursor-not-allowed' : ''}
+                ${!dayObj.isSelected && dayObj.isHoliday && dayObj.isCurrentMonth && !dayObj.isBeforeMinDate ? 'bg-white text-gray-400 cursor-not-allowed' : ''}
               `}
             >
               {dayObj.day}
