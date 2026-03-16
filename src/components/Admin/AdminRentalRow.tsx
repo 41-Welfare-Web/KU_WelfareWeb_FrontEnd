@@ -82,6 +82,10 @@ export default function AdminRentalRow({
   // status 변환: overdue -> defective로 매핑
   const badgeStatus = status === "overdue" ? "defective" : status as "reserved" | "renting" | "returned" | "defective" | "canceled";
 
+  useEffect(() => {
+    setNoteValue(note);
+  }, [note]);
+
   // 날짜 포맷팅 함수: ISO 형식에서 YYYY-MM-DD만 추출
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
