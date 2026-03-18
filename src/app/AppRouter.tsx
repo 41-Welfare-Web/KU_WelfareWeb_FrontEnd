@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "../features/Home/Home";
-import WelfareIntro from "../features/Home/WelfareIntro";
+import WelfareIntro from "../features/Intro/WelfareIntro";
 import Login from "../features/Login/Login";
 import Register from "../features/Login/Register";
 import RentalList from "../features/Rental/RentalList";
