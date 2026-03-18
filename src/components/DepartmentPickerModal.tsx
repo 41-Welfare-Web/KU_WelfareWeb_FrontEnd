@@ -153,7 +153,7 @@ export default function DepartmentPickerModal({
               <>
                 <div className="text-sm text-black/50 mb-3">
                   {activeGroup?.requiresInput
-                    ? "소속명을 직접 입력해주세요."
+                    ? "소속명을 직접 입력해주세요. (ex. @@대학/@@학과 @@@)"
                     : "이 대분류는 소분류 목록이 없어서 직접 입력해야 해요."}
                 </div>
 

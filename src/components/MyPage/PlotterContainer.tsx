@@ -31,40 +31,48 @@ const PlotterContainer = ({
 }: PlotterContainerProps) => {
   return (
     <div
-      className={`relative bg-white border border-[#b9b9b9] rounded-[21px] w-full h-[120px] md:h-[149px] ${className}`}
+      className={`bg-white border border-[#b9b9b9] rounded-[21px] w-full p-4 md:p-6 ${className}`}
     >
-      {/* 상태 배지 및 예약 정보 */}
-      <div className="absolute left-[16px] md:left-[24px] top-[10px] md:top-[14px] flex items-center gap-[8px] md:gap-[16px]">
-        <PlotterStatusBadge status={status} />
-        <div className="flex flex-col gap-[1px]">
-          <p className="text-[11px] md:text-[13px] font-light text-[#919191]">
-            {reservationNumber}
-          </p>
-          <p className="text-[11px] md:text-[13px] font-light text-[#919191]">
-            신청일 {formatDate(applicationDate)}
-          </p>
+      {/* 모바일: 세로 레이아웃 / 데스크톱: 가로 레이아웃 */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        
+        {/* 왼쪽 영역: 상태 배지, 예약 정보, 제목 */}
+        <div className="flex-1 flex flex-col gap-3">
+          {/* 상태 배지 및 예약 정보 */}
+          <div className="flex items-center gap-3">
+            <PlotterStatusBadge status={status} />
+            <div className="flex flex-col gap-1">
+              <p className="text-[11px] md:text-[13px] font-light text-[#919191]">
+                {reservationNumber}
+              </p>
+              <p className="text-[11px] md:text-[13px] font-light text-[#919191]">
+                신청일 {formatDate(applicationDate)}
+              </p>
+            </div>
+          </div>
+
+          {/* 제목 */}
+          <h3
+            className="text-[18px] md:text-[24px] font-semibold text-[#410f07]"
+            style={{
+              fontFamily: "'Noto Sans', 'Noto Sans KR', sans-serif",
+              letterSpacing: '-0.64px',
+            }}
+          >
+            {title || '플로터 주문'}
+          </h3>
+
+          {/* 캘린더 아이콘과 날짜 정보 */}
+          <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+            <img src={calendarIcon} alt="calendar" width="14" height="14" className="md:w-4 md:h-4" />
+            <p className="text-[12px] md:text-[15px] font-medium text-[#5b5b5b]">
+              {printDate ? formatDate(printDate) : '수령일 미정'}
+            </p>
+            <p className="text-[12px] md:text-[15px] font-medium text-[#5b5b5b]">
+              | 장수: {pageCount}장
+            </p>
+          </div>
         </div>
-      </div>
-
-      {/* 제목 */}
-      <div className="absolute left-[16px] md:left-[24px] top-[48px] md:top-[62px]">
-        <h3
-          className="text-[18px] md:text-[24px] font-semibold text-[#410f07]"
-          style={{
-            fontFamily: "'Noto Sans', 'Noto Sans KR', sans-serif",
-            letterSpacing: '-0.64px',
-          }}
-        >
-          {title || '플로터 주문'}
-        </h3>
-      </div>
-
-      {/* 캠린더 아이콘과 날짜 정보 */}
-      <div className="absolute left-[16px] md:left-[24px] top-[82px] md:top-[110px] flex items-center gap-[8px] md:gap-[13px]">
-        <img src={calendarIcon} alt="calendar" width="14" height="14" className="md:w-4 md:h-4" />
-        <p className="text-[12px] md:text-[15px] font-medium text-[#5b5b5b]">
-          {printDate ? formatDate(printDate) : '수령일 미정'}   |   장수: {pageCount}장
-        </p>
       </div>
     </div>
   );

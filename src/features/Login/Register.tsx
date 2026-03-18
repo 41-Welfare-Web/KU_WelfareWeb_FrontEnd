@@ -21,9 +21,12 @@ export default function Register() {
   const [nameError, setNameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
+  // 비밀번호 확인
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [passwordConfirmError, setPasswordConfirmError] = useState("");
+
   const usernameRegex = /^[a-z0-9]{5,20}$/;
-  const passwordRegex =
-    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]).{8,}$/;
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*]{8,}$/;
 
   const [, setDeptSub] = useState<string>("");
   const [, setDeptSubMode] = useState<"select" | "input">("select");
@@ -31,6 +34,7 @@ export default function Register() {
 
   const [phone, setPhone] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
+  const [timeLeft, setTimeLeft] = useState(0);
 
   const [, setServerIssuedCode] = useState<string>("");
   const [isVerified, setIsVerified] = useState(false);
@@ -97,6 +101,20 @@ export default function Register() {
     void verifySignupCode(pn, code);
   }, [verificationCode, phone]);
 
+  // 인증 남은 시간
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
   const onSendVerification = async () => {
     setErrorMsg("");
 
@@ -115,6 +133,7 @@ export default function Register() {
       setVerificationCode("");
 
       await requestSignupVerification({ phoneNumber });
+      setTimeLeft(300);
     } catch (e: any) {
       setErrorMsg(
         e?.message ?? "인증번호 발송에 실패했어요. 다시 시도해 주세요.",
@@ -160,8 +179,14 @@ export default function Register() {
     }
     if (!passwordRegex.test(password)) {
       return setErrorMsg(
-        "비밀번호는 영어, 숫자, 특수문자를 포함한 8자리 이상이어야 합니다.",
+        "비밀번호는 최소 8자 이상이며, 영문과 숫자를 포함해야 합니다. 특수문자는 !@#$%^&* 만 사용할 수 있습니다.",
       );
+    }
+    if (!passwordConfirm.trim()) {
+      return setErrorMsg("비밀번호 확인을 입력해 주세요.");
+    }
+    if (password !== passwordConfirm) {
+      return setErrorMsg("비밀번호가 다릅니다.");
     }
     if (!name.trim()) return setErrorMsg("이름을 입력해 주세요.");
     if (!studentNo.trim()) return setErrorMsg("학번을 입력해 주세요.");
@@ -211,6 +236,13 @@ export default function Register() {
 
   function normalizePhone(value: string) {
     return value.replace(/\D/g, "");
+  }
+
+  // 인증 남은 시간
+  function formatTimeLeft(seconds: number) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   }
 
   return (
@@ -287,19 +319,49 @@ export default function Register() {
 
                     if (!passwordRegex.test(value)) {
                       setPasswordError(
-                        "영문, 숫자, 특수문자 포함하여 8자 이상 입력해야합니다.",
+                        "영문, 숫자를 포함하여 8자 이상 입력해야합니다. 특수문자는 !@#$%^&* 만 사용할 수 있습니다.",
                       );
                     } else {
                       setPasswordError("");
                     }
                   }}
                   type="password"
-                  placeholder="영문, 숫자, 특수문자 포함 8자 이상"
+                  placeholder="영문, 숫자 포함 8자 이상"
                   className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                 />
               </div>
               {passwordError && (
                 <p className="text-[13px] text-red-500">{passwordError}</p>
+              )}
+
+              {/* 비밀번호 확인 */}
+              <div className="space-y-2">
+                <label className="block text-[16px] font-semibold text-black">
+                  비밀번호 확인
+                </label>
+                <input
+                  value={passwordConfirm}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPasswordConfirm(value);
+
+                    if (!value) {
+                      setPasswordConfirmError("");
+                    } else if (password !== value) {
+                      setPasswordConfirmError("비밀번호가 다릅니다.");
+                    } else {
+                      setPasswordConfirmError("");
+                    }
+                  }}
+                  type="password"
+                  placeholder="비밀번호를 다시 입력해 주세요"
+                  className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                />
+              </div>
+              {passwordConfirmError && (
+                <p className="text-[13px] text-red-500">
+                  {passwordConfirmError}
+                </p>
               )}
 
               {/* 이름 */}
@@ -369,7 +431,7 @@ export default function Register() {
                   핸드폰 번호
                 </label>
 
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   <input
                     value={phone}
                     onChange={(e) =>
@@ -378,13 +440,13 @@ export default function Register() {
                     type="tel"
                     inputMode="numeric"
                     placeholder="010-1234-5678"
-                    className="flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                    className="min-w-0 flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                   />
                   <button
                     type="button"
                     onClick={onSendVerification}
                     disabled={loading}
-                    className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-60"
+                    className="w-[70px] sm:w-auto shrink-0 h-12 sm:h-14 px-3 sm:px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[15px] sm:text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-60"
                   >
                     인증
                   </button>
@@ -393,14 +455,22 @@ export default function Register() {
 
               {/* 인증번호 */}
               <div className="space-y-2">
-                <input
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="인증번호"
-                  className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
-                />
+                <div className="relative">
+                  <input
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="인증번호"
+                    className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 pr-20 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                  />
+
+                  {timeLeft > 0 && (
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] font-semibold text-[#FD7D5D]">
+                      {formatTimeLeft(timeLeft)}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {errorMsg && (

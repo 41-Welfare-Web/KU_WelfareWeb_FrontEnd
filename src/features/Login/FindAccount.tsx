@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Header from "../../components/Login/Header";
 import FindAccountTabs from "../../components/Login/FindAccountTabs";
 import {
@@ -35,9 +35,10 @@ export default function FindAccount() {
   const [newPw2, setNewPw2] = useState("");
   const [pwOk, setPwOk] = useState(false);
 
-  // UI만: 전송/인증 상태 흉내
+  // 전송/인증
   const [sent, setSent] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
 
   const primaryBtnText = useMemo(() => {
     return tab === "findId" ? "아이디 찾기" : "비밀번호 초기화";
@@ -103,8 +104,15 @@ export default function FindAccount() {
 
   // 인증번호 발송
   const onSend = async () => {
-    if (!username.trim()) return alert("아이디를 입력해주세요.");
-    if (!pwPhone.trim()) return alert("전화번호를 입력해주세요.");
+    if (!username.trim()) {
+      alert("아이디를 입력해주세요.");
+      return;
+    }
+
+    if (!pwPhone.trim()) {
+      alert("전화번호를 입력해주세요.");
+      return;
+    }
 
     try {
       setFinding(true);
@@ -118,10 +126,16 @@ export default function FindAccount() {
       setVerified(false);
       setResetRequested(false);
       setResetToken(null);
-
-      alert("인증번호를 발송했어요.");
+      setCode("");
+      setTimeLeft(300);
     } catch (e: any) {
-      alert(e?.message ?? "요청에 실패했어요.");
+      setSent(false);
+      setVerified(false);
+      setResetRequested(false);
+      setResetToken(null);
+      setTimeLeft(0);
+
+      alert(e?.message ?? "인증번호 발송에 실패했어요.");
     } finally {
       setFinding(false);
     }
@@ -143,6 +157,7 @@ export default function FindAccount() {
       setResetToken(resetToken);
       setVerified(true);
       setResetRequested(true);
+      setTimeLeft(0);
       alert("인증이 완료되었어요. 새 비밀번호를 설정해주세요.");
     } catch (e: any) {
       setVerified(false);
@@ -167,6 +182,26 @@ export default function FindAccount() {
     )}`;
   }
 
+  // 인증코드 남은 시간
+  function formatTimeLeft(seconds: number) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
   const onChangeTab = (next: TabKey) => {
     setTab(next);
 
@@ -176,6 +211,7 @@ export default function FindAccount() {
 
     setSent(false);
     setVerified(false);
+    setTimeLeft(0);
 
     setResetRequested(false);
     setResetToken(null);
@@ -293,7 +329,7 @@ export default function FindAccount() {
                     <label className="block text-[16px] font-semibold text-black">
                       비밀번호 확인
                     </label>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 sm:gap-3">
                       <input
                         value={newPw2}
                         onChange={(e) => {
@@ -301,20 +337,23 @@ export default function FindAccount() {
                           setPwOk(false);
                         }}
                         type="password"
-                        className="flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                        className="min-w-0 flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                       />
                       <button
                         type="button"
                         onClick={() => {
-                          if (!newPw || !newPw2)
-                            return alert("비밀번호를 입력해 주세요.");
+                          if (!newPw || !newPw2) {
+                            alert("비밀번호를 입력해 주세요.");
+                            return;
+                          }
                           if (newPw !== newPw2) {
                             setPwOk(false);
-                            return alert("비밀번호가 일치하지 않아요.");
+                            alert("비밀번호가 일치하지 않아요.");
+                            return;
                           }
                           setPwOk(true);
                         }}
-                        className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[16px] font-bold active:scale-[0.99] transition"
+                        className="w-[72px] sm:w-[84px] shrink-0 h-12 sm:h-14 rounded-[10px] bg-[#FD7D5D] text-white text-[15px] sm:text-[16px] font-bold active:scale-[0.99] transition"
                       >
                         확인
                       </button>
@@ -346,7 +385,7 @@ export default function FindAccount() {
                     <label className="block text-[16px] font-semibold text-black">
                       전화번호
                     </label>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 sm:gap-3">
                       <input
                         value={pwPhone}
                         onChange={(e) =>
@@ -355,13 +394,13 @@ export default function FindAccount() {
                         type="tel"
                         inputMode="numeric"
                         placeholder="010-1234-5678"
-                        className="flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                        className="min-w-0 flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                       />
                       <button
                         type="button"
                         onClick={onSend}
                         disabled={finding}
-                        className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-60"
+                        className="w-[72px] sm:w-[84px] shrink-0 h-12 sm:h-14 rounded-[10px] bg-[#FD7D5D] text-white text-[15px] sm:text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-60"
                       >
                         발송
                       </button>
@@ -374,24 +413,33 @@ export default function FindAccount() {
                   </div>
                   {/* 인증번호 + 인증 */}
                   <div className="space-y-2">
-                    <div className="flex gap-3">
-                      <input
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="인증번호"
-                        className="flex-1 h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
-                      />
+                    <div className="flex gap-2 sm:gap-3">
+                      <div className="relative min-w-0 flex-1">
+                        <input
+                          value={code}
+                          onChange={(e) => setCode(e.target.value)}
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="인증번호"
+                          className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 pr-20 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
+                        />
+                        {timeLeft > 0 && (
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] font-semibold text-[#FD7D5D]">
+                            {formatTimeLeft(timeLeft)}
+                          </span>
+                        )}
+                      </div>
+
                       <button
                         type="button"
                         onClick={onVerify}
                         disabled={!sent}
-                        className="shrink-0 h-12 sm:h-14 px-5 rounded-[10px] bg-[#FD7D5D] text-white text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-50"
+                        className="w-[72px] sm:w-[84px] shrink-0 h-12 sm:h-14 rounded-[10px] bg-[#FD7D5D] text-white text-[15px] sm:text-[16px] font-bold active:scale-[0.99] transition disabled:opacity-50"
                       >
                         인증
                       </button>
                     </div>
+
                     {verified && (
                       <p className="text-[13px] text-[#2F9E44] font-semibold">
                         인증이 완료되었어요.
