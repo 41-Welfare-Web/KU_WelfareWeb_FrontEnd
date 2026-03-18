@@ -103,7 +103,8 @@ export default function WelfareIntro() {
             <div className="flex flex-wrap gap-4 md:gap-8 mb-0 border-b-2 border-[#D9D9D9] bg-white rounded-t-3xl shadow-lg px-8 pt-8">
               <button
                 onClick={() => setActiveTab("chairman")}
-                className={`pb-2 font-medium text-[14px] md:text-[24px] relative whitespace-nowrap transition-colors ${
+                translate="no"
+                className={`pb-2 font-medium text-[14px] md:text-[24px] relative whitespace-normal md:whitespace-nowrap break-keep transition-colors ${
                   activeTab === "chairman"
                     ? "text-[#FE6949]"
                     : "text-[#8E8E8E] hover:text-[#FE6949]"
@@ -116,7 +117,8 @@ export default function WelfareIntro() {
               </button>
               <button
                 onClick={() => setActiveTab("department")}
-                className={`pb-2 font-medium text-[14px] md:text-[24px] relative whitespace-nowrap transition-colors ${
+                translate="no"
+                className={`pb-2 font-medium text-[14px] md:text-[24px] relative whitespace-normal md:whitespace-nowrap break-keep transition-colors ${
                   activeTab === "department"
                     ? "text-[#FE6949]"
                     : "text-[#8E8E8E] hover:text-[#FE6949]"

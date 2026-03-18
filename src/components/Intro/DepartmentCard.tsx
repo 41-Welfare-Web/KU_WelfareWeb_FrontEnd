@@ -34,14 +34,14 @@ export default function DepartmentCard({
           )}
         </div>
         
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {/* 국 이름 */}
-          <h3 className="text-3xl font-bold text-black mb-3 font-['Gmarket_Sans']">
+          <h3 className="text-3xl font-bold text-black mb-3 font-['Gmarket_Sans'] break-words">
             {name}
           </h3>
           
           {/* 설명 */}
-          <p className="text-gray-600 text-base leading-relaxed font-['Gmarket_Sans']">
+          <p className="text-gray-600 text-base leading-relaxed font-['Gmarket_Sans'] break-words">
             {description}
           </p>
         </div>
@@ -60,10 +60,10 @@ export default function DepartmentCard({
               key={index}
               className="bg-[#ededed] rounded-lg p-5"
             >
-              <h5 className="text-lg font-bold text-gray-700 mb-3 font-['Gmarket_Sans']">
+              <h5 className="text-lg font-bold text-gray-700 mb-3 font-['Gmarket_Sans'] break-words">
                 {project.title}
               </h5>
-              <p className="text-gray-600 text-sm leading-relaxed font-['Gmarket_Sans']">
+              <p className="text-gray-600 text-sm leading-relaxed font-['Gmarket_Sans'] break-words">
                 {project.description}
               </p>
             </div>
