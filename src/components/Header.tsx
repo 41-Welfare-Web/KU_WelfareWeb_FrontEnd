@@ -329,12 +329,16 @@ export default function Header() {
                   </p>
                 </button>
               ) : (
-                <div className="flex items-center gap-2 w-full rounded-xl bg-[#FFEAD3] px-4 py-4">
+                <button
+                  type="button"
+                  onClick={() => go("/mypage")}
+                  className="flex items-center gap-2 w-full rounded-xl bg-[#FFEAD3] px-4 py-4 text-left"
+                >
                   <div className="w-7 h-7 flex justify-center items-center rounded-full bg-white">
                     <img src={person} alt="프로필" />
                   </div>
                   <UserName name={`${user?.name ?? ""}님`} className="max-w-40 font-semibold text-[#410F07]" />
-                </div>
+                </button>
               )}
             </div>
 
