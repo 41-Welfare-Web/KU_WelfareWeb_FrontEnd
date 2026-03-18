@@ -337,8 +337,11 @@ export default function Header() {
                   <div className="w-7 h-7 flex justify-center items-center rounded-full bg-white">
                     <img src={person} alt="프로필" />
                   </div>
-                  <UserName name={`${user?.name ?? ""}님`} className="max-w-40 font-semibold text-[#410F07]" />
-                </button>
+                  <UserName
+                    name={`${user?.name ?? ""}님`}
+                    className="max-w-40 font-semibold text-[#410F07]"
+                  />
+                </div>
               )}
             </div>
 
