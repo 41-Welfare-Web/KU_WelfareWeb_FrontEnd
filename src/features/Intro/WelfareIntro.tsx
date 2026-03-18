@@ -3,15 +3,23 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import DepartmentCard from "../../components/Intro/DepartmentCard";
 import { bureauData } from "../../../intro/departIntro.js";
+import { greetingData } from "../../../intro/leaderIntro.js";
+import chairpersonImage from "../../../intro/위원장.png";
+import viceChairpersonImage from "../../../intro/부위원장.png";
 
-const DEPARTMENT_ICONS: Record<string, string> = {
-  "총괄국": "💻",
-  "문화기획국": "🎪",
-  "복지정책국": "🤝",
-  "대외협력국": "🌐",
-  "홍보디자인국": "📢",
-  "사무국": "🗂️",
-};
+const bureauIconModules = import.meta.glob("../../assets/Intro/*.svg", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+
+const bureauIconByName = Object.fromEntries(
+  Object.entries(bureauIconModules).map(([path, iconSrc]) => {
+    const match = path.match(/\/([^/]+)\.svg$/);
+    const bureauName = match?.[1] ?? path;
+    return [bureauName, iconSrc];
+  })
+) as Record<string, string>;
+
 
 /**
  * 학생복지위원회 소개 페이지
@@ -19,6 +27,46 @@ const DEPARTMENT_ICONS: Record<string, string> = {
  */
 export default function WelfareIntro() {
   const [activeTab, setActiveTab] = useState<"chairman" | "department">("chairman");
+  const chairGreeting =
+    greetingData.find((greeting) => greeting.id === "chairperson") ?? greetingData[0];
+  const viceGreeting =
+    greetingData.find((greeting) => greeting.id === "vice-chairperson") ?? greetingData[1];
+  const chairGreetingParagraphs = (chairGreeting?.content ?? "")
+    .split("\n\n")
+    .map((text) => text.trim())
+    .filter(Boolean);
+  const viceGreetingParagraphs = (viceGreeting?.content ?? "")
+    .split("\n\n")
+    .map((text) => text.trim())
+    .filter(Boolean);
+
+  const GreetingProfile = ({
+    role,
+    name,
+    imageSrc,
+    className = "",
+  }: {
+    role?: string;
+    name?: string;
+    imageSrc: string;
+    className?: string;
+  }) => (
+    <aside className={`w-full md:w-[220px] shrink-0 ${className}`}>
+      <div className="relative">
+        <div className="relative rounded-2xl overflow-hidden border border-white/20 bg-white/92">
+          <img
+            src={imageSrc}
+            alt={`${role ?? "임원"} ${name ?? "프로필"}`}
+            className="w-full aspect-[3/4] object-cover"
+          />
+          <div className="px-4 py-3 text-center bg-[#FAFAFA]/92 border-t border-white/50">
+            <p className="text-[14px] md:text-[15px] text-[#8E8E8E] font-medium">{role ?? "-"}</p>
+            <p className="text-[18px] md:text-[20px] text-[#1F2937] font-bold mt-1">{name ?? "-"}</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-white">
@@ -90,20 +138,45 @@ export default function WelfareIntro() {
                     <br />
                     <span className="text-orange-500">이어지는 연</span>
                   </h2>
-                  <div className="text-gray-700 text-lg leading-relaxed space-y-4">
-                    <p>
-                      안녕하세요. 건국대학교 41대 학생복지위원회 위원장 입니다.
-                    </p>
-                    <p>
-                      학생복지위원회는 모든 학생들의 행복과 복지 증진을 위해
-                      노력하는 기구입니다. 학생의 입장에서 생각하고, 학생을
-                      위해 행동하는 학생복지위원회가 되겠습니다.
-                    </p>
-                    <p>
-                      이 페이지를 통해 다양한 사업과 정보를 제공하고 있습니다.
-                      여러분의 많은 관심과 참여 부탁드립니다.
-                    </p>
+                  <div className="flex flex-col md:flex-row gap-8 md:gap-10 items-start md:items-start">
+                    <div className="flex-1 text-gray-700 text-lg leading-relaxed space-y-4">
+                      {chairGreetingParagraphs.map((paragraph, index) => (
+                        <p key={`${chairGreeting?.id ?? "greeting"}-${index}`} className="whitespace-pre-line">
+                          {paragraph}
+                        </p>
+                      ))}
+                    </div>
+                    <GreetingProfile
+                      role={chairGreeting?.role}
+                      name={chairGreeting?.name}
+                      imageSrc={chairpersonImage}
+                      className="md:order-first md:self-end"
+                    />
                   </div>
+
+                  {viceGreeting && (
+                    <>
+                      <hr className="my-10 border-t border-[#D9D9D9]" />
+                      <h3 className="text-2xl md:text-3xl font-bold mb-5 text-black">
+                        부위원장 인사말
+                      </h3>
+                      <div className="flex flex-col md:flex-row gap-8 md:gap-10 items-start md:items-start">
+                        <div className="flex-1 text-gray-700 text-lg leading-relaxed space-y-4">
+                          {viceGreetingParagraphs.map((paragraph, index) => (
+                            <p key={`${viceGreeting.id}-${index}`} className="whitespace-pre-line">
+                              {paragraph}
+                            </p>
+                          ))}
+                        </div>
+                        <GreetingProfile
+                          role={viceGreeting.role}
+                          name={viceGreeting.name}
+                          imageSrc={viceChairpersonImage}
+                          className="md:self-end"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div>
@@ -116,7 +189,7 @@ export default function WelfareIntro() {
                     {bureauData.map((bureau) => (
                       <DepartmentCard
                         key={bureau.id}
-                        icon={DEPARTMENT_ICONS[bureau.name] ?? "🏛️"}
+                        icon={bureauIconByName[bureau.name] ?? "🏛️"}
                         name={bureau.name}
                         description={bureau.description}
                         projects={bureau.projects.map((project) => ({

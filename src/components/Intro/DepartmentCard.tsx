@@ -16,13 +16,22 @@ export default function DepartmentCard({
   description,
   projects,
 }: DepartmentCardProps) {
+  const normalizedIcon = icon.trim();
+  const isImageIcon =
+    normalizedIcon.startsWith("data:image/") ||
+    /\.(svg|png|jpe?g|webp)(\?.*)?$/i.test(normalizedIcon);
+
   return (
     <div className="w-full bg-white rounded-lg shadow-md overflow-hidden">
       {/* 헤더 섹션 */}
       <div className="bg-[#ffdcc5] px-6 py-6 flex items-start gap-4">
         {/* 아이콘 */}
         <div className="flex-shrink-0 bg-white rounded-lg w-20 h-20 flex items-center justify-center shadow-md">
-          <span className="text-4xl">{icon}</span>
+          {isImageIcon ? (
+            <img src={icon} alt={`${name} 아이콘`} className="w-12 h-12 object-contain" />
+          ) : (
+            <span className="text-4xl">{icon}</span>
+          )}
         </div>
         
         <div className="flex-1">
