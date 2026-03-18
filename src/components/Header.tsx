@@ -341,7 +341,7 @@ export default function Header() {
                     name={`${user?.name ?? ""}님`}
                     className="max-w-40 font-semibold text-[#410F07]"
                   />
-                </div>
+                </button>
               )}
             </div>
 
