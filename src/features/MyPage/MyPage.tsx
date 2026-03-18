@@ -320,17 +320,17 @@ export default function MyPage() {
       <Header />
 
       <div className="w-full bg-gradient-to-b from-[#ffdcc5] to-white min-h-screen pb-20">
-        <div className="max-w-[1440px] mx-auto px-4 pt-8">
+        <div className="max-w-[1440px] mx-auto px-4 pt-4 sm:pt-6 md:pt-8">
           {/* 페이지 타이틀 */}
-          <div className="flex items-center gap-4 mb-8">
-            <img src={myOrangeIcon} alt="user" className="w-9 h-9" />
-            <h1 className="text-[32px] font-bold text-[#410f07]">마이페이지</h1>
+          <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8">
+            <img src={myOrangeIcon} alt="user" className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9" />
+            <h1 className="text-[20px] sm:text-[24px] md:text-[32px] font-bold text-[#410f07]">마이페이지</h1>
           </div>
 
           {/* 메인 컨텐츠 카드 */}
-          <div className="rounded-[30px] bg-[#f4f4f4] overflow-hidden">
+          <div className="rounded-[20px] sm:rounded-[25px] md:rounded-[30px] bg-[#f4f4f4] overflow-hidden">
             {/* 탭 헤더 */}
-            <div className="bg-[#f4f4f4] flex mr-10">
+            <div className="bg-[#f4f4f4] flex overflow-x-auto">
               <TabSelector 
                 activeTab={activeTab} 
                 onTabChange={setActiveTab}
@@ -338,7 +338,7 @@ export default function MyPage() {
             </div>
 
             {/* 탭 컨텐츠 */}
-            <div className="px-11 py-8 bg-white min-h-[400px] flex flex-col items-center">
+            <div className="px-4 sm:px-6 md:px-11 py-6 sm:py-8 bg-white min-h-[400px] flex flex-col items-center">
               {activeTab === "rental" && (
                 <div className="w-full">
                   {isLoadingRentals ? (
@@ -350,7 +350,7 @@ export default function MyPage() {
                       대여 내역이 없습니다.
                     </div>
                   ) : (
-                    <div className="space-y-5">
+                    <div className="w-full space-y-4 sm:space-y-5">
                       {reservations.map((reservation) => (
                         <RentalContainer
                           key={reservation.id}
@@ -383,7 +383,7 @@ export default function MyPage() {
                       플로터 내역이 없습니다.
                     </div>
                   ) : (
-                    <div className="space-y-5">
+                    <div className="w-full space-y-4 sm:space-y-5">
                       {plotterReservations.map((reservation) => (
                         <PlotterContainer
                           key={reservation.id}
@@ -401,7 +401,7 @@ export default function MyPage() {
               )}
 
               {activeTab === "profile" && (
-                <div className="flex justify-center py-8 w-full">
+                <div className="flex justify-center py-6 sm:py-8 w-full">
                   {isLoadingUser || !userProfile ? (
                     <div className="text-center py-20 text-gray-500">
                       로딩 중...

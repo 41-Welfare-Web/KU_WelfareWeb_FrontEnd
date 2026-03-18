@@ -30,6 +30,7 @@ type AuthContextValue = AuthState & {
   login: (payload: LoginPayload) => void;
   logout: () => Promise<void>;
   refreshFromStorage: () => void;
+  isLoggingOut: boolean;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -90,11 +91,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // 서버 로그아웃 연동
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const logout = async () => {
     const refreshToken = localStorage.getItem(STORAGE_KEYS.refreshToken);
     const accessToken = localStorage.getItem(STORAGE_KEYS.accessToken);
 
-    // 1) UI 먼저 즉시 로그아웃(PC/모바일 모두 즉시 반영)
+    setIsLoggingOut(true);
+
     localStorage.removeItem(STORAGE_KEYS.accessToken);
     localStorage.removeItem(STORAGE_KEYS.refreshToken);
     localStorage.removeItem(STORAGE_KEYS.me);
@@ -106,10 +110,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refreshToken: null,
     });
 
-    // 2) 서버 로그아웃은 “시도만”
-    if (!refreshToken) return;
+    if (!refreshToken) {
+      setIsLoggingOut(false);
+      return;
+    }
 
-    // refresh를 호출하더라도 "state/localStorage 갱신 금지" (임시 토큰만)
     const getFreshAccessToken = async (): Promise<string | null> => {
       try {
         const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
@@ -140,16 +145,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     try {
-      // 1차 시도 (기존 accessToken으로)
       const res1 = await tryLogout(accessToken);
 
-      // 401이면 refresh 후 재시도
       if (res1.status === 401) {
         const fresh = await getFreshAccessToken();
         await tryLogout(fresh);
       }
     } catch {
-      // 서버 실패는 무시 (클라는 이미 로그아웃 완료 상태)
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -174,8 +178,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       logout,
       refreshFromStorage,
+      isLoggingOut,
     }),
-    [state],
+    [state, isLoggingOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

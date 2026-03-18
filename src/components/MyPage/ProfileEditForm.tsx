@@ -91,12 +91,10 @@ export default function ProfileEditForm({
       return;
     }
     
-    if (window.confirm("정말 탈퇴하시겠습니까?")) {
-      if (onDelete) {
-        onDelete(currentPassword);
-      } else {
-        alert("회원 탈퇴가 완료되었습니다.");
-      }
+    if (onDelete) {
+      onDelete(currentPassword);
+    } else {
+      alert("회원 탈퇴가 완료되었습니다.");
     }
   };
 
