@@ -15,6 +15,7 @@ import AdminDashboardHeader from '../../components/Admin/AdminDashboardHeader';
 import { useExportCSV } from '../../hooks/useExportCSV';
 import { getRentals } from '../../services/rentalApi';
 import { getPlotterOrders } from '../../services/plotterApi';
+import { getCommonMetadata } from '../../services/commonApi';
 import { getCategories, getItems } from '../../api/rental/rentalApi';
 import type { Item, Category } from '../../api/rental/types';
 import axiosInstance from '../../api/axiosInstance';
@@ -62,6 +63,9 @@ interface PlotterData {
   fileUrl?: string;
   originalFilename?: string;
   memo?: string | null;
+  isPaidService?: boolean;
+  price?: number;
+  paymentReceiptUrl?: string;
 }
 
 // ItemData와 CategoryData는 API 타입 사용
@@ -252,13 +256,23 @@ function AdminDashboard() {
       setError(null);
       
       console.log('[Admin] 플로터 목록 조회 시작');
+      
+      // 메타데이터 가져오기 (무료 목적 정보)
+      const metadata = await getCommonMetadata();
+      
       const response = await getPlotterOrders({
         page: 1,
         pageSize: 1000
       });
       console.log('[Admin] 플로터 목록 조회 성공:', response);
       
-      setPlotterData(response.orders || []);
+      // isPaidService 계산: freePurposes에 있으면 무료(false), 없으면 유료(true)
+      const ordersWithPricing = (response.orders || []).map(order => ({
+        ...order,
+        isPaidService: !metadata.plotterFreePurposes.includes(order.purpose)
+      }));
+      
+      setPlotterData(ordersWithPricing);
     } catch (err: any) {
       console.error('[Admin] 플로터 목록 조회 실패:', err);
       console.error('[Admin] 에러 상세:', {
@@ -442,6 +456,14 @@ function AdminDashboard() {
     if (rentalStatusFilter !== '전체 보기') {
       if (rentalStatusFilter === '불량 반납') {
         statusMatch = item.status === 'DEFECTIVE' || item.status === 'OVERDUE';
+      } else if (rentalStatusFilter === '금일 대여') {
+        const today = new Date().toLocaleDateString('en-CA');
+        const itemStart = item.startDate.slice(0, 10);
+        statusMatch = itemStart === today && item.status !== 'CANCELED';
+      } else if (rentalStatusFilter === '금일 반납') {
+        const today = new Date().toLocaleDateString('en-CA');
+        const itemEnd = item.endDate.slice(0, 10);
+        statusMatch = itemEnd === today && item.status !== 'CANCELED';
       } else {
         statusMatch = item.status === RENTAL_STATUS_MAP[rentalStatusFilter];
       }
@@ -478,7 +500,13 @@ function AdminDashboard() {
     // 상태 필터링
     let statusMatch = true;
     if (plotterStatusFilter !== '전체 상태') {
-      statusMatch = item.status === PLOTTER_STATUS_MAP[plotterStatusFilter];
+      if (plotterStatusFilter === '금일 수령') {
+        const today = new Date().toLocaleDateString('en-CA');
+        const itemPickupDate = item.pickupDate.slice(0, 10);
+        statusMatch = itemPickupDate === today && item.status !== 'REJECTED';
+      } else {
+        statusMatch = item.status === PLOTTER_STATUS_MAP[plotterStatusFilter];
+      }
     }
 
     // 검색어 필터링
@@ -548,7 +576,7 @@ function AdminDashboard() {
               <div>
               {/* 필터 바 */}
               <AdminFilterBar
-                statusOptions={['전체 보기', '예약', '대여 중', '정상 반납', '불량 반납', '예약 취소']}
+                statusOptions={['전체 보기', '예약', '대여 중', '정상 반납', '불량 반납', '예약 취소', '금일 대여', '금일 반납']}
                 selectedStatus={rentalStatusFilter}
                 onStatusChange={setRentalStatusFilter}
                 startDate={rentalStartDate}
@@ -648,7 +676,7 @@ function AdminDashboard() {
             <div>
               {/* 필터 바 */}
               <AdminPlotterFilterBar
-                statusOptions={['전체 상태', '예약 대기', '예약 확정', '인쇄 완료', '예약 반려', '수령 완료']}
+                statusOptions={['전체 상태', '금일 수령', '예약 대기', '예약 확정', '인쇄 완료', '예약 반려', '수령 완료']}
                 selectedStatus={plotterStatusFilter}
                 onStatusChange={setPlotterStatusFilter}
                 searchQuery={plotterSearchQuery}
@@ -666,7 +694,7 @@ function AdminDashboard() {
                     { label: '신청번호', width: 'w-[7%] min-w-0' },
                     { label: '신청자', width: 'w-[8%] min-w-0' },
                     { label: '소속', width: 'w-[12%] min-w-0' },
-                    { label: '파일명', width: 'flex-1 min-w-0' },
+                    { label: '목적', width: 'flex-1 min-w-0' },
                     { label: '용지/장수', width: 'w-[10%] min-w-0' },
                     { label: '수령일', width: 'w-[10%] min-w-0' },
                     { label: '상태', width: 'w-[9%] min-w-0' },
@@ -709,6 +737,8 @@ function AdminDashboard() {
                             note={plotter.memo || ''}
                             status={PLOTTER_STATUS_MAP_REVERSE[plotter.status as keyof typeof PLOTTER_STATUS_MAP_REVERSE] as 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'}
                             fileUrl={plotter.fileUrl}
+                            isPaidService={plotter.isPaidService}
+                            paymentReceiptImageUrl={plotter.paymentReceiptUrl}
                             onStatusChange={(newStatus) => {
                               handlePlotterStatusChange(
                                 plotter.id,
