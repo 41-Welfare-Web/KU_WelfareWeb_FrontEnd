@@ -31,6 +31,8 @@ export interface PlotterOrderResponse {
   fileUrl?: string;
   originalFilename?: string;
   memo?: string | null;
+  isPaidService?: boolean;
+  price?: number;
 }
 
 // POST 응답용 (더 많은 정보 포함)

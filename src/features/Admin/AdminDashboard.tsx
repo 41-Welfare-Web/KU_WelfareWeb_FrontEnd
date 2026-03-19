@@ -15,6 +15,7 @@ import AdminDashboardHeader from '../../components/Admin/AdminDashboardHeader';
 import { useExportCSV } from '../../hooks/useExportCSV';
 import { getRentals } from '../../services/rentalApi';
 import { getPlotterOrders } from '../../services/plotterApi';
+import { getCommonMetadata } from '../../services/commonApi';
 import { getCategories, getItems } from '../../api/rental/rentalApi';
 import type { Item, Category } from '../../api/rental/types';
 import axiosInstance from '../../api/axiosInstance';
@@ -62,6 +63,8 @@ interface PlotterData {
   fileUrl?: string;
   originalFilename?: string;
   memo?: string | null;
+  isPaidService?: boolean;
+  price?: number;
 }
 
 // ItemData와 CategoryData는 API 타입 사용
@@ -252,13 +255,23 @@ function AdminDashboard() {
       setError(null);
       
       console.log('[Admin] 플로터 목록 조회 시작');
+      
+      // 메타데이터 가져오기 (무료 목적 정보)
+      const metadata = await getCommonMetadata();
+      
       const response = await getPlotterOrders({
         page: 1,
         pageSize: 1000
       });
       console.log('[Admin] 플로터 목록 조회 성공:', response);
       
-      setPlotterData(response.orders || []);
+      // isPaidService 계산: freePurposes에 있으면 무료(false), 없으면 유료(true)
+      const ordersWithPricing = (response.orders || []).map(order => ({
+        ...order,
+        isPaidService: !metadata.plotterFreePurposes.includes(order.purpose)
+      }));
+      
+      setPlotterData(ordersWithPricing);
     } catch (err: any) {
       console.error('[Admin] 플로터 목록 조회 실패:', err);
       console.error('[Admin] 에러 상세:', {
@@ -666,7 +679,7 @@ function AdminDashboard() {
                     { label: '신청번호', width: 'w-[7%] min-w-0' },
                     { label: '신청자', width: 'w-[8%] min-w-0' },
                     { label: '소속', width: 'w-[12%] min-w-0' },
-                    { label: '파일명', width: 'flex-1 min-w-0' },
+                    { label: '목적', width: 'flex-1 min-w-0' },
                     { label: '용지/장수', width: 'w-[10%] min-w-0' },
                     { label: '수령일', width: 'w-[10%] min-w-0' },
                     { label: '상태', width: 'w-[9%] min-w-0' },
@@ -709,6 +722,7 @@ function AdminDashboard() {
                             note={plotter.memo || ''}
                             status={PLOTTER_STATUS_MAP_REVERSE[plotter.status as keyof typeof PLOTTER_STATUS_MAP_REVERSE] as 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'}
                             fileUrl={plotter.fileUrl}
+                            isPaidService={plotter.isPaidService}
                             onStatusChange={(newStatus) => {
                               handlePlotterStatusChange(
                                 plotter.id,

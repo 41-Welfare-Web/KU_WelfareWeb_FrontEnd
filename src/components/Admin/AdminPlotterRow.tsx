@@ -66,6 +66,7 @@ interface AdminPlotterRowProps {
   status: 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed';
   note?: string;
   fileUrl?: string;
+  isPaidService?: boolean;
   onStatusChange?: (newStatus: 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed') => void;
   onNoteChange?: (note: string) => void;
 }
@@ -81,6 +82,7 @@ export default function AdminPlotterRow({
   status,
   note = '',
   fileUrl,
+  isPaidService,
   onStatusChange,
   onNoteChange
 }: AdminPlotterRowProps) {
@@ -224,7 +226,12 @@ export default function AdminPlotterRow({
           <span className="text-[13px] text-gray-500">{club}</span>
         </div>
         <div className="flex items-center gap-2 mb-2">
-          <p className="text-[13px] text-gray-700 truncate flex-1">{purpose}</p>
+          <p className="text-[13px] text-gray-700 truncate flex-1">
+            {purpose}
+            <span className={`ml-1 font-semibold ${isPaidService ? 'text-red-600' : 'text-blue-600'}`}>
+              {isPaidService ? '(유료)' : '(무료)'}
+            </span>
+          </p>
           {fileUrl && (
             <button
               onClick={handleDownload}
@@ -271,7 +278,7 @@ export default function AdminPlotterRow({
         <TruncatedCell text={club} className="w-[12%] min-w-0 text-center shrink" />
         {/* 파일명 + 다운로드 */}
         <div className="flex-1 min-w-0 flex items-center justify-center gap-2">
-          <TruncatedCell text={purpose} className="flex-1 min-w-0 text-center" />
+          <TruncatedCell text={`${purpose} ${isPaidService ? '(유료)' : '(무료)'}`} className="flex-1 min-w-0 text-center" />
           {fileUrl && (
             <button
               onClick={handleDownload}
