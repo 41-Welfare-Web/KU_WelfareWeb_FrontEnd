@@ -67,6 +67,7 @@ interface AdminPlotterRowProps {
   note?: string;
   fileUrl?: string;
   isPaidService?: boolean;
+  paymentReceiptImageUrl?: string;
   onStatusChange?: (newStatus: 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed') => void;
   onNoteChange?: (note: string) => void;
 }
@@ -83,6 +84,7 @@ export default function AdminPlotterRow({
   note = '',
   fileUrl,
   isPaidService,
+  paymentReceiptImageUrl,
   onStatusChange,
   onNoteChange
 }: AdminPlotterRowProps) {
@@ -91,6 +93,7 @@ export default function AdminPlotterRow({
   const [isEditing, setIsEditing] = useState(false);
   const [noteValue, setNoteValue] = useState(note);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showPaymentReceiptModal, setShowPaymentReceiptModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const badgeBtnRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -226,12 +229,21 @@ export default function AdminPlotterRow({
           <span className="text-[13px] text-gray-500">{club}</span>
         </div>
         <div className="flex items-center gap-2 mb-2">
-          <p className="text-[13px] text-gray-700 truncate flex-1">
-            {purpose}
-            <span className={`ml-1 font-semibold ${isPaidService ? 'text-red-600' : 'text-blue-600'}`}>
-              {isPaidService ? '(유료)' : '(무료)'}
-            </span>
-          </p>
+          <div className="text-[13px] text-gray-700 truncate flex-1 flex items-center gap-1">
+            <p className="truncate">{purpose}</p>
+            {isPaidService ? (
+              <button
+                onClick={() => setShowPaymentReceiptModal(true)}
+                className="ml-1 font-semibold text-red-600 cursor-pointer hover:opacity-70 transition-opacity whitespace-nowrap"
+              >
+                (유료)
+              </button>
+            ) : (
+              <span className="ml-1 font-semibold whitespace-nowrap text-blue-600">
+                (무료)
+              </span>
+            )}
+          </div>
           {fileUrl && (
             <button
               onClick={handleDownload}
@@ -278,7 +290,21 @@ export default function AdminPlotterRow({
         <TruncatedCell text={club} className="w-[12%] min-w-0 text-center shrink" />
         {/* 파일명 + 다운로드 */}
         <div className="flex-1 min-w-0 flex items-center justify-center gap-2">
-          <TruncatedCell text={`${purpose} ${isPaidService ? '(유료)' : '(무료)'}`} className="flex-1 min-w-0 text-center" />
+          <div className="flex-1 min-w-0 flex items-center justify-center gap-1">
+            <TruncatedCell text={purpose} className="flex-1 min-w-0 text-center" />
+            {isPaidService ? (
+              <button
+                onClick={() => setShowPaymentReceiptModal(true)}
+                className="font-semibold text-red-600 cursor-pointer hover:opacity-70 transition-opacity whitespace-nowrap text-[14px]"
+              >
+                (유료)
+              </button>
+            ) : (
+              <span className="font-semibold whitespace-nowrap text-[14px] text-blue-600">
+                (무료)
+              </span>
+            )}
+          </div>
           {fileUrl && (
             <button
               onClick={handleDownload}
@@ -345,6 +371,40 @@ export default function AdminPlotterRow({
           })}
         </div>,
         document.body
+      )}
+
+      {/* 입금 내역 사진 모달 */}
+      {showPaymentReceiptModal && (
+        <div
+          className="fixed inset-0 bg-transparent flex items-center justify-center z-[10000]"
+          onClick={() => setShowPaymentReceiptModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg p-6 max-w-[90vw] max-h-[90vh] flex flex-col shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-[20px] font-bold text-black">입금 내역</h2>
+              <button
+                onClick={() => setShowPaymentReceiptModal(false)}
+                className="text-[24px] text-gray-500 hover:text-black transition"
+              >
+                ×
+              </button>
+            </div>
+            {paymentReceiptImageUrl ? (
+              <img
+                src={paymentReceiptImageUrl}
+                alt="입금 내역 사진"
+                className="max-w-full max-h-[calc(90vh-120px)] object-contain"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-gray-500">
+                입금 내역이 없습니다.
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </>
   );

@@ -33,6 +33,7 @@ export interface PlotterOrderResponse {
   memo?: string | null;
   isPaidService?: boolean;
   price?: number;
+  paymentReceiptUrl?: string;
 }
 
 // POST 응답용 (더 많은 정보 포함)
@@ -42,6 +43,7 @@ export interface PlotterOrderDetailResponse extends PlotterOrderResponse {
   price: number;
   fileUrl: string;
   originalFilename: string;
+  paymentReceiptUrl?: string;
 }
 
 export interface ApiError {

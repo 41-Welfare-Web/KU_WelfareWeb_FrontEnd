@@ -65,6 +65,7 @@ interface PlotterData {
   memo?: string | null;
   isPaidService?: boolean;
   price?: number;
+  paymentReceiptUrl?: string;
 }
 
 // ItemData와 CategoryData는 API 타입 사용
@@ -723,6 +724,7 @@ function AdminDashboard() {
                             status={PLOTTER_STATUS_MAP_REVERSE[plotter.status as keyof typeof PLOTTER_STATUS_MAP_REVERSE] as 'pending' | 'confirmed' | 'printed' | 'rejected' | 'completed'}
                             fileUrl={plotter.fileUrl}
                             isPaidService={plotter.isPaidService}
+                            paymentReceiptImageUrl={plotter.paymentReceiptUrl}
                             onStatusChange={(newStatus) => {
                               handlePlotterStatusChange(
                                 plotter.id,
