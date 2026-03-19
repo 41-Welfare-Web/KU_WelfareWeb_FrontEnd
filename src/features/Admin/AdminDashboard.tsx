@@ -500,7 +500,13 @@ function AdminDashboard() {
     // 상태 필터링
     let statusMatch = true;
     if (plotterStatusFilter !== '전체 상태') {
-      statusMatch = item.status === PLOTTER_STATUS_MAP[plotterStatusFilter];
+      if (plotterStatusFilter === '금일 수령') {
+        const today = new Date().toLocaleDateString('en-CA');
+        const itemPickupDate = item.pickupDate.slice(0, 10);
+        statusMatch = itemPickupDate === today && item.status !== 'REJECTED';
+      } else {
+        statusMatch = item.status === PLOTTER_STATUS_MAP[plotterStatusFilter];
+      }
     }
 
     // 검색어 필터링
@@ -670,7 +676,7 @@ function AdminDashboard() {
             <div>
               {/* 필터 바 */}
               <AdminPlotterFilterBar
-                statusOptions={['전체 상태', '예약 대기', '예약 확정', '인쇄 완료', '예약 반려', '수령 완료']}
+                statusOptions={['전체 상태', '금일 수령', '예약 대기', '예약 확정', '인쇄 완료', '예약 반려', '수령 완료']}
                 selectedStatus={plotterStatusFilter}
                 onStatusChange={setPlotterStatusFilter}
                 searchQuery={plotterSearchQuery}
