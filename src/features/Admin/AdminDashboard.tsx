@@ -456,6 +456,14 @@ function AdminDashboard() {
     if (rentalStatusFilter !== '전체 보기') {
       if (rentalStatusFilter === '불량 반납') {
         statusMatch = item.status === 'DEFECTIVE' || item.status === 'OVERDUE';
+      } else if (rentalStatusFilter === '금일 대여') {
+        const today = new Date().toLocaleDateString('en-CA');
+        const itemStart = item.startDate.slice(0, 10);
+        statusMatch = itemStart === today && item.status !== 'CANCELED';
+      } else if (rentalStatusFilter === '금일 반납') {
+        const today = new Date().toLocaleDateString('en-CA');
+        const itemEnd = item.endDate.slice(0, 10);
+        statusMatch = itemEnd === today && item.status !== 'CANCELED';
       } else {
         statusMatch = item.status === RENTAL_STATUS_MAP[rentalStatusFilter];
       }
@@ -562,7 +570,7 @@ function AdminDashboard() {
               <div>
               {/* 필터 바 */}
               <AdminFilterBar
-                statusOptions={['전체 보기', '예약', '대여 중', '정상 반납', '불량 반납', '예약 취소']}
+                statusOptions={['전체 보기', '예약', '대여 중', '정상 반납', '불량 반납', '예약 취소', '금일 대여', '금일 반납']}
                 selectedStatus={rentalStatusFilter}
                 onStatusChange={setRentalStatusFilter}
                 startDate={rentalStartDate}
