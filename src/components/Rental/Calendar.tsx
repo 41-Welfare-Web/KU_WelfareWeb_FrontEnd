@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { getItemAvailability } from "../../api/rental/calendar";
+import {
+  getItemAvailability,
+  getHolidayCalendar,
+  type HolidayCalendarItem,
+} from "../../api/rental/calendar";
 import type { Availability } from "../../api/rental/types";
 
 type Props = {
@@ -33,7 +37,7 @@ function getMonthGrid(viewYear: number, viewMonthIndex0: number) {
   const first = new Date(viewYear, viewMonthIndex0, 1);
   const last = new Date(viewYear, viewMonthIndex0 + 1, 0);
 
-  const firstDow = first.getDay(); // 0..6
+  const firstDow = first.getDay();
   const offset = firstDow;
   const start = new Date(first);
   start.setDate(first.getDate() - offset);
@@ -52,7 +56,7 @@ function addMonths(year: number, monthIndex0: number, delta: number) {
 }
 
 function isWeekend(d: Date) {
-  const dow = d.getDay(); // 0=일 ... 6=토
+  const dow = d.getDay();
   return dow === 0 || dow === 6;
 }
 
@@ -109,6 +113,10 @@ export default function Calendar({
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<Availability[]>([]);
 
+  const [holidayLoading, setHolidayLoading] = useState(false);
+  const [holidayError, setHolidayError] = useState<string | null>(null);
+  const [holidayData, setHolidayData] = useState<HolidayCalendarItem[]>([]);
+
   const fetchRange = useMemo(() => {
     if (startDate && !endDate) {
       const maxSelectableEnd = addDaysToYmd(startDate, 14);
@@ -154,6 +162,35 @@ export default function Calendar({
     };
   }, [itemId, fetchRange.start, fetchRange.end]);
 
+  // 휴무일 조회
+  useEffect(() => {
+    let alive = true;
+
+    async function run() {
+      setHolidayLoading(true);
+      setHolidayError(null);
+      try {
+        const result = await getHolidayCalendar({
+          year: viewYear,
+          month: viewMonth + 1,
+        });
+        if (!alive) return;
+        setHolidayData(result.holidays ?? []);
+      } catch (e: any) {
+        if (!alive) return;
+        setHolidayError(e?.message ?? "휴무일 조회에 실패했어요.");
+      } finally {
+        if (!alive) return;
+        setHolidayLoading(false);
+      }
+    }
+
+    run();
+    return () => {
+      alive = false;
+    };
+  }, [viewYear, viewMonth]);
+
   const adjustedData = useMemo(() => {
     const originalStartDate = editAdjust?.originalStartDate;
     const originalEndDate = editAdjust?.originalEndDate;
@@ -185,6 +222,16 @@ export default function Calendar({
     return m;
   }, [adjustedData]);
 
+  const holidayMap = useMemo(() => {
+    const m = new Map<string, HolidayCalendarItem>();
+    holidayData.forEach((row) => {
+      if (row.type === "HOLIDAY") {
+        m.set(row.date, row);
+      }
+    });
+    return m;
+  }, [holidayData]);
+
   const commit = (next: {
     startDate: string | null;
     endDate: string | null;
@@ -194,7 +241,6 @@ export default function Calendar({
     onChange?.(next);
   };
 
-  // 재고 없음 판단
   const hasOutOfStockBetween = (start: string, end: string) => {
     const startObj = new Date(start);
     const endObj = new Date(end);
@@ -251,6 +297,7 @@ export default function Calendar({
     setViewYear(next.year);
     setViewMonth(next.monthIndex0);
   };
+
   const goNext = () => {
     const next = addMonths(viewYear, viewMonth, 1);
     setViewYear(next.year);
@@ -289,8 +336,9 @@ export default function Calendar({
       </div>
 
       <div className="mt-2 text-[12px] text-black/50">
-        {loading ? "불러오는 중…" : ""}
+        {loading || holidayLoading ? "불러오는 중…" : ""}
         {error ? ` ${error}` : ""}
+        {holidayError ? ` ${holidayError}` : ""}
       </div>
 
       <div className="mt-4 grid grid-cols-7 text-center text-[13px] font-semibold text-black/70">
@@ -318,21 +366,26 @@ export default function Calendar({
             cell.date.getDate(),
           );
 
-          const todayYmdLive = toYmd(now); // 매 렌더마다 오늘 문자열
+          const todayYmdLive = toYmd(now);
           const isPast = ymd < todayYmdLive;
 
           const isToday = isSameDate(cellDate, todayDate);
-          const afterSix = now.getHours() >= 18; // 18:00 이후면 true
+          const afterSix = now.getHours() >= 18;
+
+          const holidayInfo = holidayMap.get(ymd);
           const isWeekendDay = isWeekend(cell.date);
+
+          const isHolidayWeekend = isWeekendDay;
+          const isHolidayRegistered = holidayInfo?.type === "HOLIDAY";
 
           const exceedsMaxRange =
             !!startDate && !endDate && ymd > addDaysToYmd(startDate, 14);
 
-          // 예약 불가 조건
           const isBlocked =
             !inMonth ||
             isPast ||
-            isWeekendDay ||
+            isHolidayWeekend ||
+            isHolidayRegistered ||
             (isToday && afterSix) ||
             exceedsMaxRange;
 
@@ -348,26 +401,27 @@ export default function Calendar({
           let base =
             "bg-white border border-black/10 hover:bg-black/5 text-black";
 
-          // 1) 달 밖
-          if (!inMonth)
+          if (!inMonth) {
             base = "bg-transparent text-black/25 border-transparent";
+          }
 
-          // 2) 과거/주말/오늘18시이후/선택일 포함 15일이후 -> 예약 불가 스타일
           if (
             inMonth &&
-            (isPast || isWeekendDay || (isToday && afterSix) || exceedsMaxRange)
+            (isPast ||
+              isHolidayWeekend ||
+              isHolidayRegistered ||
+              (isToday && afterSix) ||
+              exceedsMaxRange)
           ) {
             base =
               "bg-transparent text-black/30 border-transparent cursor-not-allowed";
           }
 
-          // 3) 재고 표시(예약 가능한 날짜에만)
           if (inMonth && !isBlocked) {
             if (enough === true) base = "bg-emerald-100 text-black";
             else if (enough === false) base = "bg-[#FFA2A2] text-[#FF0000]";
           }
 
-          // 선택 스타일은 예약 가능한 날짜에만
           let selectedCls = "";
           const isOutOfStock = enough === false;
 
@@ -403,7 +457,7 @@ export default function Calendar({
                   </div>
                 )}
 
-                {inMonth && isWeekendDay && (
+                {inMonth && isHolidayWeekend && (
                   <div className="mt-1 text-[10px] text-black/40 whitespace-nowrap">
                     주말
                   </div>

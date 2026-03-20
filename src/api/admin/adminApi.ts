@@ -20,3 +20,28 @@ export async function uploadItemImage(file: File): Promise<string> {
 
   return res.data.url;
 }
+
+// 물품 상세 조회 (GET /api/items/{itemId})
+export async function getItemDetail(itemId: number) {
+  const response = await axiosInstance.get(`/api/items/${itemId}`);
+  return response.data;
+}
+
+// 물품 수정 (PUT /api/items/{itemId})
+export async function updateItem(
+  itemId: number,
+  payload: {
+    categoryId?: number;
+    name?: string;
+    itemCode?: string;
+    description?: string;
+    imageUrl?: string | null;
+    imageUrls?: string[];
+    videoUrl?: string | null;
+    managementType?: "BULK" | "INDIVIDUAL";
+    totalQuantity?: number;
+  },
+) {
+  const response = await axiosInstance.put(`/api/items/${itemId}`, payload);
+  return response.data;
+}
