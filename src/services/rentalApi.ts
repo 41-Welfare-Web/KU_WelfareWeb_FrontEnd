@@ -84,3 +84,23 @@ export async function createRental(data: CreateRentalRequest): Promise<CreateRen
     throw new Error(error.response?.data?.message || "대여 예약 생성에 실패했습니다.");
   }
 }
+
+/**
+ * 대여 상태 변경
+ * PUT /api/rentals/{rentalId}/status
+ */
+export interface UpdateRentalStatusRequest {
+  status: 'RESERVED' | 'RENTED' | 'RETURNED' | 'CANCELED' | 'OVERDUE';
+  memo?: string;
+}
+
+export async function updateRentalStatus(
+  rentalId: number,
+  data: UpdateRentalStatusRequest
+): Promise<void> {
+  try {
+    await axiosInstance.put(`/api/rentals/${rentalId}/status`, data);
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "대여 상태 변경에 실패했습니다.");
+  }
+}

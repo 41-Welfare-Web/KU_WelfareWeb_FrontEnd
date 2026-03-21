@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import RentalStatusBadge from "../MyPage/RentalStatusBadge";
+import RentalDetailModal from "./RentalDetailModal";
 import editIcon from '../../assets/admin/pencil.svg';
 
 // 필요 시 호버 툴팁을 띄우는 셀
@@ -55,6 +56,7 @@ function TruncatedCell({
 }
 
 interface AdminRentalRowProps {
+  rentalId: number;
   rentalCode: string;
   userName: string;
   phoneNumber?: string;
@@ -71,6 +73,7 @@ interface AdminRentalRowProps {
 }
 
 export default function AdminRentalRow({
+  rentalId,
   rentalCode,
   userName,
   phoneNumber,
@@ -90,6 +93,7 @@ export default function AdminRentalRow({
   const [isEditing, setIsEditing] = useState(false);
   const [noteValue, setNoteValue] = useState(note);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const badgeBtnRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -151,8 +155,7 @@ export default function AdminRentalRow({
   };
 
   const handleEditClick = () => {
-    setIsEditing(true);
-    setTimeout(() => inputRef.current?.focus(), 0);
+    setIsDetailModalOpen(true);
   };
 
   const handleNoteBlur = () => {
@@ -284,6 +287,33 @@ export default function AdminRentalRow({
         </div>,
         document.body
       )}
+
+      {/* 상세 관리 모달 */}
+      <RentalDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        rentalId={rentalId}
+        rentalCode={rentalCode}
+        userName={userName}
+        department={department}
+        itemName={itemName}
+        startDate={startDate}
+        endDate={endDate}
+        status={status}
+        note={note}
+        onStatusChange={(newStatus) => {
+          if (onStatusChange) {
+            onStatusChange(newStatus);
+          }
+          setIsDetailModalOpen(false);
+        }}
+        onNoteSave={(newNote) => {
+          if (onNoteChange) {
+            onNoteChange(newNote);
+          }
+          setIsDetailModalOpen(false);
+        }}
+      />
     </>
   );
 }

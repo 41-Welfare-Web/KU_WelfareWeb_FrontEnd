@@ -701,6 +701,7 @@ function AdminDashboard() {
                             return (
                               <AdminRentalRow
                                 key={rental.id}
+                                rentalId={rental.id}
                                 rentalCode={`R-${rental.id}`}
                                 userName={rental.user.name}
                                 phoneNumber={rental.user.phoneNumber || "-"}
