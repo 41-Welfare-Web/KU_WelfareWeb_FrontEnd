@@ -20,7 +20,7 @@ interface RentalDetailModalProps {
   onNoteSave?: (note: string) => void;
 }
 
-const allStatuses = ['reserved', 'renting', 'returned', 'overdue', 'canceled', 'defective'] as const;
+const allStatuses = ['reserved', 'renting', 'returned', 'defective', 'canceled'] as const;
 
 // 상태 매핑: 프론트엔드 상태 -> API 상태
 const statusToAPI = {
@@ -191,10 +191,10 @@ export default function RentalDetailModal({
                 <option key={s} value={s}>
                   {s === 'reserved' && '예약'}
                   {s === 'renting' && '대여중'}
-                  {s === 'returned' && '반납'}
+                  {s === 'returned' && '정상 반납'}
                   {s === 'overdue' && '연체'}
-                  {s === 'canceled' && '취소'}
-                  {s === 'defective' && '불량'}
+                  {s === 'canceled' && '예약 취소'}
+                  {s === 'defective' && '불량 반납'}
                 </option>
               ))}
             </select>

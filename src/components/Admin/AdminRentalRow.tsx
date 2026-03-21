@@ -112,8 +112,8 @@ export default function AdminRentalRow({
   };
 
   // 가능한 모든 상태
-  const allStatuses: Array<"reserved" | "renting" | "returned" | "overdue" | "canceled"> = [
-    "reserved", "renting", "returned", "overdue", "canceled"
+  const allStatuses: Array<"reserved" | "renting" | "returned" | "defective" | "canceled"> = [
+    "reserved", "renting", "returned", "defective", "canceled"
   ];
 
   // 외부 클릭 시 드롭다운 닫기
@@ -180,30 +180,28 @@ export default function AdminRentalRow({
         <div className="flex items-center justify-between mb-2">
           <span className="text-[13px] font-semibold text-gray-500">{rentalCode}</span>
           <div>
-            <button ref={badgeBtnRef} onClick={handleToggleDropdown} className="hover:opacity-80 transition">
-              <RentalStatusBadge status={badgeStatus} />
-            </button>
+            <RentalStatusBadge status={badgeStatus} />
           </div>
         </div>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-[14px] font-semibold text-black" title={phoneNumber || '-'}>{userName}</span>
           <span className="text-[13px] text-gray-500">{department}</span>
         </div>
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2 justify-between">
           <p className="text-[13px] text-gray-700 truncate flex-1">{itemName}</p>
-          <div className="flex items-center gap-2">
-            {quantity !== undefined && (
-              <span className="text-[13px] font-medium text-gray-600">수량: {quantity}</span>
-            )}
-            <button onClick={handleEditClick} className="hover:opacity-70 transition-opacity" aria-label="상세 관리">
-              <img src={editIcon} alt="수정" className="w-[18px] h-[18px]" />
-            </button>
-          </div>
+          {quantity !== undefined && (
+            <span className="text-[13px] font-medium text-gray-600">수량: {quantity}</span>
+          )}
         </div>
-        <div className="flex items-center gap-2 text-[12px] text-gray-500">
-          <span>{formatDate(startDate)}</span>
-          <span>~</span>
-          <span>{formatDate(endDate)}</span>
+        <div className="flex items-center gap-2 text-[12px] text-gray-500 justify-between">
+          <div>
+            <span>{formatDate(startDate)}</span>
+            <span>~</span>
+            <span>{formatDate(endDate)}</span>
+          </div>
+          <button onClick={handleEditClick} className="hover:opacity-70 transition-opacity" aria-label="상세 관리">
+            <img src={editIcon} alt="수정" className="w-[18px] h-[18px]" />
+          </button>
         </div>
       </div>
 
