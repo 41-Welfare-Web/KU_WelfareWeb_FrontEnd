@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import RentalStatusBadge from '../MyPage/RentalStatusBadge';
 import { updateRentalStatus } from '../../services/rentalApi';
 
@@ -46,10 +47,25 @@ export default function RentalDetailModal({
   onStatusChange,
   onNoteSave,
 }: RentalDetailModalProps) {
+  const navigate = useNavigate();
   const [selectedStatus, setSelectedStatus] = useState<typeof status>(status);
   const [memoValue, setMemoValue] = useState(note);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleEdit = () => {
+    navigate(`/rental/cart?editRentalId=${rentalId}`, {
+      state: {
+        rentalCode,
+        userName,
+        department,
+        itemName,
+        startDate,
+        endDate,
+        isEditFromAdmin: true,
+      }
+    });
+  };
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -122,7 +138,10 @@ export default function RentalDetailModal({
           </div>
 
           {/* 신청자 정보 박스 */}
-          <div className="bg-[#e9e9e9] rounded-[10px] p-5 mb-5">
+          <div className="bg-[#e9e9e9] rounded-[10px] p-5 mb-5 relative">
+            <button onClick={handleEdit} className="absolute top-3 right-3 bg-[#f72] text-white px-3 py-1 rounded-[4px] text-[13px] font-['Gmarket_Sans:Medium',sans-serif] hover:bg-[#e65a3d] transition-colors shadow-md">
+              수정
+            </button>
             <div className="space-y-3">
               <div className="flex items-center gap-5">
                 <p className="text-[15px] font-['Gmarket_Sans:Bold',sans-serif] text-black flex-[3]">신청자</p>

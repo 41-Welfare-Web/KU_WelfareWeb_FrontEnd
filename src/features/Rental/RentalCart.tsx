@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import Calendar from "../../components/Rental/Calendar";
@@ -124,10 +124,12 @@ type EditRentalData = {
 
 export default function RentalCart() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [searchParams] = useSearchParams();
   const editRentalIdParam = searchParams.get("editRentalId");
   const isEditMode = !!editRentalIdParam;
+  const editFromAdminState = (location.state as any)?.isEditFromAdmin ? location.state : null;
 
   const [editRental, setEditRental] = useState<EditRentalData | null>(null);
   const [, setEditLoading] = useState(false);
@@ -546,6 +548,7 @@ export default function RentalCart() {
                   initialDepartmentName={
                     isEditMode ? (editRental?.departmentName ?? "") : ""
                   }
+                  initialUserName={editFromAdminState?.userName ?? ""}
                   editRentalId={
                     isEditMode ? Number(editRentalIdParam) : undefined
                   }
