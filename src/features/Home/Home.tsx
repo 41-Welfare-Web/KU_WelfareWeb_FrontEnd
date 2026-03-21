@@ -91,6 +91,14 @@ export default function Home() {
               건국대학교 41대 학생복지위원회 '연'
             </div>
           </div>
+
+          {/* 개선점 및 오류 신고 버튼 */}
+          <button
+            onClick={() => window.open('https://forms.gle/8jSY8XPF63gkqpGC6', '_blank')}
+            className="absolute top-4 right-4 bg-white text-[#E02000] px-3 py-1.5 rounded-full text-[12px] sm:text-[13px] font-semibold hover:bg-gray-100 transition shadow-md"
+          >
+            개선점 및 오류 신고
+          </button>
         </div>
       </section>
 
