@@ -668,7 +668,7 @@ function AdminDashboard() {
                         { label: "대여 날짜", width: "w-[10%] min-w-0" },
                         { label: "반납 날짜", width: "w-[10%] min-w-0" },
                         { label: "상태", width: "w-[9%] min-w-0" },
-                        { label: "비고", width: "w-[12%] min-w-0" },
+                        { label: "수정", width: "w-[5%] min-w-0" },
                       ]}
                     />
 

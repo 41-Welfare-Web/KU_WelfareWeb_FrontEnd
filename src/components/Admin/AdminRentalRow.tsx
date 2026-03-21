@@ -191,33 +191,19 @@ export default function AdminRentalRow({
         </div>
         <div className="flex items-center gap-2 mb-2">
           <p className="text-[13px] text-gray-700 truncate flex-1">{itemName}</p>
-          {quantity !== undefined && (
-            <span className="text-[13px] font-medium text-gray-600">수량: {quantity}</span>
-          )}
+          <div className="flex items-center gap-2">
+            {quantity !== undefined && (
+              <span className="text-[13px] font-medium text-gray-600">수량: {quantity}</span>
+            )}
+            <button onClick={handleEditClick} className="hover:opacity-70 transition-opacity" aria-label="상세 관리">
+              <img src={editIcon} alt="수정" className="w-[18px] h-[18px]" />
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-2 text-[12px] text-gray-500">
           <span>{formatDate(startDate)}</span>
           <span>~</span>
           <span>{formatDate(endDate)}</span>
-        </div>
-        {/* 비고 */}
-        <div className="flex items-center gap-2 mt-2 min-w-0">
-          <input
-            ref={inputRef}
-            type="text"
-            value={noteValue}
-            onChange={(e) => setNoteValue(e.target.value)}
-            onBlur={handleNoteBlur}
-            onKeyDown={handleNoteKeyDown}
-            disabled={!isEditing}
-            placeholder="비고"
-            className={`flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none transition-colors ${
-              saveSuccess ? 'border-green-500' : isEditing ? 'border-[#FF7A57]' : 'border-gray-300'
-            }`}
-          />
-          <button onClick={handleEditClick} className="w-4 h-4 hover:opacity-70 transition-opacity flex-shrink-0" aria-label="비고 수정">
-            <img src={editIcon} alt="수정" className="w-4 h-4" />
-          </button>
         </div>
       </div>
 
@@ -240,27 +226,15 @@ export default function AdminRentalRow({
 
         {/* 상태 배지 */}
         <div className="w-[9%] min-w-0 shrink flex items-center justify-center">
-          <button ref={badgeBtnRef} onClick={handleToggleDropdown} className="w-full hover:opacity-80 transition">
+          <button ref={badgeBtnRef} onClick={handleToggleDropdown} className="hover:opacity-80 transition">
             <RentalStatusBadge status={badgeStatus} />
           </button>
         </div>
 
-        {/* 비고 입력 필드 */}
-        <div className="w-[12%] min-w-0 shrink flex items-center gap-1">
-          <input
-            ref={inputRef}
-            type="text"
-            value={noteValue}
-            onChange={(e) => setNoteValue(e.target.value)}
-            onBlur={handleNoteBlur}
-            onKeyDown={handleNoteKeyDown}
-            disabled={!isEditing}
-            className={`flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none transition-colors ${
-              saveSuccess ? 'border-green-500' : isEditing ? 'border-[#FF7A57]' : 'border-gray-300'
-            }`}
-          />
-          <button onClick={handleEditClick} className="w-4 h-4 hover:opacity-70 transition-opacity flex-shrink-0" aria-label="비고 수정">
-            <img src={editIcon} alt="수정" className="w-4 h-4" />
+        {/* 수정 버튼 */}
+        <div className="w-[5%] min-w-0 shrink flex items-center justify-center">
+          <button onClick={handleEditClick} className="hover:opacity-70 transition-opacity" aria-label="상세 관리">
+            <img src={editIcon} alt="수정" className="w-[18px] h-[18px]" />
           </button>
         </div>
       </div>

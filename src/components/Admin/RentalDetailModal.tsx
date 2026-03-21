@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import RentalStatusBadge from '../MyPage/RentalStatusBadge';
@@ -52,6 +52,15 @@ export default function RentalDetailModal({
   const [memoValue, setMemoValue] = useState(note);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 모달이 열리거나 status/note가 변경될 때마다 상태 동기화
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedStatus(status);
+      setMemoValue(note);
+      setError(null);
+    }
+  }, [isOpen, status, note]);
 
   const handleEdit = () => {
     navigate(`/rental/cart?editRentalId=${rentalId}`, {
@@ -134,7 +143,7 @@ export default function RentalDetailModal({
               <p className="text-[#7d7d7d] text-[17px] font-['210_OmniGothic:030',sans-serif] mb-1">신청 번호</p>
               <p className="text-black text-[17px] font-['210_OmniGothic:030',sans-serif]">{rentalCode}</p>
             </div>
-            <RentalStatusBadge status={status} />
+            <RentalStatusBadge status={selectedStatus === 'overdue' ? 'defective' : selectedStatus as 'reserved' | 'renting' | 'returned' | 'defective' | 'canceled'} />
           </div>
 
           {/* 신청자 정보 박스 */}
