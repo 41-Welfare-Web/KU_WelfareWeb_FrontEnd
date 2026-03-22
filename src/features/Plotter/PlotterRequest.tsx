@@ -37,6 +37,7 @@ export default function PlotterRequest() {
   const [desiredDate, setDesiredDate] = useState("");
   const [paperSize, setPaperSize] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [copies, setCopies] = useState(1);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -134,7 +135,7 @@ export default function PlotterRequest() {
     return found ? found.price : 0;
   };
 
-  const totalPrice = getPaperPrice() * quantity;
+  const totalPrice = getPaperPrice() * quantity * copies;
 
   const handlePdfUpload = (file: File) => {
     if (
@@ -206,6 +207,7 @@ export default function PlotterRequest() {
         purpose: purpose.trim(),
         paperSize: extractedPaperSize,
         pageCount: quantity,
+        orderQuantity: copies,
         departmentType,
         departmentName: departmentName || undefined,
         pickupDate: desiredDate,
@@ -221,7 +223,8 @@ export default function PlotterRequest() {
           studentNo: response.user?.studentId || "",
           phone: phoneNumber,
           purpose: response.purpose,
-          quantity: response.pageCount,
+          pageCount: response.pageCount,
+          orderQuantity: response.orderQuantity || response.price,
           paperSize: response.paperSize,
           expectedDate: response.pickupDate,
           price: response.price,
@@ -293,6 +296,8 @@ export default function PlotterRequest() {
                 onPaperSizeChange={setPaperSize}
                 quantity={quantity}
                 onQuantityChange={setQuantity}
+                copies={copies}
+                onCopiesChange={setCopies}
               />
 
               {/* PDF 파일 업로드 */}

@@ -28,6 +28,7 @@ type Props = {
 
   initialDepartmentType?: string;
   initialDepartmentName?: string;
+  initialUserName?: string;
 
   onSubmit?: (payload: {
     departmentType: string;
@@ -48,6 +49,7 @@ export default function RentalConfirmModal({
   editItems,
   initialDepartmentType = "",
   initialDepartmentName = "",
+  initialUserName = "",
 }: Props) {
   const { deptGroups, loading: metaLoading } = useMetadata();
 
@@ -88,21 +90,32 @@ export default function RentalConfirmModal({
     // 1) profile
     setProfileLoading(true);
     setProfileError(null);
-    getMyProfile()
-      .then((p) => {
-        if (!alive) return;
-        setProfile(p);
-      })
-      .catch((e: unknown) => {
-        if (!alive) return;
-        setProfileError(
-          e instanceof Error ? e.message : "사용자 정보를 불러오지 못했습니다.",
-        );
-      })
-      .finally(() => {
-        if (!alive) return;
-        setProfileLoading(false);
-      });
+    
+    // 수정 모드이고 initialUserName이 있으면 원래 예약자 정보 유지
+    if (mode === "edit" && initialUserName) {
+      setProfile({
+        name: initialUserName,
+        studentId: "",
+        phoneNumber: "",
+      } as UserProfile);
+      setProfileLoading(false);
+    } else {
+      getMyProfile()
+        .then((p) => {
+          if (!alive) return;
+          setProfile(p);
+        })
+        .catch((e: unknown) => {
+          if (!alive) return;
+          setProfileError(
+            e instanceof Error ? e.message : "사용자 정보를 불러오지 못했습니다.",
+          );
+        })
+        .finally(() => {
+          if (!alive) return;
+          setProfileLoading(false);
+        });
+    }
 
     // 2) items
     setItemsLoading(true);

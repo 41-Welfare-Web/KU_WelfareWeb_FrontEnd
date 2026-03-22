@@ -31,6 +31,7 @@ interface PlotterData {
   purpose: string;
   paperSize: string;
   pageCount: number;
+  orderQuantity?: number;
   pickupDate: string;
   status: string;
   createdAt: string;
@@ -99,8 +100,8 @@ export function useExportCSV() {
       return;
     }
 
-    // 테이블 컬럼 순서: 신청번호 / 신청자 / 소속 / 파일명(목적) / 용지/장수 / 수령일 / 상태
-    let csvContent = '신청번호,신청자,학번,소속,파일명,용지 크기,인쇄 장수,수령일,상태\n';
+    // 테이블 컬럼 순서: 신청번호 / 신청자 / 소속 / 파일명(목적) / 용지/인쇄부수 / 수령일 / 상태
+    let csvContent = '신청번호,신청자,학번,소속,파일명,용지 크기,인쇄 부수,수령일,상태\n';
 
     data.forEach(item => {
       const dept = item.departmentName || item.user?.departmentName || item.departmentType || '-';
@@ -111,7 +112,7 @@ export function useExportCSV() {
         esc(dept),
         esc(item.purpose),
         esc(item.paperSize),
-        esc(item.pageCount),
+        esc(item.orderQuantity || item.pageCount || 0),
         escDate(item.pickupDate ?? ''),
         esc(PLOTTER_STATUS_KO[item.status] ?? item.status),
       ].join(',');

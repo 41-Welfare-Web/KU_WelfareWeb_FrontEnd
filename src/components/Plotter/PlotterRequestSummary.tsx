@@ -1,6 +1,6 @@
 interface PlotterRequestSummaryProps {
   purpose: string;
-  quantity: number;
+  orderQuantity: number;
   expectedDate: string;
   applicantName: string;
   studentNo: string;
@@ -10,7 +10,7 @@ interface PlotterRequestSummaryProps {
 
 export default function PlotterRequestSummary({
   purpose,
-  quantity,
+  orderQuantity,
   expectedDate,
   applicantName,
   studentNo,
@@ -35,7 +35,7 @@ export default function PlotterRequestSummary({
       
       {/* 상단 섹션 - 우측 */}
       <div className="absolute right-[20px] md:right-[39px] top-[30px] md:top-[44.5px] transform -translate-y-1/2">
-        <p className="text-[16px] md:text-[25px] font-bold text-black whitespace-nowrap">{quantity}부</p>
+        <p className="text-[16px] md:text-[25px] font-bold text-black whitespace-nowrap">{orderQuantity}부</p>
       </div>
       
       {/* 수령일 - 좌측 */}
