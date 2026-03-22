@@ -640,7 +640,7 @@ export default function RentalCart() {
                       let result;
                       if (adminCreateFor) {
                         // 관리자 대리 예약
-                        const { userId, departmentType: adminDeptType, departmentName: adminDeptName } = adminCreateFor;
+                        const { userId } = adminCreateFor;
                         result = await import("../../api/rental/rentalApi").then(mod => mod.createAdminRental({
                           departmentType,
                           departmentName,
