@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import AdminRentalRow from "../../components/Admin/AdminRentalRow";
@@ -20,6 +21,7 @@ import { getCategories, getItems } from "../../api/rental/rentalApi";
 import type { Item, Category } from "../../api/rental/types";
 import axiosInstance from "../../api/axiosInstance";
 import AdminItemCreateModal from "../../components/Admin/AdminItemCreateModal";
+import AdminUserSelectModal from "../../components/Admin/AdminUserSelectModal";
 
 type TabType = "rental" | "plotter" | "items";
 
@@ -204,6 +206,7 @@ function Pagination({
 }
 
 function AdminDashboard() {
+  const navigate = useNavigate();
   const rejectHandlerRef = useRef<PlotterRejectHandlerRef>(null);
   const { exportCSV } = useExportCSV();
   const [activeTab, setActiveTab] = useState<TabType>("rental");
@@ -228,6 +231,7 @@ function AdminDashboard() {
   const [itemsPage, setItemsPage] = useState(1);
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [userSelectOpen, setUserSelectOpen] = useState(false);
 
   const fetchRentals = async () => {
     try {
@@ -620,6 +624,24 @@ function AdminDashboard() {
             onSuccess={fetchItems}
           />
 
+          <AdminUserSelectModal
+            isOpen={userSelectOpen}
+            onClose={() => setUserSelectOpen(false)}
+            onSelectUser={(user) => {
+              navigate("/rental", {
+                state: {
+                  adminCreateFor: {
+                    userId: user.id,
+                    userName: user.name,
+                    studentId: user.studentId,
+                    departmentType: user.departmentType,
+                    departmentName: user.departmentName,
+                  },
+                },
+              });
+            }}
+          />
+
           {/* 탭과 내용을 감싸는 박스 */}
           <div className="bg-white rounded-[20px] p-4 md:p-8 shadow-sm">
             {/* 탭 네비게이션 */}
@@ -763,12 +785,26 @@ function AdminDashboard() {
                 </div>
                 {/* overflow-x-auto */}
                 {!loading && !error && filteredRentalData.length > 0 && (
-                  <Pagination
-                    total={filteredRentalData.length}
-                    page={rentalPage}
-                    pageSize={PAGE_SIZE}
-                    onPageChange={setRentalPage}
-                  />
+                  <div>
+                    <div className="mt-6 md:mt-8">
+                      <div className="flex justify-end mb-4">
+                        <button
+                          onClick={() => setUserSelectOpen(true)}
+                          className="h-[36px] px-4 bg-[#fe6949] text-white font-medium text-sm rounded-lg hover:bg-[#e65a3d] transition whitespace-nowrap"
+                        >
+                          신규 예약 추가
+                        </button>
+                      </div>
+                      <div className="flex justify-center">
+                        <Pagination
+                          total={filteredRentalData.length}
+                          page={rentalPage}
+                          pageSize={PAGE_SIZE}
+                          onPageChange={setRentalPage}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             )}

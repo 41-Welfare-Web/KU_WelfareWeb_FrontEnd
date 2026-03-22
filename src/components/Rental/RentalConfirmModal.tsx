@@ -29,6 +29,7 @@ type Props = {
   initialDepartmentType?: string;
   initialDepartmentName?: string;
   initialUserName?: string;
+  initialUserProfile?: Partial<UserProfile>;
 
   onSubmit?: (payload: {
     departmentType: string;
@@ -50,6 +51,7 @@ export default function RentalConfirmModal({
   initialDepartmentType = "",
   initialDepartmentName = "",
   initialUserName = "",
+  initialUserProfile,
 }: Props) {
   const { deptGroups, loading: metaLoading } = useMetadata();
 
@@ -91,12 +93,27 @@ export default function RentalConfirmModal({
     setProfileLoading(true);
     setProfileError(null);
     
-    // 수정 모드이고 initialUserName이 있으면 원래 예약자 정보 유지
-    if (mode === "edit" && initialUserName) {
+    // 관리자 신규 예약: 전달된 사용자 정보가 있으면 그걸로 profile 세팅
+    if (mode === "create" && initialUserProfile) {
+      setProfile({
+        ...initialUserProfile,
+        role: "USER",
+        createdAt: "",
+        id: "",
+        username: "",
+      } as UserProfile);
+      setProfileLoading(false);
+    } else if (mode === "edit" && initialUserName) {
       setProfile({
         name: initialUserName,
         studentId: "",
         phoneNumber: "",
+        departmentType: initialDepartmentType,
+        departmentName: initialDepartmentName,
+        role: "USER",
+        createdAt: "",
+        id: "",
+        username: "",
       } as UserProfile);
       setProfileLoading(false);
     } else {
@@ -282,7 +299,7 @@ export default function RentalConfirmModal({
       />
 
       <div
-        className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 px-4"
+        className="fixed inset-0 z-999 flex items-center justify-center bg-black/40 px-4"
         onMouseDown={(e) => {
           if (e.target === e.currentTarget) onClose();
         }}
