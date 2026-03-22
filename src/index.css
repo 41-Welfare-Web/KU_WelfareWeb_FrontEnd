@@ -4,17 +4,29 @@
   --font-crimson: "Crimson Text", serif;
   --font-noto-serif-kr: "Noto Serif KR", serif;
   --font-playfair: "Playfair Display", serif;
+  --font-noto-sans-kr: "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 @layer utilities {
   .font-crimson {
     font-family: var(--font-crimson);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
   .font-noto-serif-kr {
     font-family: var(--font-noto-serif-kr);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
   .font-playfair {
     font-family: var(--font-playfair);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .font-noto-sans-kr {
+    font-family: var(--font-noto-sans-kr);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 }
 
