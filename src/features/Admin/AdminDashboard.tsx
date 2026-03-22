@@ -719,11 +719,10 @@ function AdminDashboard() {
                             </span>
                           </div>
                         ) : (
-                          paginatedRentalData.map((rental) => {
-                            // status 매핑: RENTED -> renting
-                            return (
+                          paginatedRentalData.flatMap((rental) =>
+                            (rental.rentalItems || []).map((item, idx) => (
                               <AdminRentalRow
-                                key={rental.id}
+                                key={rental.id + '-' + (item.id ?? idx)}
                                 rentalId={rental.id}
                                 rentalCode={`R-${rental.id}`}
                                 userName={rental.user.name}
@@ -733,16 +732,11 @@ function AdminDashboard() {
                                   rental.departmentType ||
                                   "-"
                                 }
-                                itemName={
-                                  rental.itemSummary?.replace(
-                                    /\s*외\s*0건$/,
-                                    "",
-                                  ) || "-"
-                                }
-                                quantity={rental.quantity}
+                                itemName={item.item?.name || "-"}
+                                quantity={item.quantity}
                                 startDate={rental.startDate}
                                 endDate={rental.endDate}
-                                note={rental.memo || ""}
+                                note={item.memo || rental.memo || ""}
                                 status={
                                   RENTAL_STATUS_MAP_REVERSE[rental.status] as
                                     | "reserved"
@@ -776,8 +770,8 @@ function AdminDashboard() {
                                   );
                                 }}
                               />
-                            );
-                          })
+                            ))
+                          )
                         )}
                       </div>
                     )}
