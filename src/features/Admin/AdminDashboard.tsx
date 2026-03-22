@@ -737,7 +737,7 @@ function AdminDashboard() {
                                 quantity={item.quantity}
                                 startDate={rental.startDate}
                                 endDate={rental.endDate}
-                                note={item.memo || rental.memo || ""}
+                                note={rental.memo || ""}
                                 status={
                                   RENTAL_STATUS_MAP_REVERSE[rental.status] as
                                     | "reserved"
