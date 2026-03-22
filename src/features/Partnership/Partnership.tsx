@@ -45,7 +45,7 @@ export default function Partnership() {
     {
       id: 4,
       category: "의류/단체복",
-      title: "연 X 디엔진",
+      title: "연 X 더엔진",
       description: "과잠, 단체복 제작 시 누리는 건국대 특별 혜택",
       imageUrl: cloth,
       link: "https://www.instagram.com/p/DVnoj_Jk2ta/?igsh=Y3A0anVkOTY0NGZq",
