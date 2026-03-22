@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import cancel from "../../assets/rental/cancel-white.svg";
 
 import { getMyProfile } from "../../services/userApi";
@@ -8,7 +9,29 @@ import { useMetadata } from "../../contexts/MetadataContext";
 import { getMyCart } from "../../api/rental/cart/cartApi";
 import DepartmentPickerModal from "../DepartmentPickerModal";
 
+
 type ConfirmMode = "create" | "edit";
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  mode?: ConfirmMode; // default "create"
+  editRentalId?: number;
+  editItems?: ConfirmItem[];
+  initialDepartmentType?: string;
+  initialDepartmentName?: string;
+  initialUserName?: string;
+  initialUserProfile?: Partial<UserProfile>;
+  onSubmit?: (payload: {
+    departmentType: string;
+    departmentName: string;
+    cartItems: ConfirmItem[];
+    profile: UserProfile;
+    mode: ConfirmMode;
+    editRentalId?: number;
+  }) => void;
+  onEditUser?: () => void; // 예약자 수정 버튼 클릭 시 호출
+}
 
 export type ConfirmItem = {
   itemId: number;
@@ -18,28 +41,7 @@ export type ConfirmItem = {
   endDate: string | null; // "YYYY-MM-DD"
 };
 
-type Props = {
-  open: boolean;
-  onClose: () => void;
 
-  mode?: ConfirmMode; // default "create"
-  editRentalId?: number;
-  editItems?: ConfirmItem[];
-
-  initialDepartmentType?: string;
-  initialDepartmentName?: string;
-  initialUserName?: string;
-  initialUserProfile?: Partial<UserProfile>;
-
-  onSubmit?: (payload: {
-    departmentType: string;
-    departmentName: string;
-    cartItems: ConfirmItem[];
-    profile: UserProfile;
-    mode: ConfirmMode;
-    editRentalId?: number;
-  }) => void;
-};
 
 export default function RentalConfirmModal({
   open,
@@ -52,7 +54,9 @@ export default function RentalConfirmModal({
   initialDepartmentName = "",
   initialUserName = "",
   initialUserProfile,
+  onEditUser,
 }: Props) {
+  const { user } = useAuth();
   const { deptGroups, loading: metaLoading } = useMetadata();
 
   // 신청자 정보
@@ -92,7 +96,7 @@ export default function RentalConfirmModal({
     // 1) profile
     setProfileLoading(true);
     setProfileError(null);
-    
+
     // 관리자 신규 예약: 전달된 사용자 정보가 있으면 그걸로 profile 세팅
     if (mode === "create" && initialUserProfile) {
       setProfile({
@@ -169,7 +173,7 @@ export default function RentalConfirmModal({
     return () => {
       alive = false;
     };
-  }, [open, mode, editItems]);
+  }, [open, mode, editItems, initialUserProfile, initialUserName, initialDepartmentType, initialDepartmentName]);
 
   // 프로필 로드 후: 기본 소속 세팅 (한 번만)
   useEffect(() => {
@@ -394,8 +398,20 @@ export default function RentalConfirmModal({
                 </div>
               </div>
 
+              {/* 대여 품목 위: 관리자인 경우 예약자 수정 버튼 */}
+              {user?.role === "ADMIN" && (
+                <div className="mt-6 mb-2 flex justify-end">
+                  <button
+                    type="button"
+                    className="px-3 py-1.5 rounded-lg bg-[#FE6949] text-white text-xs font-semibold hover:bg-[#e65a3d] transition"
+                    onClick={onEditUser}
+                  >
+                    예약자 수정하기
+                  </button>
+                </div>
+              )}
               {/* 대여 품목 */}
-              <div className="mt-6">
+              <div className="mt-2">
                 <div className="mb-3 text-xs sm:text-sm font-semibold text-black/70">
                   대여 품목
                 </div>

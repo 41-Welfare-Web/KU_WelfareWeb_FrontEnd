@@ -76,7 +76,7 @@ export default function AdminUserSelectModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
       <div className="w-full max-w-2xl max-h-[90vh] bg-white rounded-[15px] shadow-2xl flex flex-col">
         {/* 헤더 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -121,7 +121,6 @@ export default function AdminUserSelectModal({
                   key={user.id}
                   onClick={() => {
                     onSelectUser(user);
-                    onClose();
                   }}
                   className="w-full px-4 py-3 border-b border-gray-200 hover:bg-gray-50 transition text-left flex items-center justify-between"
                 >

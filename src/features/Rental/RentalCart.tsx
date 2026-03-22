@@ -22,6 +22,7 @@ import {
 
 import calendar from "../../assets/rental/calendar-orange.svg";
 import RentalConfirmModal from "../../components/Rental/RentalConfirmModal";
+import AdminUserSelectModal from "../../components/Admin/AdminUserSelectModal";
 
 async function checkEnough(
   itemId: number,
@@ -126,11 +127,19 @@ export default function RentalCart() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // location.state에서 최초 예약자 정보 추출
+  const initialAdminCreateFor = (location.state as any)?.adminCreateFor;
+
+  // 예약자 선택 모달 상태
+  const [userSelectOpen, setUserSelectOpen] = useState(false);
+  // 예약자 정보 상태 (관리자용)
+  const [selectedUser, setSelectedUser] = useState<any>(initialAdminCreateFor || null);
+
   const [searchParams] = useSearchParams();
   const editRentalIdParam = searchParams.get("editRentalId");
   const isEditMode = !!editRentalIdParam;
   // 관리자 신규 예약: 선택된 사용자 정보
-  const adminCreateFor = (location.state as any)?.adminCreateFor;
+  const adminCreateFor = selectedUser || initialAdminCreateFor;
   const editFromAdminState = (location.state as any)?.isEditFromAdmin ? location.state : null;
 
   const [editRental, setEditRental] = useState<EditRentalData | null>(null);
@@ -643,6 +652,18 @@ export default function RentalCart() {
                           })),
                           targetUserId: userId,
                         }));
+
+                        // 대리예약 성공 시 장바구니 비우기
+                        try {
+                          const cartData = await import("../../api/rental/cart/cartApi").then(mod => mod.getMyCart());
+                          const cartIds = (cartData.items ?? []).map((item: any) => item.id || item.cartId);
+                          for (const cartId of cartIds) {
+                            await import("../../api/rental/cart/cartApi").then(mod => mod.deleteCartItem(cartId));
+                          }
+                        } catch (e) {
+                          // 실패해도 무시(알림만)
+                          console.warn("관리자 대리예약 후 장바구니 비우기 실패:", e);
+                        }
                       } else {
                         // 일반 사용자 예약
                         result = await createRentals({
@@ -672,6 +693,23 @@ export default function RentalCart() {
 
                       alert(message || "요청에 실패했어요. 다시 시도해주세요.");
                     }
+                  }}
+                  onEditUser={() => setUserSelectOpen(true)}
+                />
+
+                {/* 예약자 선택 모달 */}
+                <AdminUserSelectModal
+                  isOpen={userSelectOpen}
+                  onClose={() => setUserSelectOpen(false)}
+                  onSelectUser={(user) => {
+                    setSelectedUser({
+                      userId: user.id,
+                      userName: user.name,
+                      studentId: user.studentId,
+                      departmentType: user.departmentType,
+                      departmentName: user.departmentName,
+                    });
+                    setUserSelectOpen(false);
                   }}
                 />
               </div>

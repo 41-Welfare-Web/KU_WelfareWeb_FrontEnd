@@ -789,7 +789,7 @@ function AdminDashboard() {
                     <div className="mt-6 md:mt-8">
                       <div className="flex justify-end mb-4">
                         <button
-                          onClick={() => setUserSelectOpen(true)}
+                          onClick={() => navigate("/rental")}
                           className="h-[36px] px-4 bg-[#fe6949] text-white font-medium text-sm rounded-lg hover:bg-[#e65a3d] transition whitespace-nowrap"
                         >
                           신규 예약 추가
