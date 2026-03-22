@@ -4,6 +4,7 @@ export interface PlotterOrderRequest {
   purpose: string;
   paperSize: string;
   pageCount: number;
+  orderQuantity: number;
   departmentType: string;
   departmentName?: string;
   pickupDate: string;
@@ -25,6 +26,7 @@ export interface PlotterOrderResponse {
   purpose: string;
   paperSize: string;
   pageCount: number;
+  orderQuantity?: number;
   pickupDate: string;
   status: string;
   createdAt: string;
@@ -44,6 +46,7 @@ export interface PlotterOrderDetailResponse extends PlotterOrderResponse {
   fileUrl: string;
   originalFilename: string;
   paymentReceiptUrl?: string;
+  orderQuantity?: number;
 }
 
 export interface ApiError {
@@ -63,6 +66,7 @@ export async function createPlotterOrder(
   formData.append("purpose", data.purpose);
   formData.append("paperSize", data.paperSize);
   formData.append("pageCount", data.pageCount.toString());
+  formData.append("orderQuantity", data.orderQuantity.toString());
   formData.append("departmentType", data.departmentType);
   formData.append("pickupDate", data.pickupDate);
   

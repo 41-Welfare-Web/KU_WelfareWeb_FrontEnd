@@ -1,5 +1,5 @@
 interface RentalStatusBadgeProps {
-  status: 'reserved' | 'renting' | 'returned' | 'defective' | 'canceled';
+  status: 'reserved' | 'renting' | 'returned' | 'defective' | 'canceled' | 'overdue';
   className?: string;
 }
 
@@ -29,6 +29,11 @@ const RentalStatusBadge = ({ status, className = '' }: RentalStatusBadgeProps) =
       text: '예약 취소',
       bgColor: '#fcff9c',
       textColor: '#ffae00',
+    },
+    overdue: {
+      text: '연체',
+      bgColor: '#ffcccb',
+      textColor: '#d32f2f',
     },
   };
 

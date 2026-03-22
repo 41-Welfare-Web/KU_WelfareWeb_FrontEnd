@@ -64,6 +64,7 @@ interface PlotterData {
   purpose: string;
   paperSize: string;
   pageCount: number;
+  orderQuantity?: number;
   pickupDate: string;
   status: string;
   createdAt: string;
@@ -668,7 +669,7 @@ function AdminDashboard() {
                         { label: "대여 날짜", width: "w-[10%] min-w-0" },
                         { label: "반납 날짜", width: "w-[10%] min-w-0" },
                         { label: "상태", width: "w-[9%] min-w-0" },
-                        { label: "비고", width: "w-[12%] min-w-0" },
+                        { label: "수정", width: "w-[5%] min-w-0" },
                       ]}
                     />
 
@@ -701,6 +702,7 @@ function AdminDashboard() {
                             return (
                               <AdminRentalRow
                                 key={rental.id}
+                                rentalId={rental.id}
                                 rentalCode={`R-${rental.id}`}
                                 userName={rental.user.name}
                                 phoneNumber={rental.user.phoneNumber || "-"}
@@ -850,7 +852,7 @@ function AdminDashboard() {
                                   "-"
                                 }
                                 purpose={plotter.purpose}
-                                paperSizeAndCount={`${plotter.paperSize} / ${plotter.pageCount}장`}
+                                paperSizeAndCount={`${plotter.paperSize} / ${plotter.orderQuantity || plotter.pageCount}부`}
                                 orderDate={plotter.pickupDate}
                                 note={plotter.memo || ""}
                                 status={

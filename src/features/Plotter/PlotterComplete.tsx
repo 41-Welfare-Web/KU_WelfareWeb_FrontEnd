@@ -12,7 +12,8 @@ type LocationState = {
   studentNo?: string;
   phone?: string;
   purpose?: string;
-  quantity?: number;
+  pageCount?: number;
+  orderQuantity?: number;
   paperSize?: string;
   expectedDate?: string;
   price?: number;
@@ -30,7 +31,7 @@ export default function PlotterComplete() {
   const studentNo = state?.studentNo || "202112345";
   const phone = state?.phone || "010-1234-5678";
   const purpose = state?.purpose || "대자보";
-  const quantity = state?.quantity || 1;
+  const orderQuantity = state?.orderQuantity || 1;
   const rawExpectedDate = state?.expectedDate || "2026-01-10";
   
   // 메타데이터에서 무료 목적 목록 가져오기
@@ -96,7 +97,7 @@ export default function PlotterComplete() {
           <div className="flex justify-center mt-6 md:mt-12 px-3">
             <PlotterRequestSummary
               purpose={purpose}
-              quantity={quantity}
+              orderQuantity={orderQuantity}
               expectedDate={expectedDate}
               applicantName={name}
               studentNo={studentNo}

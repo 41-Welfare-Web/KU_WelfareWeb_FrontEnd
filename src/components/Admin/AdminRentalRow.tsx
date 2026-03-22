@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import RentalStatusBadge from "../MyPage/RentalStatusBadge";
+import RentalDetailModal from "./RentalDetailModal";
 import editIcon from '../../assets/admin/pencil.svg';
 
 // 필요 시 호버 툴팁을 띄우는 셀
@@ -55,6 +56,7 @@ function TruncatedCell({
 }
 
 interface AdminRentalRowProps {
+  rentalId: number;
   rentalCode: string;
   userName: string;
   phoneNumber?: string;
@@ -71,6 +73,7 @@ interface AdminRentalRowProps {
 }
 
 export default function AdminRentalRow({
+  rentalId,
   rentalCode,
   userName,
   phoneNumber,
@@ -87,19 +90,12 @@ export default function AdminRentalRow({
 }: AdminRentalRowProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
-  const [isEditing, setIsEditing] = useState(false);
-  const [noteValue, setNoteValue] = useState(note);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const badgeBtnRef = useRef<HTMLButtonElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // status 변환: overdue -> defective로 매핑
   const badgeStatus = status === "overdue" ? "defective" : status as "reserved" | "renting" | "returned" | "defective" | "canceled";
-
-  useEffect(() => {
-    setNoteValue(note);
-  }, [note]);
 
   // 날짜 포맷팅 함수: ISO 형식에서 YYYY-MM-DD만 추출
   const formatDate = (dateString: string) => {
@@ -108,8 +104,8 @@ export default function AdminRentalRow({
   };
 
   // 가능한 모든 상태
-  const allStatuses: Array<"reserved" | "renting" | "returned" | "overdue" | "canceled"> = [
-    "reserved", "renting", "returned", "overdue", "canceled"
+  const allStatuses: Array<"reserved" | "renting" | "returned" | "defective" | "canceled"> = [
+    "reserved", "renting", "returned", "defective", "canceled"
   ];
 
   // 외부 클릭 시 드롭다운 닫기
@@ -143,7 +139,7 @@ export default function AdminRentalRow({
     setIsDropdownOpen((prev) => !prev);
   };
 
-  const handleStatusClick = (newStatus: "reserved" | "renting" | "returned" | "overdue" | "canceled") => {
+  const handleStatusClick = (newStatus: "reserved" | "renting" | "returned" | "defective" | "canceled") => {
     if (onStatusChange) {
       onStatusChange(newStatus);
     }
@@ -151,23 +147,7 @@ export default function AdminRentalRow({
   };
 
   const handleEditClick = () => {
-    setIsEditing(true);
-    setTimeout(() => inputRef.current?.focus(), 0);
-  };
-
-  const handleNoteBlur = () => {
-    setIsEditing(false);
-    if (onNoteChange && noteValue !== note) {
-      onNoteChange(noteValue);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 1000);
-    }
-  };
-
-  const handleNoteKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleNoteBlur();
-    }
+    setIsDetailModalOpen(true);
   };
 
   return (
@@ -177,43 +157,27 @@ export default function AdminRentalRow({
         <div className="flex items-center justify-between mb-2">
           <span className="text-[13px] font-semibold text-gray-500">{rentalCode}</span>
           <div>
-            <button ref={badgeBtnRef} onClick={handleToggleDropdown} className="hover:opacity-80 transition">
-              <RentalStatusBadge status={badgeStatus} />
-            </button>
+            <RentalStatusBadge status={badgeStatus} />
           </div>
         </div>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-[14px] font-semibold text-black" title={phoneNumber || '-'}>{userName}</span>
           <span className="text-[13px] text-gray-500">{department}</span>
         </div>
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2 justify-between">
           <p className="text-[13px] text-gray-700 truncate flex-1">{itemName}</p>
           {quantity !== undefined && (
             <span className="text-[13px] font-medium text-gray-600">수량: {quantity}</span>
           )}
         </div>
-        <div className="flex items-center gap-2 text-[12px] text-gray-500">
-          <span>{formatDate(startDate)}</span>
-          <span>~</span>
-          <span>{formatDate(endDate)}</span>
-        </div>
-        {/* 비고 */}
-        <div className="flex items-center gap-2 mt-2 min-w-0">
-          <input
-            ref={inputRef}
-            type="text"
-            value={noteValue}
-            onChange={(e) => setNoteValue(e.target.value)}
-            onBlur={handleNoteBlur}
-            onKeyDown={handleNoteKeyDown}
-            disabled={!isEditing}
-            placeholder="비고"
-            className={`flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none transition-colors ${
-              saveSuccess ? 'border-green-500' : isEditing ? 'border-[#FF7A57]' : 'border-gray-300'
-            }`}
-          />
-          <button onClick={handleEditClick} className="w-4 h-4 hover:opacity-70 transition-opacity flex-shrink-0" aria-label="비고 수정">
-            <img src={editIcon} alt="수정" className="w-4 h-4" />
+        <div className="flex items-center gap-2 text-[12px] text-gray-500 justify-between">
+          <div>
+            <span>{formatDate(startDate)}</span>
+            <span>~</span>
+            <span>{formatDate(endDate)}</span>
+          </div>
+          <button onClick={handleEditClick} className="hover:opacity-70 transition-opacity" aria-label="상세 관리">
+            <img src={editIcon} alt="수정" className="w-[18px] h-[18px]" />
           </button>
         </div>
       </div>
@@ -237,27 +201,15 @@ export default function AdminRentalRow({
 
         {/* 상태 배지 */}
         <div className="w-[9%] min-w-0 shrink flex items-center justify-center">
-          <button ref={badgeBtnRef} onClick={handleToggleDropdown} className="w-full hover:opacity-80 transition">
+          <button ref={badgeBtnRef} onClick={handleToggleDropdown} className="hover:opacity-80 transition">
             <RentalStatusBadge status={badgeStatus} />
           </button>
         </div>
 
-        {/* 비고 입력 필드 */}
-        <div className="w-[12%] min-w-0 shrink flex items-center gap-1">
-          <input
-            ref={inputRef}
-            type="text"
-            value={noteValue}
-            onChange={(e) => setNoteValue(e.target.value)}
-            onBlur={handleNoteBlur}
-            onKeyDown={handleNoteKeyDown}
-            disabled={!isEditing}
-            className={`flex-1 min-w-0 h-[30px] px-2 text-[13px] font-medium text-black border rounded bg-white disabled:bg-gray-50 disabled:border-gray-200 focus:outline-none transition-colors ${
-              saveSuccess ? 'border-green-500' : isEditing ? 'border-[#FF7A57]' : 'border-gray-300'
-            }`}
-          />
-          <button onClick={handleEditClick} className="w-4 h-4 hover:opacity-70 transition-opacity flex-shrink-0" aria-label="비고 수정">
-            <img src={editIcon} alt="수정" className="w-4 h-4" />
+        {/* 수정 버튼 */}
+        <div className="w-[5%] min-w-0 shrink flex items-center justify-center">
+          <button onClick={handleEditClick} className="hover:opacity-70 transition-opacity" aria-label="상세 관리">
+            <img src={editIcon} alt="수정" className="w-[18px] h-[18px]" />
           </button>
         </div>
       </div>
@@ -270,20 +222,46 @@ export default function AdminRentalRow({
           className="bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[120px] max-h-[220px] overflow-y-auto"
         >
           {allStatuses.map((statusOption) => {
-            const displayStatus = statusOption === "overdue" ? "defective" : statusOption as "reserved" | "renting" | "returned" | "defective" | "canceled";
             return (
               <button
                 key={statusOption}
                 onClick={() => handleStatusClick(statusOption)}
                 className="w-full px-3 py-2 hover:bg-gray-50 transition flex items-center justify-center"
               >
-                <RentalStatusBadge status={displayStatus} />
+                <RentalStatusBadge status={statusOption} />
               </button>
             );
           })}
         </div>,
         document.body
       )}
+
+      {/* 상세 관리 모달 */}
+      <RentalDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        rentalId={rentalId}
+        rentalCode={rentalCode}
+        userName={userName}
+        department={department}
+        itemName={itemName}
+        startDate={startDate}
+        endDate={endDate}
+        status={status}
+        note={note}
+        onStatusChange={(newStatus) => {
+          if (onStatusChange) {
+            onStatusChange(newStatus);
+          }
+          setIsDetailModalOpen(false);
+        }}
+        onNoteSave={(newNote) => {
+          if (onNoteChange) {
+            onNoteChange(newNote);
+          }
+          setIsDetailModalOpen(false);
+        }}
+      />
     </>
   );
 }
