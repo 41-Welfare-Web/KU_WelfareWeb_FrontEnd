@@ -22,6 +22,7 @@ import {
 
 import calendar from "../../assets/rental/calendar-orange.svg";
 import RentalConfirmModal from "../../components/Rental/RentalConfirmModal";
+import AdminUserSelectModal from "../../components/Admin/AdminUserSelectModal";
 
 async function checkEnough(
   itemId: number,
@@ -126,9 +127,19 @@ export default function RentalCart() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // location.state에서 최초 예약자 정보 추출
+  const initialAdminCreateFor = (location.state as any)?.adminCreateFor;
+
+  // 예약자 선택 모달 상태
+  const [userSelectOpen, setUserSelectOpen] = useState(false);
+  // 예약자 정보 상태 (관리자용)
+  const [selectedUser, setSelectedUser] = useState<any>(initialAdminCreateFor || null);
+
   const [searchParams] = useSearchParams();
   const editRentalIdParam = searchParams.get("editRentalId");
   const isEditMode = !!editRentalIdParam;
+  // 관리자 신규 예약: 선택된 사용자 정보
+  const adminCreateFor = selectedUser || initialAdminCreateFor;
   const editFromAdminState = (location.state as any)?.isEditFromAdmin ? location.state : null;
 
   const [editRental, setEditRental] = useState<EditRentalData | null>(null);
@@ -445,7 +456,7 @@ export default function RentalCart() {
     <>
       <Header />
 
-      <div className="min-h-[calc(100dvh-80px)] bg-[linear-gradient(180deg,_#FFDCC5_0.33%,_#FFEDE2_57.71%,_#FFFFFF_99.63%)]">
+      <div className="min-h-[calc(100dvh-80px)] bg-[linear-gradient(180deg,#FFDCC5_0.33%,#FFEDE2_57.71%,#FFFFFF_99.63%)]">
         <div className="mx-auto max-w-[1440px] px-6 py-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* 왼쪽: 기간 선택 */}
@@ -485,7 +496,7 @@ export default function RentalCart() {
                 "rounded-2xl bg-white border border-black/10 shadow-[0_10px_24px_rgba(0,0,0,0.10)]",
                 "p-9",
                 "flex flex-col",
-                "h-[560px] md:h-[640px]",
+                "h-140 md:h-160",
               ].join(" ")}
             >
               <div className="flex items-center justify-between shrink-0">
@@ -543,12 +554,31 @@ export default function RentalCart() {
                   onClose={() => setConfirmOpen(false)}
                   mode={isEditMode ? "edit" : "create"}
                   initialDepartmentType={
-                    isEditMode ? (editRental?.departmentType ?? "") : ""
+                    isEditMode
+                      ? (editRental?.departmentType ?? "")
+                      : adminCreateFor?.departmentType ?? ""
                   }
                   initialDepartmentName={
-                    isEditMode ? (editRental?.departmentName ?? "") : ""
+                    isEditMode
+                      ? (editRental?.departmentName ?? "")
+                      : adminCreateFor?.departmentName ?? ""
                   }
-                  initialUserName={editFromAdminState?.userName ?? ""}
+                  initialUserName={
+                    isEditMode
+                      ? editFromAdminState?.userName ?? ""
+                      : adminCreateFor?.userName ?? ""
+                  }
+                  initialUserProfile={
+                    !isEditMode && adminCreateFor
+                      ? {
+                          name: adminCreateFor.userName,
+                          studentId: adminCreateFor.studentId,
+                          phoneNumber: "",
+                          departmentType: adminCreateFor.departmentType,
+                          departmentName: adminCreateFor.departmentName,
+                        }
+                      : undefined
+                  }
                   editRentalId={
                     isEditMode ? Number(editRentalIdParam) : undefined
                   }
@@ -606,17 +636,47 @@ export default function RentalCart() {
                         return;
                       }
 
-                      // 신규 예약: create API 호출
-                      const result = await createRentals({
-                        departmentType,
-                        departmentName,
-                        items: cartItems.map((it: any) => ({
-                          itemId: it.item?.id ?? it.itemId,
-                          quantity: it.quantity ?? it.count ?? 1,
-                          startDate: String(it.startDate ?? "").slice(0, 10),
-                          endDate: String(it.endDate ?? "").slice(0, 10),
-                        })),
-                      });
+                      // 신규 예약: 일반/관리자 분기
+                      let result;
+                      if (adminCreateFor) {
+                        // 관리자 대리 예약
+                        const { userId } = adminCreateFor;
+                        result = await import("../../api/rental/rentalApi").then(mod => mod.createAdminRental({
+                          departmentType,
+                          departmentName,
+                          items: cartItems.map((it: any) => ({
+                            itemId: it.item?.id ?? it.itemId,
+                            quantity: it.quantity ?? it.count ?? 1,
+                            startDate: String(it.startDate ?? "").slice(0, 10),
+                            endDate: String(it.endDate ?? "").slice(0, 10),
+                          })),
+                          targetUserId: userId,
+                        }));
+
+                        // 대리예약 성공 시 장바구니 비우기
+                        try {
+                          const cartData = await import("../../api/rental/cart/cartApi").then(mod => mod.getMyCart());
+                          const cartIds = (cartData.items ?? []).map((item: any) => item.id || item.cartId);
+                          for (const cartId of cartIds) {
+                            await import("../../api/rental/cart/cartApi").then(mod => mod.deleteCartItem(cartId));
+                          }
+                        } catch (e) {
+                          // 실패해도 무시(알림만)
+                          console.warn("관리자 대리예약 후 장바구니 비우기 실패:", e);
+                        }
+                      } else {
+                        // 일반 사용자 예약
+                        result = await createRentals({
+                          departmentType,
+                          departmentName,
+                          items: cartItems.map((it: any) => ({
+                            itemId: it.item?.id ?? it.itemId,
+                            quantity: it.quantity ?? it.count ?? 1,
+                            startDate: String(it.startDate ?? "").slice(0, 10),
+                            endDate: String(it.endDate ?? "").slice(0, 10),
+                          })),
+                        });
+                      }
 
                       navigate("/rental/complete", { state: { result } });
                       setConfirmOpen(false);
@@ -633,6 +693,23 @@ export default function RentalCart() {
 
                       alert(message || "요청에 실패했어요. 다시 시도해주세요.");
                     }
+                  }}
+                  onEditUser={() => setUserSelectOpen(true)}
+                />
+
+                {/* 예약자 선택 모달 */}
+                <AdminUserSelectModal
+                  isOpen={userSelectOpen}
+                  onClose={() => setUserSelectOpen(false)}
+                  onSelectUser={(user) => {
+                    setSelectedUser({
+                      userId: user.id,
+                      userName: user.name,
+                      studentId: user.studentId,
+                      departmentType: user.departmentType,
+                      departmentName: user.departmentName,
+                    });
+                    setUserSelectOpen(false);
                   }}
                 />
               </div>

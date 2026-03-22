@@ -54,6 +54,16 @@ export async function createRentals(body: RentalCreateRequest) {
   return res.data;
 }
 
+// 관리자 대여 대리 신청 (POST /api/rentals/admin)
+import type { AdminRentalCreateRequest } from "./types";
+export async function createAdminRental(body: AdminRentalCreateRequest) {
+  const res = await axiosInstance.post<RentalCreateResponse>(
+    "/api/rentals/admin",
+    body,
+  );
+  return res.data;
+}
+
 // 대여 예약 상세조회 (GET /api/rentals/{id})
 export async function getRentalDetail(rentalId: number) {
   const res = await axiosInstance.get<RentalDetail>(`/api/rentals/${rentalId}`);

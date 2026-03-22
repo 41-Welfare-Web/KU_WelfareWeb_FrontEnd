@@ -94,6 +94,14 @@ export type RentalCreateRequest = {
   items: RentalCreateItem[];
 };
 
+// 관리자 대여 대리 신청 (POST /api/rentals/admin)
+export type AdminRentalCreateRequest = {
+  departmentType: string;
+  departmentName: string;
+  items: RentalCreateItem[];
+  targetUserId: string;
+};
+
 export type RentalStatus = "RESERVED" | "RENTED" | "RETURNED" | "CANCELED";
 
 export type RentalUser = {
