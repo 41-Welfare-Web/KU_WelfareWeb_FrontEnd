@@ -97,8 +97,13 @@ export default function RentalDetailModal({
       }
 
       onClose();
-    } catch (err) {
+    } catch (err: any) {
+      console.error("대여 상태 변경 실패:", err);
       const errorMessage = err instanceof Error ? err.message : '저장에 실패했습니다.';
+      console.error("상세 에러 정보:", {
+        errorMessage,
+        fullError: err,
+      });
       setError(errorMessage);
     } finally {
       setIsLoading(false);

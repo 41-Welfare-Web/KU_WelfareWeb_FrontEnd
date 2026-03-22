@@ -101,6 +101,12 @@ export async function updateRentalStatus(
   try {
     await axiosInstance.put(`/api/rentals/${rentalId}/status`, data);
   } catch (error: any) {
+    console.error("대여 상태 변경 API 에러:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      message: error.response?.data?.message,
+      data: error.response?.data,
+    });
     throw new Error(error.response?.data?.message || "대여 상태 변경에 실패했습니다.");
   }
 }

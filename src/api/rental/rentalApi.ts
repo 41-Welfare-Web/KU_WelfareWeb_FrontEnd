@@ -60,13 +60,15 @@ export async function getRentalDetail(rentalId: number) {
   return res.data;
 }
 
-// 대여 예약 수정 (PUT /api/rentals/{id})
+// 대여 예약 수정 (PUT /api/rentals/{id} 또는 PUT /api/rentals/admin/{id})
 export async function updateRental(
   rentalId: number,
   body: RentalUpsertRequest,
+  isAdmin: boolean = false,
 ) {
+  const endpoint = isAdmin ? `/api/rentals/admin/${rentalId}` : `/api/rentals/${rentalId}`;
   const res = await axiosInstance.put<RentalUpsertResponse>(
-    `/api/rentals/${rentalId}`,
+    endpoint,
     body,
   );
   return res.data;
