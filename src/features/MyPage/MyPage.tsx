@@ -189,7 +189,7 @@ export default function MyPage() {
                 code: `PLOT-${order.id}`,
                 applicationDate: order.createdAt || "",
                 printDate: order.pickupDate || "",
-                orderQuantity: order.orderQuantity || 0,
+                orderQuantity: order.orderQuantity || order.pageCount || 0,
               };
             },
           );

@@ -90,20 +90,12 @@ export default function AdminRentalRow({
 }: AdminRentalRowProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
-  const [isEditing, setIsEditing] = useState(false);
-  const [noteValue, setNoteValue] = useState(note);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const badgeBtnRef = useRef<HTMLButtonElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // status 변환: overdue -> defective로 매핑
   const badgeStatus = status === "overdue" ? "defective" : status as "reserved" | "renting" | "returned" | "defective" | "canceled";
-
-  useEffect(() => {
-    setNoteValue(note);
-  }, [note]);
 
   // 날짜 포맷팅 함수: ISO 형식에서 YYYY-MM-DD만 추출
   const formatDate = (dateString: string) => {
@@ -147,7 +139,7 @@ export default function AdminRentalRow({
     setIsDropdownOpen((prev) => !prev);
   };
 
-  const handleStatusClick = (newStatus: "reserved" | "renting" | "returned" | "overdue" | "canceled") => {
+  const handleStatusClick = (newStatus: "reserved" | "renting" | "returned" | "defective" | "canceled") => {
     if (onStatusChange) {
       onStatusChange(newStatus);
     }
@@ -156,21 +148,6 @@ export default function AdminRentalRow({
 
   const handleEditClick = () => {
     setIsDetailModalOpen(true);
-  };
-
-  const handleNoteBlur = () => {
-    setIsEditing(false);
-    if (onNoteChange && noteValue !== note) {
-      onNoteChange(noteValue);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 1000);
-    }
-  };
-
-  const handleNoteKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleNoteBlur();
-    }
   };
 
   return (
@@ -245,14 +222,13 @@ export default function AdminRentalRow({
           className="bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[120px] max-h-[220px] overflow-y-auto"
         >
           {allStatuses.map((statusOption) => {
-            const displayStatus = statusOption === "overdue" ? "defective" : statusOption as "reserved" | "renting" | "returned" | "defective" | "canceled";
             return (
               <button
                 key={statusOption}
                 onClick={() => handleStatusClick(statusOption)}
                 className="w-full px-3 py-2 hover:bg-gray-50 transition flex items-center justify-center"
               >
-                <RentalStatusBadge status={displayStatus} />
+                <RentalStatusBadge status={statusOption} />
               </button>
             );
           })}

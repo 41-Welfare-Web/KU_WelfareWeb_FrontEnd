@@ -26,6 +26,7 @@ export interface PlotterOrderResponse {
   purpose: string;
   paperSize: string;
   pageCount: number;
+  orderQuantity?: number;
   pickupDate: string;
   status: string;
   createdAt: string;
@@ -45,6 +46,7 @@ export interface PlotterOrderDetailResponse extends PlotterOrderResponse {
   fileUrl: string;
   originalFilename: string;
   paymentReceiptUrl?: string;
+  orderQuantity?: number;
 }
 
 export interface ApiError {

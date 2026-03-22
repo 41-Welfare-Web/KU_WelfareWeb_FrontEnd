@@ -121,7 +121,7 @@ export default function RentalDetailModal({
     }
   };
 
-  const displayStatus = status === 'overdue' ? 'defective' : status as 'reserved' | 'renting' | 'returned' | 'defective' | 'canceled';
+  // displayStatus는 선택된 상태를 badge에 표시할 때 사용됨
 
   return createPortal(
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -197,7 +197,6 @@ export default function RentalDetailModal({
                   {s === 'reserved' && '예약'}
                   {s === 'renting' && '대여중'}
                   {s === 'returned' && '정상 반납'}
-                  {s === 'overdue' && '연체'}
                   {s === 'canceled' && '예약 취소'}
                   {s === 'defective' && '불량 반납'}
                 </option>

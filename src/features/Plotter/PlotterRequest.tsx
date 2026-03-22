@@ -224,7 +224,7 @@ export default function PlotterRequest() {
           phone: phoneNumber,
           purpose: response.purpose,
           pageCount: response.pageCount,
-          orderQuantity: response.orderQuantity,
+          orderQuantity: response.orderQuantity || response.price,
           paperSize: response.paperSize,
           expectedDate: response.pickupDate,
           price: response.price,

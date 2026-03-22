@@ -31,6 +31,7 @@ interface PlotterData {
   purpose: string;
   paperSize: string;
   pageCount: number;
+  orderQuantity?: number;
   pickupDate: string;
   status: string;
   createdAt: string;
