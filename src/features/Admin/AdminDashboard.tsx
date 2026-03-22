@@ -50,6 +50,7 @@ interface RentalData {
   quantity?: number;
   memo?: string | null;
   createdAt: string;
+  rentalItems: import("../../api/rental/types").RentalRentalItem[];
 }
 
 interface PlotterData {
