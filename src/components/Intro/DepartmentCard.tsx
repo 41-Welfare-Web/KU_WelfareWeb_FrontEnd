@@ -36,12 +36,12 @@ export default function DepartmentCard({
         
         <div className="flex-1 min-w-0">
           {/* 국 이름 */}
-          <h3 className="text-2xl sm:text-3xl font-bold text-black mb-2 sm:mb-3 font-['Gmarket_Sans'] break-words">
+          <h3 className="text-2xl sm:text-3xl font-bold text-black mb-2 sm:mb-3 font-noto-sans-kr break-words">
             {name}
           </h3>
           
           {/* 설명 */}
-          <p className="text-gray-600 text-sm sm:text-base leading-relaxed font-['Gmarket_Sans'] break-words">
+          <p className="text-gray-600 text-sm sm:text-base leading-relaxed font-noto-sans-kr break-words">
             {description}
           </p>
         </div>
@@ -49,7 +49,7 @@ export default function DepartmentCard({
 
       {/* 주요 사업 섹션 */}
       <div className="px-4 sm:px-6 py-6 sm:py-8">
-        <h4 className="text-lg sm:text-xl font-bold text-gray-700 mb-4 sm:mb-6 font-['Gmarket_Sans']">
+        <h4 className="text-lg sm:text-xl font-bold text-gray-700 mb-4 sm:mb-6 font-noto-sans-kr">
           주요 사업
         </h4>
 
@@ -60,10 +60,10 @@ export default function DepartmentCard({
               key={index}
               className="bg-[#ededed] rounded-lg p-4 sm:p-5"
             >
-              <h5 className="text-base sm:text-lg font-bold text-gray-700 mb-2 sm:mb-3 font-['Gmarket_Sans'] break-words">
+              <h5 className="text-base sm:text-lg font-bold text-gray-700 mb-2 sm:mb-3 font-noto-sans-kr break-words">
                 {project.title}
               </h5>
-              <p className="text-[13px] sm:text-sm text-gray-600 leading-relaxed font-['Gmarket_Sans'] break-words">
+              <p className="text-[13px] sm:text-sm text-gray-600 leading-relaxed font-noto-sans-kr break-words">
                 {project.description}
               </p>
             </div>

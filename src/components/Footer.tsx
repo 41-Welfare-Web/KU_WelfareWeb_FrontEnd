@@ -42,7 +42,7 @@ export default function Footer() {
 
               {/* 건국대학교 / KONKUK UNIV. */}
               <div className="text-left leading-tight">
-                <div className="text-[22px] sm:text-[28px] text-black font-noto-serif-kr">
+                <div className="text-[22px] sm:text-[28px] text-black font-noto-sans-kr font-bold">
                   건국대학교
                 </div>
                 <div className="text-[18px] sm:text-[24px] tracking-[0.02em] text-black font-playfair">
@@ -53,14 +53,14 @@ export default function Footer() {
           </div>
 
           <div className="text-[#2B1B14]">
-            <p className="text-[14px] sm:text-[15px] font-semibold [font-family:var(--font-crimson)]">
+            <p className="text-[14px] sm:text-[15px] font-semibold font-crimson">
               건국대학교 41대 학생복지위원회 연
             </p>
-            <p className="mt-1 text-[12px] sm:text-[13px] font-semibold tracking-[0.02em] [font-family:var(--font-crimson)]">
+            <p className="mt-1 text-[12px] sm:text-[13px] font-semibold tracking-[0.02em] font-playfair">
               KONKUK UNIVERSITY THE 41ST STUDENT WELFARE COUNCIL
             </p>
 
-            <p className="mt-6 text-[12px] sm:text-[13px] leading-[1.6] font-semibold text-[#3A2A23]/80 [font-family:var(--font-crimson)]">
+            <p className="mt-6 text-[12px] sm:text-[13px] leading-[1.6] font-semibold text-[#3A2A23]/80 font-noto-sans-kr">
               서울특별시 광진구 능동로 120
               <br />
               건국대학교 제1학생회관 B110호
