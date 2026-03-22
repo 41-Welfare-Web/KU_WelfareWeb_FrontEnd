@@ -64,6 +64,7 @@ interface PlotterData {
   purpose: string;
   paperSize: string;
   pageCount: number;
+  orderQuantity?: number;
   pickupDate: string;
   status: string;
   createdAt: string;
@@ -851,7 +852,7 @@ function AdminDashboard() {
                                   "-"
                                 }
                                 purpose={plotter.purpose}
-                                paperSizeAndCount={`${plotter.paperSize} / ${plotter.pageCount}장`}
+                                paperSizeAndCount={`${plotter.paperSize} / ${plotter.orderQuantity || plotter.pageCount}부`}
                                 orderDate={plotter.pickupDate}
                                 note={plotter.memo || ""}
                                 status={

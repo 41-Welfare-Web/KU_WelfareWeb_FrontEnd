@@ -16,7 +16,7 @@ interface PlotterContainerProps {
   applicationDate: string;
   title: string;
   printDate: string;
-  pageCount: number;
+  orderQuantity: number;
   className?: string;
 }
 
@@ -26,7 +26,7 @@ const PlotterContainer = ({
   applicationDate,
   title,
   printDate,
-  pageCount,
+  orderQuantity,
   className = '',
 }: PlotterContainerProps) => {
   return (
@@ -69,7 +69,7 @@ const PlotterContainer = ({
               {printDate ? formatDate(printDate) : '수령일 미정'}
             </p>
             <p className="text-[12px] md:text-[15px] font-medium text-[#5b5b5b]">
-              | 장수: {pageCount}장
+              | 부수: {orderQuantity}부
             </p>
           </div>
         </div>
