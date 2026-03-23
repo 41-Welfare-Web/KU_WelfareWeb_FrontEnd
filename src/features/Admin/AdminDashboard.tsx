@@ -379,38 +379,7 @@ function AdminDashboard() {
     setItemsPage(1);
   }, [itemsCategoryFilter, itemsSearchQuery]);
 
-  const handleRentalStatusChange = async (
-    rentalId: number,
-    newStatus: string,
-  ) => {
-    try {
-      await axiosInstance.put(`/api/rentals/${rentalId}/status`, {
-        status: newStatus,
-      });
-      alert("상태가 변경되었습니다.");
-      fetchRentals();
-    } catch (err: any) {
-      console.error("상태 변경 실패:", err);
-      alert(err.response?.data?.message || "상태 변경에 실패했습니다.");
-    }
-  };
-
-  const handleRentalNoteChange = async (
-    rentalId: number,
-    currentStatus: RentalData["status"],
-    memo: string,
-  ) => {
-    try {
-      await axiosInstance.put(`/api/rentals/${rentalId}/status`, {
-        status: currentStatus,
-        memo,
-      });
-      fetchRentals();
-    } catch (err: any) {
-      console.error("비고 저장 실패:", err);
-      alert(err.response?.data?.message || "비고 저장에 실패했습니다.");
-    }
-  };
+  // handleRentalStatusChange, handleRentalNoteChange는 onSave로 통합되어 더 이상 사용되지 않으므로 제거
 
   const handlePlotterStatusChange = async (
     orderId: number,
