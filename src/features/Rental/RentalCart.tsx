@@ -121,6 +121,9 @@ type EditRentalData = {
     imageUrl?: string;
     categoryName?: string;
   }[];
+  userName?: string;
+  studentId?: string;
+  phoneNumber?: string;
 };
 
 export default function RentalCart() {
