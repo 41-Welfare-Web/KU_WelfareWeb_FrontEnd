@@ -369,10 +369,15 @@ export default function RentalCart() {
         setEditLoading(true);
         setEditError(null);
 
+
         try {
           const detail = await getRentalDetail(rentalId);
 
-          const mappedEditRental: EditRentalData = {
+          const mappedEditRental: EditRentalData & {
+            userName?: string;
+            studentId?: string;
+            phoneNumber?: string;
+          } = {
             rentalId: detail.id,
             departmentType: detail.departmentType ?? "",
             departmentName: detail.departmentName ?? "",
@@ -386,6 +391,9 @@ export default function RentalCart() {
               imageUrl: ri.item?.imageUrl ?? undefined,
               categoryName: ri.item?.category?.name ?? undefined,
             })),
+            userName: detail.user?.name ?? "",
+            studentId: detail.user?.studentId ?? "",
+            phoneNumber: detail.user?.phoneNumber ?? "",
           };
 
           setEditRental(mappedEditRental);
@@ -565,17 +573,26 @@ export default function RentalCart() {
                   }
                   initialUserName={
                     isEditMode
-                      ? editFromAdminState?.userName ?? adminCreateFor?.userName ?? ""
+                      ? editFromAdminState?.userName
+                        ?? adminCreateFor?.userName
+                        ?? editRental?.userName
+                        ?? ""
                       : adminCreateFor?.userName ?? ""
                   }
                   initialStudentId={
                     isEditMode
-                      ? editFromAdminState?.studentId ?? adminCreateFor?.studentId ?? ""
+                      ? editFromAdminState?.studentId
+                        ?? adminCreateFor?.studentId
+                        ?? editRental?.studentId
+                        ?? ""
                       : adminCreateFor?.studentId ?? ""
                   }
                   initialPhoneNumber={
                     isEditMode
-                      ? editFromAdminState?.phoneNumber ?? adminCreateFor?.phoneNumber ?? ""
+                      ? editFromAdminState?.phoneNumber
+                        ?? adminCreateFor?.phoneNumber
+                        ?? editRental?.phoneNumber
+                        ?? ""
                       : adminCreateFor?.phoneNumber ?? ""
                   }
                   initialUserProfile={
