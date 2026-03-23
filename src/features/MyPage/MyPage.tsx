@@ -13,7 +13,7 @@ import {
   deleteMyAccount,
 } from "../../services/userApi";
 import { getRentals, cancelRental } from "../../services/rentalApi";
-import { getPlotterOrders } from "../../services/plotterApi";
+import { getPlotterOrders, cancelPlotterOrder } from "../../services/plotterApi";
 import {
   mapRentalStatus,
   mapPlotterStatus,
@@ -393,6 +393,27 @@ export default function MyPage() {
                           title={reservation.title}
                           printDate={reservation.printDate}
                           orderQuantity={reservation.orderQuantity}
+                          onCancel={reservation.status === 'waiting' ? async () => {
+                            if (!window.confirm('플로터 예약을 취소하시겠습니까?')) return;
+                            try {
+                              await cancelPlotterOrder(Number(reservation.id));
+                              alert('플로터 예약이 취소되었습니다.');
+                              // 목록 새로고침
+                              const response = await getPlotterOrders({ userId: userProfile?.id, pageSize: 100 });
+                              const mappedOrders = response.orders.map((order) => ({
+                                id: order.id.toString(),
+                                title: order.purpose || "플로터 주문",
+                                status: mapPlotterStatus(order.status),
+                                code: `PLOT-${order.id}`,
+                                applicationDate: order.createdAt || "",
+                                printDate: order.pickupDate || "",
+                                orderQuantity: order.orderQuantity || order.pageCount || 0,
+                              }));
+                              setPlotterReservations(mappedOrders);
+                            } catch (error) {
+                              alert('플로터 예약 취소에 실패했습니다.');
+                            }
+                          } : undefined}
                         />
                       ))}
                     </div>
