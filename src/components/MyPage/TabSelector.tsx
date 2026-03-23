@@ -13,11 +13,11 @@ const TabSelector = ({ activeTab, onTabChange, className = '' }: TabSelectorProp
 
   return (
     <div className={`flex h-[60px] md:h-[94px] ${className}`}>
-      {tabs.map((tab) => (
+         {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
-          className={`flex-1 md:w-[293px] md:flex-none h-full text-[13px] md:text-[30px] font-medium text-[#410f07] transition-colors rounded-tl-[10px] rounded-tr-[10px] px-1 md:px-4 ${
+          className={`flex-1 h-full text-[13px] md:text-[30px] font-medium text-[#410f07] transition-colors rounded-tl-[10px] rounded-tr-[10px] px-1 md:px-4 ${
             activeTab === tab.id
               ? 'bg-[#ff7755]'
               : 'bg-white hover:bg-[#f5f5f5] border border-[#e3e3e3]'
@@ -27,7 +27,7 @@ const TabSelector = ({ activeTab, onTabChange, className = '' }: TabSelectorProp
             letterSpacing: '-0.6px',
           }}
         >
-          <span className="block leading-tight">{tab.label}</span>
+          <span className="block leading-tight whitespace-nowrap">{tab.label}</span>
         </button>
       ))}
     </div>
