@@ -142,6 +142,9 @@ export default function WelfareIntro() {
                     <br />
                     <span className="text-orange-500">이어지는 연</span>
                   </h2>
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-5 text-black">
+                    위원장 인사말
+                  </h3>
                   <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-10 items-start">
                     <div className="flex-1 min-w-0 text-gray-700 text-[15px] sm:text-base lg:text-lg leading-relaxed space-y-4">
                       {chairGreetingParagraphs.map((paragraph, index) => (

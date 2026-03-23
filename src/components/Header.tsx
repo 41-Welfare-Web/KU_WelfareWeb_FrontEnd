@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import logo from "../assets/all/logo.svg";
 import my from "../assets/all/my.svg";
 import { useAuth } from "../contexts/AuthContext";
 import menu from "../assets/all/menu.svg";
@@ -113,13 +112,13 @@ export default function Header() {
           className="flex items-center gap-2 sm:gap-3"
         >
           <img
-            src={logo}
+            src="/logo.png"
             alt="로고"
             className="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10"
           />
           <div className="flex flex-col items-start leading-tight text-[#410F07]">
             <p className="text-[12px] font-semibold sm:text-xs lg:text-sm">
-              건국대학교 41대 학생복지위원회
+              건국대학교 제41대 학생복지위원회
             </p>
             <p className="text-[16px] font-semibold sm:text-lg lg:text-xl">
               연:連
