@@ -573,7 +573,7 @@ export default function RentalCart() {
                       ? {
                           name: adminCreateFor.userName,
                           studentId: adminCreateFor.studentId,
-                          phoneNumber: "",
+                          phoneNumber: adminCreateFor.phoneNumber || "",
                           departmentType: adminCreateFor.departmentType,
                           departmentName: adminCreateFor.departmentName,
                         }
@@ -706,6 +706,7 @@ export default function RentalCart() {
                       userId: user.id,
                       userName: user.name,
                       studentId: user.studentId,
+                      phoneNumber: user.phoneNumber || "",
                       departmentType: user.departmentType,
                       departmentName: user.departmentName,
                     });
