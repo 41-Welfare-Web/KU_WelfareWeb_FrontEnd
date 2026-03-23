@@ -403,7 +403,7 @@ export default function RentalConfirmModal({
               </div>
 
               {/* 대여 품목 위: 관리자인 경우 예약자 수정 버튼 */}
-              {user?.role === "ADMIN" && (
+              {user?.role === "ADMIN" && mode !== "edit" && (
                 <div className="mt-6 mb-2 flex justify-end">
                   <button
                     type="button"
