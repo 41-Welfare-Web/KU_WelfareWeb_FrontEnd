@@ -18,6 +18,7 @@ interface PlotterContainerProps {
   printDate: string;
   orderQuantity: number;
   className?: string;
+  onCancel?: () => void;
 }
 
 const PlotterContainer = ({
@@ -28,14 +29,13 @@ const PlotterContainer = ({
   printDate,
   orderQuantity,
   className = '',
+  onCancel,
 }: PlotterContainerProps) => {
   return (
     <div
       className={`bg-white border border-[#b9b9b9] rounded-[21px] w-full p-4 md:p-6 ${className}`}
     >
-      {/* 모바일: 세로 레이아웃 / 데스크톱: 가로 레이아웃 */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        
         {/* 왼쪽 영역: 상태 배지, 예약 정보, 제목 */}
         <div className="flex-1 flex flex-col gap-3">
           {/* 상태 배지 및 예약 정보 */}
@@ -73,6 +73,17 @@ const PlotterContainer = ({
             </p>
           </div>
         </div>
+        {/* 오른쪽 영역: 버튼 그룹 (취소) */}
+        {status === 'waiting' && onCancel && (
+          <div className="flex items-center gap-2 md:gap-3 md:flex-shrink-0 mt-4 md:mt-0">
+            <button
+              onClick={onCancel}
+              className="flex-1 md:flex-none w-full md:w-[120px] h-[32px] md:h-[40px] bg-[#ffd2d2] border-[0.5px] border-[#ff5151] rounded-[13px] text-[12px] md:text-[16px] font-medium text-[red] hover:bg-[#ffc0c0] whitespace-nowrap"
+            >
+              예약 취소
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
