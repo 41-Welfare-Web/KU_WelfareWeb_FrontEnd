@@ -8,6 +8,7 @@ import {
   registerApi,
 } from "../../api/signup/signupApi";
 import DepartmentPickerModal from "../../components/DepartmentPickerModal";
+import PrivacyAgreementModal from "../../components/Login/PrivacyAgreementModal";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -49,6 +50,10 @@ export default function Register() {
   const [deptModalOpen, setDeptModalOpen] = useState(false);
   const [departmentType, setDepartmentType] = useState("");
   const [departmentName, setDepartmentName] = useState("");
+
+  // 개인정보 수집 및 이용 동의 모달
+  const [isAgreed, setIsAgreed] = useState(false);
+  const [showAgreement, setShowAgreement] = useState(false);
 
   const deptDisplay = useMemo(() => {
     if (!departmentType && !departmentName) return "";
@@ -198,6 +203,7 @@ export default function Register() {
     if (!verificationCode.trim())
       return setErrorMsg("인증번호를 입력해 주세요.");
     if (!isVerified) return setErrorMsg("휴대폰 인증을 완료해 주세요.");
+    if (!isAgreed) return setErrorMsg("개인정보 수집 및 이용에 동의해 주세요.");
 
     try {
       setLoading(true);
@@ -302,6 +308,7 @@ export default function Register() {
                   onChange={(e) => setStudentNo(e.target.value)}
                   type="text"
                   inputMode="numeric"
+                  maxLength={9}
                   className="w-full h-12 sm:h-14 rounded-[10px] bg-[#EFEFEF] px-4 text-[16px] outline-none ring-0 focus:bg-white focus:ring-2 focus:ring-[#FF7A57]/40"
                 />
               </div>
@@ -473,6 +480,50 @@ export default function Register() {
                 </div>
               </div>
 
+              {/* 개인정보 동의 */}
+              <div className="space-y-2 mt-2">
+                <div className="flex items-center justify-between gap-3">
+                  <label className="flex items-center gap-2 text-[14px] text-black cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isAgreed}
+                      onChange={(e) => setIsAgreed(e.target.checked)}
+                      className="sr-only"
+                    />
+                    <div
+                      className={`relative w-4 h-4 rounded-sm border flex items-center justify-center ${
+                        isAgreed
+                          ? "bg-[#FD7D5D] border-[#FD7D5D]"
+                          : "bg-white border-gray-300"
+                      }`}
+                    >
+                      {isAgreed && (
+                        <svg
+                          className="w-4 h-4 text-white"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0l-3.25-3.25a1 1 0 111.414-1.414l2.543 2.543 6.543-6.543a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    개인정보 수집 및 이용 동의 (필수)
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowAgreement(true)}
+                    className="shrink-0 text-[13px] text-[#9A9A9A] hover:text-[#666]"
+                  >
+                    전체보기
+                  </button>
+                </div>
+              </div>
+
               {errorMsg && (
                 <p className="text-[14px] text-red-500 font-medium">
                   {errorMsg}
@@ -481,7 +532,7 @@ export default function Register() {
 
               <button
                 type="submit"
-                disabled={loading || verifying || !isVerified}
+                disabled={loading || verifying || !isVerified || !isAgreed}
                 className="mt-2 w-full h-12 sm:h-14 rounded-[10px] bg-[#FD7D5D] text-white text-[18px] font-bold active:scale-[0.99] transition disabled:opacity-60"
               >
                 가입 완료
@@ -500,6 +551,10 @@ export default function Register() {
           </div>
         </section>
       </main>
+      <PrivacyAgreementModal
+        open={showAgreement}
+        onClose={() => setShowAgreement(false)}
+      />
     </>
   );
 }
