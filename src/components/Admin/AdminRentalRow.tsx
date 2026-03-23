@@ -67,8 +67,7 @@ interface AdminRentalRowProps {
   endDate: string;
   status: "reserved" | "renting" | "returned" | "overdue" | "canceled" | "defective";
   note?: string;
-  onStatusChange?: (newStatus: "reserved" | "renting" | "returned" | "overdue" | "canceled" | "defective") => void;
-  onNoteChange?: (note: string) => void;
+  onSave: (payload: { status: typeof status; memo: string }) => void;
   className?: string;
 }
 
@@ -84,8 +83,7 @@ export default function AdminRentalRow({
   endDate,
   status,
   note = '',
-  onStatusChange,
-  onNoteChange,
+  onSave,
   className = "",
 }: AdminRentalRowProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -140,9 +138,7 @@ export default function AdminRentalRow({
   };
 
   const handleStatusClick = (newStatus: "reserved" | "renting" | "returned" | "defective" | "canceled") => {
-    if (onStatusChange) {
-      onStatusChange(newStatus);
-    }
+    onSave({ status: newStatus, memo: note });
     setIsDropdownOpen(false);
   };
 
@@ -249,16 +245,8 @@ export default function AdminRentalRow({
         endDate={endDate}
         status={status}
         note={note}
-        onStatusChange={(newStatus) => {
-          if (onStatusChange) {
-            onStatusChange(newStatus);
-          }
-          setIsDetailModalOpen(false);
-        }}
-        onNoteSave={(newNote) => {
-          if (onNoteChange) {
-            onNoteChange(newNote);
-          }
+        onSave={({ status: newStatus, memo: newMemo }) => {
+          onSave({ status: newStatus, memo: newMemo });
           setIsDetailModalOpen(false);
         }}
       />

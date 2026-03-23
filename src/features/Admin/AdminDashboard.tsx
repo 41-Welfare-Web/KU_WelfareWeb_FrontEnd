@@ -747,28 +747,29 @@ function AdminDashboard() {
                                     | "canceled"
                                     | "defective"
                                 }
-                                onStatusChange={(newStatus) => {
-                                  handleRentalStatusChange(
-                                    rental.id,
-                                    (
-                                      Object.keys(
-                                        RENTAL_STATUS_MAP_REVERSE,
-                                      ) as Array<
-                                        keyof typeof RENTAL_STATUS_MAP_REVERSE
-                                      >
-                                    ).find(
-                                      (k) =>
-                                        RENTAL_STATUS_MAP_REVERSE[k] ===
-                                        newStatus,
-                                    ) || "RESERVED",
-                                  );
-                                }}
-                                onNoteChange={(note) => {
-                                  handleRentalNoteChange(
-                                    rental.id,
-                                    rental.status,
-                                    note,
-                                  );
+                                onSave={({ status: newStatus, memo: newMemo }) => {
+                                  // status, memo 둘 다 한 번에 반영
+                                  const apiStatus = (
+                                    Object.keys(RENTAL_STATUS_MAP_REVERSE) as Array<keyof typeof RENTAL_STATUS_MAP_REVERSE>
+                                  ).find(
+                                    (k) => RENTAL_STATUS_MAP_REVERSE[k] === newStatus
+                                  ) || "RESERVED";
+                                  axiosInstance.put(`/api/rentals/${rental.id}/status`, {
+                                    status: apiStatus,
+                                    memo: newMemo,
+                                  })
+                                    .then(() => {
+                                      let msg = [];
+                                      if (RENTAL_STATUS_MAP_REVERSE[rental.status] !== newStatus) msg.push("상태");
+                                      if ((rental.memo || "") !== newMemo) msg.push("비고");
+                                      if (msg.length > 0) {
+                                        alert(msg.join(", ") + "가 변경되었습니다.");
+                                      }
+                                      fetchRentals();
+                                    })
+                                    .catch((err) => {
+                                      alert(err.response?.data?.message || "저장에 실패했습니다.");
+                                    });
                                 }}
                               />
                             ))
