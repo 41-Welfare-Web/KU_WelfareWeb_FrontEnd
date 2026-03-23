@@ -16,8 +16,7 @@ interface RentalDetailModalProps {
   endDate: string;
   status: 'reserved' | 'renting' | 'returned' | 'overdue' | 'canceled' | 'defective';
   note?: string;
-  onStatusChange?: (newStatus: 'reserved' | 'renting' | 'returned' | 'overdue' | 'canceled' | 'defective') => void;
-  onNoteSave?: (note: string) => void;
+  onSave: (payload: { status: typeof status; memo: string }) => void;
 }
 
 const allStatuses = ['reserved', 'renting', 'returned', 'defective', 'canceled'] as const;
@@ -44,8 +43,7 @@ export default function RentalDetailModal({
   endDate,
   status,
   note = '',
-  onStatusChange,
-  onNoteSave,
+  onSave,
 }: RentalDetailModalProps) {
   const navigate = useNavigate();
   const [selectedStatus, setSelectedStatus] = useState<typeof status>(status);
@@ -79,31 +77,18 @@ export default function RentalDetailModal({
   const handleSave = async () => {
     setIsLoading(true);
     setError(null);
-    
     try {
-      // API 호출: 상태 및 메모 변경
       const apiStatus = statusToAPI[selectedStatus];
       await updateRentalStatus(rentalId, {
         status: apiStatus as any,
         memo: memoValue,
       });
-
-      // 콜백 호출
-      if (selectedStatus !== status && onStatusChange) {
-        onStatusChange(selectedStatus);
-      }
-      if (memoValue !== note && onNoteSave) {
-        onNoteSave(memoValue);
-      }
-
+      // 저장 후 콜백 하나만 호출
+      onSave({ status: selectedStatus, memo: memoValue });
       onClose();
     } catch (err: any) {
       console.error("대여 상태 변경 실패:", err);
       const errorMessage = err instanceof Error ? err.message : '저장에 실패했습니다.';
-      console.error("상세 에러 정보:", {
-        errorMessage,
-        fullError: err,
-      });
       setError(errorMessage);
     } finally {
       setIsLoading(false);

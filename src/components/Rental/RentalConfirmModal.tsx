@@ -21,6 +21,8 @@ interface Props {
   initialDepartmentType?: string;
   initialDepartmentName?: string;
   initialUserName?: string;
+  initialStudentId?: string;
+  initialPhoneNumber?: string;
   initialUserProfile?: Partial<UserProfile>;
   onSubmit?: (payload: {
     departmentType: string;
@@ -53,6 +55,8 @@ export default function RentalConfirmModal({
   initialDepartmentType = "",
   initialDepartmentName = "",
   initialUserName = "",
+  initialStudentId = "",
+  initialPhoneNumber = "",
   initialUserProfile,
   onEditUser,
 }: Props) {
@@ -107,11 +111,11 @@ export default function RentalConfirmModal({
         username: "",
       } as UserProfile);
       setProfileLoading(false);
-    } else if (mode === "edit" && initialUserName) {
+    } else if (mode === "edit" && (initialUserName || initialStudentId || initialPhoneNumber)) {
       setProfile({
         name: initialUserName,
-        studentId: "",
-        phoneNumber: "",
+        studentId: initialStudentId ?? "",
+        phoneNumber: initialPhoneNumber ?? "",
         departmentType: initialDepartmentType,
         departmentName: initialDepartmentName,
         role: "USER",
@@ -399,7 +403,7 @@ export default function RentalConfirmModal({
               </div>
 
               {/* 대여 품목 위: 관리자인 경우 예약자 수정 버튼 */}
-              {user?.role === "ADMIN" && (
+              {user?.role === "ADMIN" && mode !== "edit" && (
                 <div className="mt-6 mb-2 flex justify-end">
                   <button
                     type="button"
