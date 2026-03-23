@@ -10,6 +10,8 @@ import meeting from "../../assets/home/meeting.svg";
 
 import { useNavigate } from "react-router-dom";
 
+import FloatingHelpButton from "../../components/ui/FloatingHelpButton";
+
 type ServiceItem = {
   title: string;
   desc: string;
@@ -167,6 +169,7 @@ export default function Home() {
         </div>
       </section>
       <Footer />
+      <FloatingHelpButton />
     </>
   );
 }
