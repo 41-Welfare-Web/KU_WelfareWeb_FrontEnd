@@ -565,11 +565,21 @@ export default function RentalCart() {
                   }
                   initialUserName={
                     isEditMode
-                      ? editFromAdminState?.userName ?? ""
+                      ? editFromAdminState?.userName ?? adminCreateFor?.userName ?? ""
                       : adminCreateFor?.userName ?? ""
                   }
+                  initialStudentId={
+                    isEditMode
+                      ? editFromAdminState?.studentId ?? adminCreateFor?.studentId ?? ""
+                      : adminCreateFor?.studentId ?? ""
+                  }
+                  initialPhoneNumber={
+                    isEditMode
+                      ? editFromAdminState?.phoneNumber ?? adminCreateFor?.phoneNumber ?? ""
+                      : adminCreateFor?.phoneNumber ?? ""
+                  }
                   initialUserProfile={
-                    !isEditMode && adminCreateFor
+                    adminCreateFor
                       ? {
                           name: adminCreateFor.userName,
                           studentId: adminCreateFor.studentId,
