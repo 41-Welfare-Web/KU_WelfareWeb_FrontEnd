@@ -74,9 +74,9 @@ export default function RentalComplete() {
               예약이 완료되었습니다!
             </h1>
             <p className="text-[16px] md:text-[30px] text-[#410f07] leading-relaxed px-4">
-              신청하신 날짜에 학생복지위원회실에
+              신청하신 날짜 재실근무 시간 내(14:00-18:00)
               <br />
-              방문하여 물품을 수령해주시기 바랍니다.
+              학생복지위원회실에 방문하여 물품을 수령해주시기 바랍니다.
             </p>
           </div>
 
