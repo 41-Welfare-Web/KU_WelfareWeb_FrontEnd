@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { getNextWorkday, getHolidaysList } from "../../utils/dateUtils";
+import { getNextWorkday, getHolidaysList, setHolidays } from "../../utils/dateUtils";
+import { getPlotterHolidays } from "../../services/plotterApi";
 
 interface DatePickerCalendarProps {
   selectedDate: string; // YYYY-MM-DD format
@@ -30,34 +31,50 @@ export default function DatePickerCalendar({
     month: new Date().getMonth() + 1,
   });
   const [days, setDays] = useState<Day[]>([]);
+  const [apiHolidays, setApiHolidays] = useState<string[]>([]);
 
-  // Initialize with selected date's month
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      try {
+        const holidays = await getPlotterHolidays();
+        const holidayDates = holidays.map(holiday => {
+          const date = new Date(holiday.holidayDate);
+          return date.toISOString().split("T")[0];
+        });
+
+        setHolidays(holidayDates);
+        setApiHolidays(holidayDates);
+      } catch (error) {
+        console.warn("Failed to fetch holidays from API, using default holidays:", error);
+        setApiHolidays(getHolidaysList());
+      }
+    };
+
+    fetchHolidays();
+  }, []);
+
   useEffect(() => {
     if (selectedDate) {
-      const [year, month] = selectedDate.split('-').map(Number);
+      const [year, month] = selectedDate.split("-").map(Number);
       setCurrentMonth({ year, month });
     }
   }, [selectedDate]);
 
-  // Generate calendar days
   useEffect(() => {
     const { year, month } = currentMonth;
-    const holidays = getHolidaysList();
+    const holidays = apiHolidays.length > 0 ? apiHolidays : getHolidaysList();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Parse minDate if provided
     const minDateObj = minDate ? new Date(minDate) : null;
     minDateObj?.setHours(0, 0, 0, 0);
 
-    // First day of month
     const firstDay = new Date(year, month - 1, 1);
     const lastDay = new Date(year, month, 0);
     const prevLastDay = new Date(year, month - 1, 0);
 
     const daysArray: Day[] = [];
 
-    // Previous month's days
     const startDate = firstDay.getDay();
     for (let i = startDate - 1; i >= 0; i--) {
       const date = new Date(prevLastDay);
@@ -76,7 +93,6 @@ export default function DatePickerCalendar({
       });
     }
 
-    // Current month's days
     for (let i = 1; i <= lastDay.getDate(); i++) {
       const date = new Date(year, month - 1, i);
       const dateStr = formatDate(date);
@@ -94,8 +110,7 @@ export default function DatePickerCalendar({
       });
     }
 
-    // Next month's days
-    const remainingDays = 42 - daysArray.length; // 6 rows * 7 days
+    const remainingDays = 42 - daysArray.length;
     for (let i = 1; i <= remainingDays; i++) {
       const date = new Date(year, month, i);
       const dateStr = formatDate(date);
@@ -105,7 +120,7 @@ export default function DatePickerCalendar({
         day: i,
         isCurrentMonth: false,
         isWeekend: isWeekendDay(date),
-        isHoliday: getHolidaysList().includes(dateStr),
+        isHoliday: holidays.includes(dateStr),
         isToday: false,
         isSelected: dateStr === selectedDate,
         isBeforeMinDate: isBeforeMin,
@@ -113,25 +128,24 @@ export default function DatePickerCalendar({
     }
 
     setDays(daysArray);
-  }, [currentMonth, selectedDate, minDate]);
+  }, [currentMonth, selectedDate, minDate, apiHolidays]);
 
   const handlePrevMonth = () => {
     const today = new Date();
     const todayYear = today.getFullYear();
     const todayMonth = today.getMonth() + 1;
-    
-    // 현재 월보다 과거로는 이동 불가
+
     if (currentMonth.year < todayYear || (currentMonth.year === todayYear && currentMonth.month <= todayMonth)) {
       return;
     }
-    
+
     let newMonth: { year: number; month: number };
     if (currentMonth.month === 1) {
       newMonth = { year: currentMonth.year - 1, month: 12 };
     } else {
       newMonth = { ...currentMonth, month: currentMonth.month - 1 };
     }
-    
+
     setCurrentMonth(newMonth);
   };
 
@@ -142,11 +156,10 @@ export default function DatePickerCalendar({
     } else {
       newMonth = { ...currentMonth, month: currentMonth.month + 1 };
     }
-    
+
     setCurrentMonth(newMonth);
   };
 
-  // 현재 월보다 과거로 갈 수 없는지 확인
   const canGoPrev = () => {
     const today = new Date();
     const todayYear = today.getFullYear();
@@ -159,8 +172,8 @@ export default function DatePickerCalendar({
       alert("선택할 수 없는 날짜입니다.");
       return;
     }
+
     if (isWeekend || isHoliday) {
-      // Auto-move to next workday
       const nextWorkday = getNextWorkday(date);
       if (nextWorkday) {
         if (isWeekend) {
@@ -172,6 +185,7 @@ export default function DatePickerCalendar({
       }
       return;
     }
+
     onDateChange(date);
   };
 
@@ -179,24 +193,23 @@ export default function DatePickerCalendar({
 
   return (
     <div className={className}>
-      {/* Calendar Header */}
       <div className="bg-[#ffc87c] rounded-t-[10px] p-4 flex items-center justify-between">
         <button
           type="button"
           onClick={handlePrevMonth}
           disabled={!canGoPrev()}
-          className={`p-2 rounded transition-colors ${canGoPrev() ? 'hover:bg-[#ffb347]' : 'opacity-40 cursor-not-allowed'}`}
+          className={`p-2 rounded transition-colors ${canGoPrev() ? "hover:bg-[#ffb347]" : "opacity-40 cursor-not-allowed"}`}
           aria-label="Previous month"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path d="M12 15L7 10L12 5" stroke="black" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </button>
-        
+
         <h3 className="text-lg font-bold text-black">
-          {currentMonth.year}년 {String(currentMonth.month).padStart(2, '0')}월
+          {currentMonth.year}년 {String(currentMonth.month).padStart(2, "0")}월
         </h3>
-        
+
         <button
           type="button"
           onClick={handleNextMonth}
@@ -209,9 +222,7 @@ export default function DatePickerCalendar({
         </button>
       </div>
 
-      {/* Calendar Grid */}
       <div className="bg-white border border-[#99a1af] border-t-0 rounded-b-[10px] p-4">
-        {/* Week Day Headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {weekDays.map(day => (
             <div key={day} className="text-center text-sm font-semibold text-black h-8 flex items-center justify-center">
@@ -220,7 +231,6 @@ export default function DatePickerCalendar({
           ))}
         </div>
 
-        {/* Days Grid */}
         <div className="grid grid-cols-7 gap-1">
           {days.map(dayObj => (
             <button
@@ -231,12 +241,12 @@ export default function DatePickerCalendar({
               className={`
                 h-8 flex items-center justify-center text-sm font-medium rounded transition-all
                 relative
-                ${dayObj.isSelected ? 'bg-orange-400 text-white font-bold text-base scale-110 hover:bg-orange-500' : ''}
-                ${!dayObj.isSelected && !dayObj.isCurrentMonth ? 'text-gray-300 bg-white' : ''}
-                ${!dayObj.isSelected && dayObj.isBeforeMinDate && dayObj.isCurrentMonth ? 'bg-white text-gray-400 cursor-not-allowed' : ''}
-                ${!dayObj.isSelected && dayObj.isCurrentMonth && !dayObj.isWeekend && !dayObj.isHoliday && !dayObj.isBeforeMinDate ? 'bg-white hover:bg-[#fff5e1] text-black cursor-pointer' : ''}
-                ${!dayObj.isSelected && dayObj.isWeekend && dayObj.isCurrentMonth ? 'bg-white text-gray-400 cursor-not-allowed' : ''}
-                ${!dayObj.isSelected && dayObj.isHoliday && dayObj.isCurrentMonth && !dayObj.isBeforeMinDate ? 'bg-white text-gray-400 cursor-not-allowed' : ''}
+                ${dayObj.isSelected ? "bg-orange-400 text-white font-bold text-base scale-110 hover:bg-orange-500" : ""}
+                ${!dayObj.isSelected && !dayObj.isCurrentMonth ? "text-gray-300 bg-white" : ""}
+                ${!dayObj.isSelected && dayObj.isBeforeMinDate && dayObj.isCurrentMonth ? "bg-white text-gray-400 cursor-not-allowed" : ""}
+                ${!dayObj.isSelected && dayObj.isCurrentMonth && !dayObj.isWeekend && !dayObj.isHoliday && !dayObj.isBeforeMinDate ? "bg-white hover:bg-[#fff5e1] text-black cursor-pointer" : ""}
+                ${!dayObj.isSelected && dayObj.isWeekend && dayObj.isCurrentMonth ? "bg-white text-gray-400 cursor-not-allowed" : ""}
+                ${!dayObj.isSelected && dayObj.isHoliday && dayObj.isCurrentMonth && !dayObj.isBeforeMinDate ? "bg-white text-gray-400 cursor-not-allowed" : ""}
               `}
             >
               {dayObj.day}
@@ -248,11 +258,10 @@ export default function DatePickerCalendar({
   );
 }
 
-// Helper functions
 function formatDate(date: Date): string {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
