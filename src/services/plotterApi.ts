@@ -138,3 +138,22 @@ export async function cancelPlotterOrder(orderId: number): Promise<void> {
     throw new Error(error.response?.data?.message || "플로터 주문 취소에 실패했습니다.");
   }
 }
+
+export interface PlotterHoliday {
+  id: number;
+  holidayDate: string;
+  description: string;
+}
+
+/**
+ * 플로터 공휴일 목록 조회
+ * GET /api/admin/holidays
+ */
+export async function getPlotterHolidays(): Promise<PlotterHoliday[]> {
+  try {
+    const response = await axiosInstance.get<PlotterHoliday[]>("/api/admin/holidays");
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "공휴일 목록 조회에 실패했습니다.");
+  }
+}
