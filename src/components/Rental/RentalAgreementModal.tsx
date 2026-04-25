@@ -1,8 +1,12 @@
 export default function RentalAgreementModal({
   open,
+  agreed,
+  onAgreeChange,
   onClose,
 }: {
   open: boolean;
+  agreed: boolean;
+  onAgreeChange: (checked: boolean) => void;
   onClose: () => void;
 }) {
   if (!open) return null;
@@ -14,6 +18,7 @@ export default function RentalAgreementModal({
           <h2 className="text-[20px] sm:text-[28px] font-bold text-black">
             대여 이용 동의
           </h2>
+
           <button
             type="button"
             onClick={onClose}
@@ -23,7 +28,7 @@ export default function RentalAgreementModal({
           </button>
         </div>
 
-        <div className="max-h-[calc(86dvh-80px)] overflow-y-auto px-5 sm:px-7 py-5 text-[15px] sm:text-[18px] leading-[1.8] text-black/70">
+        <div className="max-h-[calc(86dvh-210px)] overflow-y-auto px-5 sm:px-7 py-5 text-[15px] sm:text-[18px] leading-[1.8] text-black/70">
           <p className="font-bold text-black">
             1. 지연 반납에 따른 이용 제한 및 신청 단위 제한 동의
           </p>
@@ -55,6 +60,46 @@ export default function RentalAgreementModal({
             반납되어 A/S 수리나 재구매가 필요할 경우, 이에 발생하는 비용
             전액(100%)을 배상할 것을 서약합니다.
           </p>
+        </div>
+
+        <div className="border-t border-black/10 px-5 sm:px-7 py-4">
+          <label className="flex items-center gap-2 text-[14px] sm:text-[16px] font-semibold text-black cursor-pointer">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => onAgreeChange(e.target.checked)}
+              className="hidden peer"
+            />
+            <div className="w-4 h-4 rounded-sm border border-gray-300 flex items-center justify-center peer-checked:bg-[#FD7D5D] peer-checked:border-[#FD7D5D]">
+              {agreed && (
+                <svg
+                  viewBox="0 0 20 20"
+                  className="w-3 h-3 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M4 10.5L8 14.5L16 5.5" />
+                </svg>
+              )}
+            </div>
+            위 내용을 확인했으며 동의합니다.
+          </label>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={!agreed}
+            className={`mt-4 h-12 w-full rounded-xl text-[16px] font-bold text-white transition ${
+              agreed
+                ? "bg-[#FD7D5D] hover:bg-[#f26f4d]"
+                : "bg-gray-300 cursor-not-allowed"
+            }`}
+          >
+            확인
+          </button>
         </div>
       </div>
     </div>

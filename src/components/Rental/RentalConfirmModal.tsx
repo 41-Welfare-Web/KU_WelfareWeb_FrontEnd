@@ -240,8 +240,11 @@ export default function RentalConfirmModal({
   // 지연 반납에 따른 이용 동의서
   useEffect(() => {
     if (!open) return;
-    setIsRentalAgreed(false);
+
     setRentalAgreementOpen(false);
+
+    // 최초로 신청 모달이 열릴 때만 동의 초기화
+    setIsRentalAgreed(false);
   }, [open]);
 
   const cartItems = items;
@@ -331,6 +334,8 @@ export default function RentalConfirmModal({
 
       <RentalAgreementModal
         open={rentalAgreementOpen}
+        agreed={isRentalAgreed}
+        onAgreeChange={setIsRentalAgreed}
         onClose={() => setRentalAgreementOpen(false)}
       />
 
@@ -523,7 +528,6 @@ export default function RentalConfirmModal({
                   className="shrink-0 text-[12px] sm:text-[14px] font-semibold text-black/45 hover:text-black"
                   onClick={() => {
                     setRentalAgreementOpen(true);
-                    setIsRentalAgreed(true);
                   }}
                 >
                   전체보기
