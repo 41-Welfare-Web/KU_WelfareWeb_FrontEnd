@@ -9,6 +9,7 @@ import { useMetadata } from "../../contexts/MetadataContext";
 import { getMyCart } from "../../api/rental/cart/cartApi";
 import DepartmentPickerModal from "../DepartmentPickerModal";
 
+import RentalAgreementModal from "./RentalAgreementModal";
 
 type ConfirmMode = "create" | "edit";
 
@@ -42,8 +43,6 @@ export type ConfirmItem = {
   startDate: string | null; // "YYYY-MM-DD"
   endDate: string | null; // "YYYY-MM-DD"
 };
-
-
 
 export default function RentalConfirmModal({
   open,
@@ -82,6 +81,8 @@ export default function RentalConfirmModal({
 
   // 예약 확정
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [rentalAgreementOpen, setRentalAgreementOpen] = useState(false);
+  const [isRentalAgreed, setIsRentalAgreed] = useState(false);
   const [, setSubmitError] = useState<string | null>(null);
 
   // 대분류 옵션
@@ -111,7 +112,10 @@ export default function RentalConfirmModal({
         username: "",
       } as UserProfile);
       setProfileLoading(false);
-    } else if (mode === "edit" && (initialUserName || initialStudentId || initialPhoneNumber)) {
+    } else if (
+      mode === "edit" &&
+      (initialUserName || initialStudentId || initialPhoneNumber)
+    ) {
       setProfile({
         name: initialUserName,
         studentId: initialStudentId ?? "",
@@ -133,7 +137,9 @@ export default function RentalConfirmModal({
         .catch((e: unknown) => {
           if (!alive) return;
           setProfileError(
-            e instanceof Error ? e.message : "사용자 정보를 불러오지 못했습니다.",
+            e instanceof Error
+              ? e.message
+              : "사용자 정보를 불러오지 못했습니다.",
           );
         })
         .finally(() => {
@@ -177,7 +183,15 @@ export default function RentalConfirmModal({
     return () => {
       alive = false;
     };
-  }, [open, mode, editItems, initialUserProfile, initialUserName, initialDepartmentType, initialDepartmentName]);
+  }, [
+    open,
+    mode,
+    editItems,
+    initialUserProfile,
+    initialUserName,
+    initialDepartmentType,
+    initialDepartmentName,
+  ]);
 
   // 프로필 로드 후: 기본 소속 세팅 (한 번만)
   useEffect(() => {
@@ -223,6 +237,13 @@ export default function RentalConfirmModal({
     });
   }, [open]);
 
+  // 지연 반납에 따른 이용 동의서
+  useEffect(() => {
+    if (!open) return;
+    setIsRentalAgreed(false);
+    setRentalAgreementOpen(false);
+  }, [open]);
+
   const cartItems = items;
 
   const totalCount = useMemo(() => {
@@ -239,6 +260,7 @@ export default function RentalConfirmModal({
     if (!department.departmentName) return false;
     if (cartItems.length === 0) return false;
     if (hasUnsetDates) return false;
+    if (!isRentalAgreed) return false;
     return true;
   }, [
     profile,
@@ -246,6 +268,7 @@ export default function RentalConfirmModal({
     department.departmentName,
     cartItems.length,
     hasUnsetDates,
+    isRentalAgreed,
   ]);
 
   const handleSubmit = async () => {
@@ -304,6 +327,11 @@ export default function RentalConfirmModal({
         }
         onConfirm={(next) => setDepartment(next)}
         title="소속 선택"
+      />
+
+      <RentalAgreementModal
+        open={rentalAgreementOpen}
+        onClose={() => setRentalAgreementOpen(false)}
       />
 
       <div
@@ -469,6 +497,37 @@ export default function RentalConfirmModal({
                     </>
                   )}
                 </div>
+              </div>
+
+              {/* 대여 동의 */}
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <label className="flex items-center gap-2 text-[13px] sm:text-[15px] font-semibold text-black cursor-default">
+                  <input
+                    type="checkbox"
+                    checked={isRentalAgreed}
+                    readOnly
+                    className="hidden peer"
+                  />
+                  <div className="w-4 h-4 rounded-sm border border-gray-300 flex items-center justify-center peer-checked:bg-[#FD7D5D] peer-checked:border-[#FD7D5D]">
+                    {isRentalAgreed && (
+                      <span className="text-white text-[13px] leading-none font-black">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  대여 이용 제한 및 배상 책임 동의 (필수)
+                </label>
+
+                <button
+                  type="button"
+                  className="shrink-0 text-[12px] sm:text-[14px] font-semibold text-black/45 hover:text-black"
+                  onClick={() => {
+                    setRentalAgreementOpen(true);
+                    setIsRentalAgreed(true);
+                  }}
+                >
+                  전체보기
+                </button>
               </div>
 
               {/* edit 모드 안내 */}
