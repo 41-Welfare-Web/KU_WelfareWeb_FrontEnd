@@ -314,8 +314,8 @@ export default function PlotterRequest() {
               {!isFreePurpose && (
                 <PaymentProofBox
                   accountInfo={{
-                    bank: "카카오뱅크",
-                    accountNumber: "3333-00-1234567",
+                    bank: "우리은행",
+                    accountNumber: "1002-963-696667",
                     accountHolder: "정근녕",
                   }}
                   onChange={handleReceiptUpload}
