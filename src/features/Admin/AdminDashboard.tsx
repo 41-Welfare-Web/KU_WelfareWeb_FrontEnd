@@ -22,6 +22,7 @@ import type { Item, Category } from "../../api/rental/types";
 import axiosInstance from "../../api/axiosInstance";
 import AdminItemCreateModal from "../../components/Admin/AdminItemCreateModal";
 import AdminUserSelectModal from "../../components/Admin/AdminUserSelectModal";
+import sortIcon from "../../assets/admin/sort.svg";
 
 type TabType = "rental" | "plotter" | "items";
 
@@ -225,6 +226,10 @@ function AdminDashboard() {
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rentalSortColumn, setRentalSortColumn] = useState<'startDate' | 'endDate' | null>(null);
+  const [rentalSortOrder, setRentalSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [plotterSortColumn, setPlotterSortColumn] = useState<'pickupDate' | null>(null);
+  const [plotterSortOrder, setPlotterSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const PAGE_SIZE = 20;
   const [rentalPage, setRentalPage] = useState(1);
@@ -463,6 +468,28 @@ function AdminDashboard() {
     exportCSV(activeTab, rentalData, plotterData);
   };
 
+  const handleRentalColumnSort = (sortKey: string) => {
+    if (rentalSortColumn === sortKey) {
+      // 같은 컬럼이면 순서 토글
+      setRentalSortOrder(rentalSortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // 다른 컬럼이면 desc (기본값)로 정렬
+      setRentalSortColumn(sortKey as 'startDate' | 'endDate');
+      setRentalSortOrder('desc');
+    }
+  };
+
+  const handlePlotterColumnSort = (sortKey: string) => {
+    if (plotterSortColumn === sortKey) {
+      // 같은 컬럼이면 순서 토글
+      setPlotterSortOrder(plotterSortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // 다른 컬럼이면 desc (기본값)로 정렬
+      setPlotterSortColumn(sortKey as 'pickupDate');
+      setPlotterSortOrder('desc');
+    }
+  };
+
   const filteredRentalData = rentalData.map((item) => {
     // 상태 필터링
     let statusMatch = true;
@@ -525,6 +552,25 @@ function AdminDashboard() {
     return null;
   }).filter((item): item is RentalData => item !== null);
 
+  // 대여 데이터 정렬
+  if (rentalSortColumn) {
+    filteredRentalData.sort((a, b) => {
+      let aValue = '';
+      let bValue = '';
+      
+      if (rentalSortColumn === 'startDate') {
+        aValue = a.startDate.slice(0, 10);
+        bValue = b.startDate.slice(0, 10);
+      } else if (rentalSortColumn === 'endDate') {
+        aValue = a.endDate.slice(0, 10);
+        bValue = b.endDate.slice(0, 10);
+      }
+      
+      const comparison = aValue.localeCompare(bValue);
+      return rentalSortOrder === 'asc' ? comparison : -comparison;
+    });
+  }
+
   const filteredPlotterData = plotterData.filter((item) => {
     // 상태 필터링
     let statusMatch = true;
@@ -573,8 +619,24 @@ function AdminDashboard() {
     const norm = (s: string | null | undefined) =>
       (s ?? "").replace(/\s+/g, "").toLowerCase();
     const searchMatch = norm(item.name).includes(query);
-    return categoryMatch && searchMatch;
+    return statusMatch && searchMatch;
   });
+
+  // 플로터 데이터 정렬
+  if (plotterSortColumn) {
+    filteredPlotterData.sort((a, b) => {
+      let aValue = '';
+      let bValue = '';
+      
+      if (plotterSortColumn === 'pickupDate') {
+        aValue = a.pickupDate.slice(0, 10);
+        bValue = b.pickupDate.slice(0, 10);
+      }
+      
+      const comparison = aValue.localeCompare(bValue);
+      return plotterSortOrder === 'asc' ? comparison : -comparison;
+    });
+  }
 
   const paginatedRentalData = filteredRentalData.slice(
     (rentalPage - 1) * PAGE_SIZE,
@@ -672,11 +734,12 @@ function AdminDashboard() {
                         { label: "소속", width: "w-[12%] min-w-0" },
                         { label: "대여 품목", width: "flex-1 min-w-0" },
                         { label: "수량", width: "w-[6%] min-w-0" },
-                        { label: "대여 날짜", width: "w-[10%] min-w-0" },
-                        { label: "반납 날짜", width: "w-[10%] min-w-0" },
+                        { label: "대여 날짜", width: "w-[10%] min-w-0", icon: sortIcon, sortKey: "startDate" },
+                        { label: "반납 날짜", width: "w-[10%] min-w-0", icon: sortIcon, sortKey: "endDate" },
                         { label: "상태", width: "w-[9%] min-w-0" },
                         { label: "수정", width: "w-[5%] min-w-0" },
                       ]}
+                      onColumnSort={handleRentalColumnSort}
                     />
 
                     {/* 로딩 및 에러 표시 */}
@@ -821,10 +884,11 @@ function AdminDashboard() {
                         { label: "소속", width: "w-[12%] min-w-0" },
                         { label: "목적", width: "flex-1 min-w-0" },
                         { label: "용지/장수", width: "w-[10%] min-w-0" },
-                        { label: "수령일", width: "w-[10%] min-w-0" },
+                        { label: "수령일", width: "w-[10%] min-w-0", icon: sortIcon, sortKey: "pickupDate" },
                         { label: "상태", width: "w-[9%] min-w-0" },
                         { label: "비고", width: "w-[13%] min-w-0" },
                       ]}
+                      onColumnSort={handlePlotterColumnSort}
                     />
 
                     {/* 로딩 및 에러 표시 */}
