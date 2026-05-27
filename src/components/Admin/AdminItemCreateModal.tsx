@@ -3,6 +3,7 @@ import cancel from "../../assets/rental/cancel-white.svg";
 import { getCategories } from "../../api/rental/rentalApi";
 import { createItem, uploadItemImage } from "../../api/admin/adminApi";
 import type { Category } from "../../api/rental/types";
+import { useLockBodyScroll } from "../../hooks/useLockBodyScroll";
 
 type Props = {
   open: boolean;
@@ -15,6 +16,7 @@ export default function AdminItemCreateModal({
   onClose,
   onSuccess,
 }: Props) {
+  useLockBodyScroll(open);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
 

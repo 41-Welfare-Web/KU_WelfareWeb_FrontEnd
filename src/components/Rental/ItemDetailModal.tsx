@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLockBodyScroll } from "../../hooks/useLockBodyScroll";
 import ItemCalendar from "./ItemCalendar";
 import type { ItemDetail } from "../../api/rental/types";
 import { getItemDetail } from "../../api/rental/rentalApi";
@@ -27,7 +28,9 @@ export default function ItemDetailModal({
   onClose,
   onAddToCart,
 }: Props) {
-  const { isLoggedIn } = useAuth();
+  useLockBodyScroll(open);
+  const { isLoggedIn, user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
@@ -317,6 +320,7 @@ export default function ItemDetailModal({
                         key={calendarKey}
                         itemId={data.id}
                         maxQuantity={data.totalQuantity}
+                        isAdmin={isAdmin}
                         onChange={async ({ startDate, endDate, quantity }) => {
                           // 일단 선택값 반영
                           setPicked({ startDate, endDate, quantity });

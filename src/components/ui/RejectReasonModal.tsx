@@ -1,4 +1,5 @@
 import React from "react";
+import { useLockBodyScroll } from "../../hooks/useLockBodyScroll";
 
 interface RejectReasonModalProps {
   open: boolean;
@@ -8,6 +9,7 @@ interface RejectReasonModalProps {
 
 export default function RejectReasonModal({ open, onClose, onSubmit }: RejectReasonModalProps) {
   const [reason, setReason] = React.useState("");
+  useLockBodyScroll(open);
 
   React.useEffect(() => {
     if (open) setReason("");

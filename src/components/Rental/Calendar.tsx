@@ -9,6 +9,7 @@ import type { Availability } from "../../api/rental/types";
 type Props = {
   itemId: number;
   requestedQty: number;
+  isAdmin?: boolean;
   value?: { startDate: string | null; endDate: string | null };
   onChange?: (next: {
     startDate: string | null;
@@ -82,6 +83,7 @@ function addDaysToYmd(ymd: string, days: number) {
 export default function Calendar({
   itemId,
   requestedQty,
+  isAdmin = false,
   value,
   onChange,
   editAdjust,
@@ -367,7 +369,7 @@ export default function Calendar({
           );
 
           const todayYmdLive = toYmd(now);
-          const isPast = ymd < todayYmdLive;
+          const isPast = !isAdmin && ymd < todayYmdLive;
 
           const isToday = isSameDate(cellDate, todayDate);
           const afterSix = now.getHours() >= 18;
