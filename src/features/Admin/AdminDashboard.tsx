@@ -619,7 +619,7 @@ function AdminDashboard() {
     const norm = (s: string | null | undefined) =>
       (s ?? "").replace(/\s+/g, "").toLowerCase();
     const searchMatch = norm(item.name).includes(query);
-    return statusMatch && searchMatch;
+    return categoryMatch && searchMatch;
   });
 
   // 플로터 데이터 정렬
