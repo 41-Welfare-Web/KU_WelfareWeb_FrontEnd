@@ -463,7 +463,7 @@ function AdminDashboard() {
     exportCSV(activeTab, rentalData, plotterData);
   };
 
-  const filteredRentalData = rentalData.filter((item) => {
+  const filteredRentalData = rentalData.map((item) => {
     // 상태 필터링
     let statusMatch = true;
     if (rentalStatusFilter !== "전체 보기") {
@@ -494,7 +494,9 @@ function AdminDashboard() {
     }
 
     // 검색어 필터
-    if (!rentalSearchQuery.trim()) return statusMatch && dateMatch;
+    if (!rentalSearchQuery.trim()) {
+      return statusMatch && dateMatch ? item : null;
+    }
     const query = rentalSearchQuery.replace(/\s+/g, "").toLowerCase();
     const norm = (s: string | null | undefined) =>
       (s ?? "").replace(/\s+/g, "").toLowerCase();
@@ -505,8 +507,23 @@ function AdminDashboard() {
       norm(departmentName).includes(query) ||
       norm(item.itemSummary).includes(query) ||
       norm(`RENT-${item.id}`).includes(query);
-    return statusMatch && dateMatch && searchMatch;
-  });
+    
+    // 검색어가 있고 매칭될 때, rentalItems 필터링
+    if (statusMatch && dateMatch && searchMatch) {
+      const filteredRentalItems = item.rentalItems.filter((ri) =>
+        norm(ri.item?.name).includes(query)
+      );
+      return {
+        ...item,
+        rentalItems: filteredRentalItems,
+        itemSummary: filteredRentalItems
+          .map((ri) => ri.item?.name)
+          .filter(Boolean)
+          .join(", "),
+      };
+    }
+    return null;
+  }).filter((item): item is RentalData => item !== null);
 
   const filteredPlotterData = plotterData.filter((item) => {
     // 상태 필터링
@@ -555,10 +572,7 @@ function AdminDashboard() {
     const query = itemsSearchQuery.replace(/\s+/g, "").toLowerCase();
     const norm = (s: string | null | undefined) =>
       (s ?? "").replace(/\s+/g, "").toLowerCase();
-    const searchMatch =
-      norm(item.name).includes(query) ||
-      norm(item.itemCode).includes(query) ||
-      norm(item.description).includes(query);
+    const searchMatch = norm(item.name).includes(query);
     return categoryMatch && searchMatch;
   });
 
