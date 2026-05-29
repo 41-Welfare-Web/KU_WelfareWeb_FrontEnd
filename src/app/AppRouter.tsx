@@ -1,4 +1,6 @@
-import { Routes, Route } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import Home from "../features/Home/Home";
 import WelfareIntro from "../features/Intro/WelfareIntro";
 import Login from "../features/Login/Login";
@@ -13,8 +15,32 @@ import RentalCart from "../features/Rental/RentalCart";
 import RentalComplete from "../components/Rental/RentalComplete";
 import ProtectedAdminRoute from "../components/Admin/ProtectedAdminRoute";
 import Partnership from "../features/Partnership/Partnership";
+import InspectionScreen from "../features/Inspection/InspectionScreen";
+
+function checkInspectionTime(): boolean {
+  const hour = new Date().getHours();
+  return hour >= 0 && hour < 5;
+}
 
 export default function AppRouter() {
+  const { user } = useAuth();
+  const location = useLocation();
+  const isAdmin = user?.role === "ADMIN";
+  const isLoginPage = location.pathname === "/login";
+
+  const [isInspection, setIsInspection] = useState(checkInspectionTime);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsInspection(checkInspectionTime());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (isInspection && !isAdmin && !isLoginPage) {
+    return <InspectionScreen />;
+  }
+
   return (
     <Routes>
       <Route path="/" element={<Home />} />
