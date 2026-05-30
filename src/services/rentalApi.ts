@@ -26,6 +26,7 @@ export async function getRentals(params?: {
   status?: string;
   page?: number;
   pageSize?: number;
+  search?: string;
 }): Promise<RentalsResponse> {
   try {
     const response = await axiosInstance.get<RentalsResponse>("/api/rentals", {

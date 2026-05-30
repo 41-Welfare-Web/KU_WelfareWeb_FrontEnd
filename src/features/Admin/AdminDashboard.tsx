@@ -528,17 +528,22 @@ function AdminDashboard() {
     const norm = (s: string | null | undefined) =>
       (s ?? "").replace(/\s+/g, "").toLowerCase();
     const departmentName = item.departmentName || item.departmentType || "";
+    // 이름, 학과, 품목명(대여 품목) 모두에서 검색
+    const rentalItemNames = item.rentalItems.map((ri) => norm(ri.item?.name)).join(",");
     const searchMatch =
       norm(item.user?.name).includes(query) ||
       (item.user?.studentId || "").includes(query) ||
       norm(departmentName).includes(query) ||
+      rentalItemNames.includes(query) ||
       norm(item.itemSummary).includes(query) ||
       norm(`RENT-${item.id}`).includes(query);
-    
-    // 검색어가 있고 매칭될 때, rentalItems 필터링
+
     if (statusMatch && dateMatch && searchMatch) {
+      // rentalItems도 검색어에 맞게 필터링
       const filteredRentalItems = item.rentalItems.filter((ri) =>
-        norm(ri.item?.name).includes(query)
+        norm(ri.item?.name).includes(query) ||
+        norm(item.user?.name).includes(query) ||
+        norm(departmentName).includes(query)
       );
       return {
         ...item,
