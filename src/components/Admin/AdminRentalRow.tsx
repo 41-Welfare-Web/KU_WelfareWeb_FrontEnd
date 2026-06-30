@@ -70,6 +70,7 @@ interface AdminRentalRowProps {
   note?: string;
   checked?: boolean;
   onCheck?: (checked: boolean) => void;
+  onSelectGroup?: () => void;
   onSave: (payload: { status: typeof status; memo: string; rentalItemId?: number }) => void;
   className?: string;
 }
@@ -89,6 +90,7 @@ export default function AdminRentalRow({
   note = '',
   checked = false,
   onCheck,
+  onSelectGroup,
   onSave,
   className = "",
 }: AdminRentalRowProps) {
@@ -158,7 +160,7 @@ export default function AdminRentalRow({
   return (
     <>
       {/* 모바일 카드 뷰 */}
-      <div className={`md:hidden w-full bg-white border-b border-[#e5e5e5] p-4 ${className}`}>
+      <div className={`md:hidden w-full border-b border-[#c8c8c8] p-4 ${checked ? 'bg-[#fff5f2]' : 'bg-white'} ${className}`}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <input
@@ -190,15 +192,18 @@ export default function AdminRentalRow({
           </button>
         </div>
         {note && (
-          <div className="mt-1.5 text-[12px] text-gray-500 bg-gray-50 rounded px-2 py-1">
-            <span className="font-medium text-gray-600">비고: </span>{note}
+          <div className="mt-1 text-[12px] text-gray-500 text-right">
+            {note}
           </div>
         )}
       </div>
 
       {/* 데스크톱 테이블 행 뷰 */}
-      <div className={`hidden md:flex w-full flex-col bg-white border-b border-[#e5e5e5] ${className}`}>
-        <div className="flex w-full h-[52px] items-center px-4 gap-2">
+      <div className={`hidden md:flex w-full flex-col border-b border-[#c8c8c8] ${checked ? 'bg-[#fff5f2]' : 'bg-white'} ${className}`}>
+        <div
+          className="flex w-full h-[52px] items-center px-4 gap-2 cursor-pointer"
+          onClick={() => onCheck?.(!checked)}
+        >
           {/* 체크박스 */}
           <div className="w-[3%] min-w-0 shrink flex items-center justify-center">
             <input
@@ -209,8 +214,15 @@ export default function AdminRentalRow({
               onClick={(e) => e.stopPropagation()}
             />
           </div>
-          {/* 대여 코드 */}
-          <TruncatedCell text={rentalCode} className="w-[7%] min-w-0 text-center shrink" />
+          {/* 대여 코드 — 클릭 시 그룹 전체 선택 */}
+          <div
+            className="w-[7%] min-w-0 shrink flex items-center justify-center"
+            onClick={(e) => { e.stopPropagation(); onSelectGroup?.(); }}
+          >
+            <span className="block truncate text-[14px] font-semibold text-[#f72] hover:underline cursor-pointer">
+              {rentalCode}
+            </span>
+          </div>
           {/* 이름 */}
           <TruncatedCell text={userName} tooltipText={phoneNumber || '-'} showTooltipOnOverflowOnly={false} className="w-[8%] min-w-0 text-center shrink" />
           {/* 소속 */}
@@ -226,22 +238,29 @@ export default function AdminRentalRow({
           </span>
           {/* 상태 배지 */}
           <div className="w-[9%] min-w-0 shrink flex items-center justify-center">
-            <button ref={badgeBtnRef} onClick={handleToggleDropdown} className="hover:opacity-80 transition">
+            <button
+              ref={badgeBtnRef}
+              onClick={(e) => { e.stopPropagation(); handleToggleDropdown(); }}
+              className="hover:opacity-80 transition"
+            >
               <RentalStatusBadge status={badgeStatus} />
             </button>
           </div>
           {/* 수정 버튼 */}
           <div className="w-[5%] min-w-0 shrink flex items-center justify-center">
-            <button onClick={handleEditClick} className="hover:opacity-70 transition-opacity" aria-label="상세 관리">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleEditClick(); }}
+              className="hover:opacity-70 transition-opacity"
+              aria-label="상세 관리"
+            >
               <img src={editIcon} alt="수정" className="w-[18px] h-[18px]" />
             </button>
           </div>
         </div>
         {/* 비고 서브 행 */}
         {note && (
-          <div className="flex items-center gap-2 bg-[#fafafa] border-t border-[#f0f0f0] px-4 py-1.5">
-            <span className="text-[12px] font-medium text-gray-500 shrink-0">비고</span>
-            <span className="text-[12px] text-gray-600 truncate">{note}</span>
+          <div className={`flex justify-end px-4 py-1.5 ${checked ? 'bg-[#fff5f2]' : 'bg-white'}`}>
+            <span className="text-[12px] text-gray-500 truncate">{note}</span>
           </div>
         )}
       </div>

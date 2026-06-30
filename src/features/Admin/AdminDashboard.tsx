@@ -240,6 +240,7 @@ function AdminDashboard() {
   const [userSelectOpen, setUserSelectOpen] = useState(false);
   const [checkedRentalItems, setCheckedRentalItems] = useState<Set<number>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<"reserved" | "renting" | "returned" | "defective" | "canceled">("renting");
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
 
   const fetchRentals = async () => {
     try {
@@ -287,35 +288,40 @@ function AdminDashboard() {
     }
   };
 
-  const handleBulkApply = () => {
+  const handleBulkApply = async () => {
     if (checkedRentalItems.size === 0) return;
 
     const apiStatus = (
       Object.keys(RENTAL_STATUS_MAP_REVERSE) as Array<keyof typeof RENTAL_STATUS_MAP_REVERSE>
     ).find((k) => RENTAL_STATUS_MAP_REVERSE[k] === bulkStatus) || "RESERVED";
 
-    const ownerRental = rentalData.find((r) =>
-      r.rentalItems?.some((ri) => ri.id !== undefined && checkedRentalItems.has(ri.id))
-    );
-    if (!ownerRental) return;
+    // 체크된 아이템을 대여별로 그룹화
+    const requestsByRental: { rentalId: number; rentalItemId: number }[] = [];
+    for (const rental of rentalData) {
+      for (const ri of rental.rentalItems || []) {
+        if (ri.id !== undefined && checkedRentalItems.has(ri.id)) {
+          requestsByRental.push({ rentalId: rental.id, rentalItemId: ri.id });
+        }
+      }
+    }
 
-    const checkedIds = Array.from(checkedRentalItems);
-    Promise.all(
-      checkedIds.map((itemId) =>
-        axiosInstance.put(`/api/rentals/${ownerRental.id}/status`, {
+    try {
+      setIsBulkLoading(true);
+      // 순차 처리 — 동시 요청 시 DB 트랜잭션 충돌 방지
+      for (const { rentalId, rentalItemId } of requestsByRental) {
+        await axiosInstance.put(`/api/rentals/${rentalId}/status`, {
           status: apiStatus,
-          rentalItemId: itemId,
-        })
-      )
-    )
-      .then(() => {
-        setCheckedRentalItems(new Set());
-        alert("상태가 변경되었습니다.");
-        fetchRentals();
-      })
-      .catch((err) => {
-        alert(err.response?.data?.message || "저장에 실패했습니다.");
-      });
+          rentalItemId,
+        });
+      }
+      setCheckedRentalItems(new Set());
+      alert("상태가 변경되었습니다.");
+      fetchRentals();
+    } catch (err: any) {
+      alert(err.response?.data?.message || "저장에 실패했습니다.");
+    } finally {
+      setIsBulkLoading(false);
+    }
   };
 
   const fetchPlotterOrders = async () => {
@@ -772,7 +778,8 @@ function AdminDashboard() {
                       <select
                         value={bulkStatus}
                         onChange={(e) => setBulkStatus(e.target.value as typeof bulkStatus)}
-                        className="h-[30px] px-2 rounded-[6px] text-black text-[13px] border border-[#C2C2C2] bg-white outline-none cursor-pointer"
+                        disabled={isBulkLoading}
+                        className="h-[30px] px-2 rounded-[6px] text-black text-[13px] border border-[#C2C2C2] bg-white outline-none cursor-pointer disabled:opacity-50"
                       >
                         <option value="reserved">예약</option>
                         <option value="renting">대여중</option>
@@ -782,13 +789,23 @@ function AdminDashboard() {
                       </select>
                       <button
                         onClick={handleBulkApply}
-                        className="h-[30px] px-4 bg-[#f72] rounded-[6px] text-white text-[13px] font-semibold hover:bg-[#e65a3d] transition-colors whitespace-nowrap"
+                        disabled={isBulkLoading}
+                        className="h-[30px] px-4 bg-[#f72] rounded-[6px] text-white text-[13px] font-semibold hover:bg-[#e65a3d] transition-colors whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5"
                       >
-                        일괄 적용
+                        {isBulkLoading ? (
+                          <>
+                            <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4" />
+                              <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                            </svg>
+                            처리 중...
+                          </>
+                        ) : "일괄 적용"}
                       </button>
                       <button
                         onClick={() => setCheckedRentalItems(new Set())}
-                        className="h-[30px] px-3 bg-white border border-[#C2C2C2] rounded-[6px] text-black text-[13px] hover:bg-gray-100 transition-colors whitespace-nowrap"
+                        disabled={isBulkLoading}
+                        className="h-[30px] px-3 bg-white border border-[#C2C2C2] rounded-[6px] text-black text-[13px] hover:bg-gray-100 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         선택 해제
                       </button>
@@ -868,18 +885,20 @@ function AdminDashboard() {
                                   if (item.id === undefined) return;
                                   setCheckedRentalItems((prev) => {
                                     const next = new Set(prev);
-                                    if (checked) {
-                                      const thisRentalItemIds = new Set(
-                                        (rental.rentalItems || []).map((ri) => ri.id)
-                                      );
-                                      const hasForeignChecked = [...prev].some(
-                                        (id) => !thisRentalItemIds.has(id)
-                                      );
-                                      if (hasForeignChecked) next.clear();
-                                      next.add(item.id!);
-                                    } else {
-                                      next.delete(item.id!);
-                                    }
+                                    if (checked) next.add(item.id!);
+                                    else next.delete(item.id!);
+                                    return next;
+                                  });
+                                }}
+                                onSelectGroup={() => {
+                                  const groupIds = (rental.rentalItems || [])
+                                    .map((ri) => ri.id)
+                                    .filter((id): id is number => id !== undefined);
+                                  const allChecked = groupIds.every((id) => checkedRentalItems.has(id));
+                                  setCheckedRentalItems((prev) => {
+                                    const next = new Set(prev);
+                                    if (allChecked) groupIds.forEach((id) => next.delete(id));
+                                    else groupIds.forEach((id) => next.add(id));
                                     return next;
                                   });
                                 }}
