@@ -314,9 +314,19 @@ function AdminDashboard() {
           rentalItemId,
         });
       }
+      // 전체 재조회 없이 로컬 상태만 업데이트
+      setRentalData((prev) =>
+        prev.map((r) => ({
+          ...r,
+          rentalItems: r.rentalItems.map((ri) =>
+            ri.id !== undefined && checkedRentalItems.has(ri.id)
+              ? { ...ri, status: apiStatus as typeof ri.status }
+              : ri
+          ),
+        }))
+      );
       setCheckedRentalItems(new Set());
       alert("상태가 변경되었습니다.");
-      fetchRentals();
     } catch (err: any) {
       alert(err.response?.data?.message || "저장에 실패했습니다.");
     } finally {
@@ -914,7 +924,21 @@ function AdminDashboard() {
                                   axiosInstance.put(`/api/rentals/${rental.id}/status`, body)
                                     .then(() => {
                                       alert("상태가 변경되었습니다.");
-                                      fetchRentals();
+                                      // 전체 재조회 없이 로컬 상태만 업데이트
+                                      setRentalData((prev) =>
+                                        prev.map((r) => {
+                                          if (r.id !== rental.id) return r;
+                                          return {
+                                            ...r,
+                                            memo: newMemo ?? r.memo,
+                                            rentalItems: r.rentalItems.map((ri) => {
+                                              // DEFECTIVE는 해당 아이템만, 나머지는 전체 적용
+                                              if (apiStatus === "DEFECTIVE" && ri.id !== itemId) return ri;
+                                              return { ...ri, status: apiStatus as typeof ri.status };
+                                            }),
+                                          };
+                                        })
+                                      );
                                     })
                                     .catch((err) => {
                                       alert(err.response?.data?.message || "저장에 실패했습니다.");
