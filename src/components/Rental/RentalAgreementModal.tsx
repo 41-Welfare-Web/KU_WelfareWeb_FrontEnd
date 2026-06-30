@@ -1,3 +1,5 @@
+import { useLockBodyScroll } from "../../hooks/useLockBodyScroll";
+
 export default function RentalAgreementModal({
   open,
   agreed,
@@ -9,6 +11,8 @@ export default function RentalAgreementModal({
   onAgreeChange: (checked: boolean) => void;
   onClose: () => void;
 }) {
+  useLockBodyScroll(open);
+
   if (!open) return null;
 
   return (

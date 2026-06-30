@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLockBodyScroll } from "../../hooks/useLockBodyScroll";
 import cancel from "../../assets/rental/cancel-white.svg";
 
 import { getMyProfile } from "../../services/userApi";
@@ -59,6 +60,7 @@ export default function RentalConfirmModal({
   initialUserProfile,
   onEditUser,
 }: Props) {
+  useLockBodyScroll(open);
   const { user } = useAuth();
   const { deptGroups, loading: metaLoading } = useMetadata();
 

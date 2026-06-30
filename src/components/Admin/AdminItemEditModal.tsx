@@ -7,6 +7,7 @@ import {
   uploadItemImage,
 } from "../../api/admin/adminApi";
 import type { Category } from "../../api/rental/types";
+import { useLockBodyScroll } from "../../hooks/useLockBodyScroll";
 
 type PreviewImage =
   | {
@@ -54,6 +55,7 @@ export default function AdminItemEditModal({
   onClose,
   onSuccess,
 }: Props) {
+  useLockBodyScroll(open);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
 

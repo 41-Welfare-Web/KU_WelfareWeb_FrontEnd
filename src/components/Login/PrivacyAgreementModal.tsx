@@ -1,4 +1,5 @@
 import cancel from "../../assets/rental/cancel.svg";
+import { useLockBodyScroll } from "../../hooks/useLockBodyScroll";
 
 type Props = {
   open: boolean;
@@ -6,6 +7,8 @@ type Props = {
 };
 
 export default function PrivacyAgreementModal({ open, onClose }: Props) {
+  useLockBodyScroll(open);
+
   if (!open) return null;
 
   return (

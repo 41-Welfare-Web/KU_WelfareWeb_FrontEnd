@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLockBodyScroll } from '../../hooks/useLockBodyScroll';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import RentalStatusBadge from '../MyPage/RentalStatusBadge';
@@ -47,6 +48,7 @@ export default function RentalDetailModal({
   note = '',
   onSave,
 }: RentalDetailModalProps) {
+  useLockBodyScroll(isOpen);
   const navigate = useNavigate();
   const [selectedStatus, setSelectedStatus] = useState<typeof status>(status);
   const [memoValue, setMemoValue] = useState(note);

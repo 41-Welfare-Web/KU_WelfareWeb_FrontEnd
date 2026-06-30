@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance";
+import { useLockBodyScroll } from "../../hooks/useLockBodyScroll";
 
 interface User {
   id: string;
@@ -22,6 +23,7 @@ export default function AdminUserSelectModal({
   onClose,
   onSelectUser,
 }: AdminUserSelectModalProps) {
+  useLockBodyScroll(isOpen);
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
