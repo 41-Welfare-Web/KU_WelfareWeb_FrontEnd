@@ -26,6 +26,7 @@ interface CommonMetadataResponse {
   prices: {
     [key: string]: number; // { a0: 5000, a1: 3000 }
   };
+  inspectionMode?: boolean;
 }
 
 // 프론트엔드에서 사용하는 형식
@@ -34,6 +35,7 @@ export interface CommonMetadata {
   plotterPurposes: PlotterPurpose[];
   plotterFreePurposes: string[];
   plotterPaperSizes: PaperSize[];
+  inspectionMode?: boolean;
 }
 
 export interface ApiError {
@@ -76,6 +78,7 @@ export async function getCommonMetadata(): Promise<CommonMetadata> {
       plotterPurposes,
       plotterFreePurposes: data.freePurposes || [],
       plotterPaperSizes,
+      inspectionMode: data.inspectionMode ?? false,
     };
   } catch (error: any) {
     throw new Error(error.response?.data?.message || "메타데이터 조회에 실패했습니다.");

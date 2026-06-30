@@ -2,7 +2,11 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import LogoCircle from "../../assets/plotter/logo-circle.svg";
 
-export default function InspectionScreen() {
+interface Props {
+  forcedMode?: boolean;
+}
+
+export default function InspectionScreen({ forcedMode = false }: Props) {
   return (
     <>
       <Header />
@@ -38,12 +42,25 @@ export default function InspectionScreen() {
 
             {/* 점검 시간 강조 박스 */}
             <div className="bg-[#fff5f0] border border-[#ffdcc5] rounded-[12px] px-6 py-5 mb-8 md:mb-10 text-center">
-              <p className="text-[14px] md:text-[16px] text-[#888] font-medium mb-1">
-                점검 시간
-              </p>
-              <p className="text-[22px] md:text-[28px] font-bold text-[#f72]">
-                00:00 ~ 05:00
-              </p>
+              {forcedMode ? (
+                <>
+                  <p className="text-[14px] md:text-[16px] text-[#888] font-medium mb-1">
+                    점검 유형
+                  </p>
+                  <p className="text-[22px] md:text-[28px] font-bold text-[#f72]">
+                    긴급 점검 중
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-[14px] md:text-[16px] text-[#888] font-medium mb-1">
+                    점검 시간
+                  </p>
+                  <p className="text-[22px] md:text-[28px] font-bold text-[#f72]">
+                    00:00 ~ 05:00
+                  </p>
+                </>
+              )}
             </div>
 
             <div className="text-center space-y-1">

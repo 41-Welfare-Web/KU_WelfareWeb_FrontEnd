@@ -241,6 +241,8 @@ function AdminDashboard() {
   const [checkedRentalItems, setCheckedRentalItems] = useState<Set<number>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<"reserved" | "renting" | "returned" | "defective" | "canceled">("renting");
   const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const [inspectionMode, setInspectionMode] = useState(false);
+  const [isInspectionToggling, setIsInspectionToggling] = useState(false);
 
   const fetchRentals = async () => {
     try {
@@ -421,6 +423,34 @@ function AdminDashboard() {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  // 점검 모드 초기 조회
+  useEffect(() => {
+    import("../../services/commonApi").then(({ getCommonMetadata }) => {
+      getCommonMetadata()
+        .then((meta) => setInspectionMode(meta.inspectionMode ?? false))
+        .catch(() => {});
+    });
+  }, []);
+
+  const handleToggleInspection = async () => {
+    if (isInspectionToggling) return;
+    const next = !inspectionMode;
+    const label = next ? '점검 모드를 켜겠습니까? 일반 사용자는 점검 화면이 표시됩니다.' : '점검 모드를 끄겠습니까?';
+    if (!window.confirm(label)) return;
+    try {
+      setIsInspectionToggling(true);
+      await axiosInstance.put('/api/admin/configurations', {
+        configKey: 'inspection_mode',
+        configValue: next ? 'true' : 'false',
+      });
+      setInspectionMode(next);
+    } catch (err: any) {
+      alert(err.response?.data?.message || '점검 모드 변경에 실패했습니다.');
+    } finally {
+      setIsInspectionToggling(false);
+    }
+  };
 
   // 필터/검색 변경 시 페이지 리셋
   useEffect(() => {
@@ -716,6 +746,8 @@ function AdminDashboard() {
             activeTab={activeTab}
             onDownload={handleDownload}
             onAddItem={() => setCreateOpen(true)}
+            inspectionMode={inspectionMode}
+            onToggleInspection={isInspectionToggling ? undefined : handleToggleInspection}
           />
 
           <AdminItemCreateModal

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { getCommonMetadata } from "../services/commonApi";
 import Home from "../features/Home/Home";
 import WelfareIntro from "../features/Intro/WelfareIntro";
 import Login from "../features/Login/Login";
@@ -28,17 +29,35 @@ export default function AppRouter() {
   const isAdmin = user?.role === "ADMIN";
   const isLoginPage = location.pathname === "/login";
 
-  const [isInspection, setIsInspection] = useState(checkInspectionTime);
+  // 시간 기반 점검 (00:00~05:00)
+  const [isInspectionTime, setIsInspectionTime] = useState(checkInspectionTime);
+  // 관리자 강제 점검 모드 (DB 설정)
+  const [forcedInspection, setForcedInspection] = useState(false);
 
+  // 1분마다 시간 체크
   useEffect(() => {
     const interval = setInterval(() => {
-      setIsInspection(checkInspectionTime());
+      setIsInspectionTime(checkInspectionTime());
     }, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  if (isInspection && !isAdmin && !isLoginPage) {
-    return <InspectionScreen />;
+  // 강제 점검 모드: 마운트 시 + 1분마다 API 폴링
+  useEffect(() => {
+    const check = () => {
+      getCommonMetadata()
+        .then((meta) => setForcedInspection(meta.inspectionMode ?? false))
+        .catch(() => {});
+    };
+    check();
+    const interval = setInterval(check, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const showInspection = (isInspectionTime || forcedInspection) && !isAdmin && !isLoginPage;
+
+  if (showInspection) {
+    return <InspectionScreen forcedMode={forcedInspection} />;
   }
 
   return (
