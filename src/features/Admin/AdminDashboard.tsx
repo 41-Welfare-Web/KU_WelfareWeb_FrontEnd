@@ -573,18 +573,19 @@ function AdminDashboard() {
     // 상태 필터링
     let statusMatch = true;
     if (rentalStatusFilter !== "전체 보기") {
+      const items = item.rentalItems || [];
       if (rentalStatusFilter === "불량 반납") {
-        statusMatch = item.status === "DEFECTIVE" || item.status === "OVERDUE";
+        statusMatch = items.some(ri => ri.status === "DEFECTIVE" || ri.status === "OVERDUE");
       } else if (rentalStatusFilter === "금일 대여") {
         const today = new Date().toLocaleDateString("en-CA");
         const itemStart = item.startDate.slice(0, 10);
-        statusMatch = itemStart === today && item.status !== "CANCELED";
+        statusMatch = itemStart === today && !items.every(ri => ri.status === "CANCELED");
       } else if (rentalStatusFilter === "금일 반납") {
         const today = new Date().toLocaleDateString("en-CA");
         const itemEnd = item.endDate.slice(0, 10);
-        statusMatch = itemEnd === today && item.status !== "CANCELED";
+        statusMatch = itemEnd === today && !items.every(ri => ri.status === "CANCELED");
       } else {
-        statusMatch = item.status === RENTAL_STATUS_MAP[rentalStatusFilter];
+        statusMatch = items.some(ri => ri.status === RENTAL_STATUS_MAP[rentalStatusFilter]);
       }
     }
 
@@ -615,7 +616,7 @@ function AdminDashboard() {
       norm(departmentName).includes(query) ||
       rentalItemNames.includes(query) ||
       norm(item.itemSummary).includes(query) ||
-      norm(`RENT-${item.id}`).includes(query);
+      norm(`R-${item.id}`).includes(query);
 
     if (statusMatch && dateMatch && searchMatch) {
       // rentalItems도 검색어에 맞게 필터링
