@@ -72,6 +72,8 @@ interface AdminRentalRowProps {
   onCheck?: (checked: boolean) => void;
   onSelectGroup?: () => void;
   onSave: (payload: { status: typeof status; memo: string; rentalItemId?: number }) => Promise<void> | void;
+  groupIndex?: number;
+  isFirstInGroup?: boolean;
   className?: string;
 }
 
@@ -92,12 +94,21 @@ export default function AdminRentalRow({
   onCheck,
   onSelectGroup,
   onSave,
+  groupIndex = 0,
+  isFirstInGroup = false,
   className = "",
 }: AdminRentalRowProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isRowLoading, setIsRowLoading] = useState(false);
+
+  // 그룹 인덱스 기반 배경색 (체크 시 오버라이드)
+  const groupBg = checked
+    ? 'bg-[#fff5f2]'
+    : groupIndex % 2 === 0 ? 'bg-white' : 'bg-[#f7f8fa]';
+  // 그룹 첫 행: 구분선 강조
+  const groupBorderTop = isFirstInGroup ? 'border-t-2 border-t-[#b8b8b8]' : '';
   const dropdownRef = useRef<HTMLDivElement>(null);
   const badgeBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -166,7 +177,7 @@ export default function AdminRentalRow({
   return (
     <>
       {/* 모바일 카드 뷰 */}
-      <div className={`md:hidden w-full border-b border-[#c8c8c8] p-4 ${checked ? 'bg-[#fff5f2]' : 'bg-white'} ${className}`}>
+      <div className={`md:hidden w-full border-b border-[#c8c8c8] p-4 ${groupBg} ${groupBorderTop} ${className}`}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <input
@@ -212,7 +223,7 @@ export default function AdminRentalRow({
       </div>
 
       {/* 데스크톱 테이블 행 뷰 */}
-      <div className={`hidden md:flex w-full flex-col border-b border-[#c8c8c8] ${checked ? 'bg-[#fff5f2]' : 'bg-white'} ${className}`}>
+      <div className={`hidden md:flex w-full flex-col border-b border-[#c8c8c8] ${groupBg} ${groupBorderTop} ${className}`}>
         <div
           className="flex w-full h-[52px] items-center px-4 gap-2 cursor-pointer"
           onClick={() => onCheck?.(!checked)}
@@ -284,7 +295,7 @@ export default function AdminRentalRow({
         </div>
         {/* 비고 서브 행 */}
         {note && (
-          <div className={`flex justify-end px-4 py-1.5 ${checked ? 'bg-[#fff5f2]' : 'bg-white'}`}>
+          <div className={`flex justify-end px-4 py-1.5 ${groupBg}`}>
             <span className="text-[12px] text-gray-500 truncate">{note}</span>
           </div>
         )}
