@@ -5,6 +5,7 @@ import calendar from "../../assets/rental/calendar.svg";
 type Props = {
   itemId: number;
   maxQuantity: number;
+  isAdmin?: boolean;
   className?: string;
   onChange?: (value: {
     startDate: string | null;
@@ -16,6 +17,7 @@ type Props = {
 export default function ItemCalendar({
   itemId,
   maxQuantity,
+  isAdmin = false,
   className,
   onChange,
 }: Props) {
@@ -104,6 +106,7 @@ export default function ItemCalendar({
         <Calendar
           itemId={itemId}
           requestedQty={quantity}
+          isAdmin={isAdmin}
           value={range}
           onChange={handleRangeChange}
         />

@@ -9,6 +9,7 @@ import type { Availability } from "../../api/rental/types";
 type Props = {
   itemId: number;
   requestedQty: number;
+  isAdmin?: boolean;
   value?: { startDate: string | null; endDate: string | null };
   onChange?: (next: {
     startDate: string | null;
@@ -82,6 +83,7 @@ function addDaysToYmd(ymd: string, days: number) {
 export default function Calendar({
   itemId,
   requestedQty,
+  isAdmin = false,
   value,
   onChange,
   editAdjust,
@@ -367,7 +369,8 @@ export default function Calendar({
           );
 
           const todayYmdLive = toYmd(now);
-          const isPast = ymd < todayYmdLive;
+          // 관리자는 과거 날짜 제한 없음
+          const isPast = !isAdmin && ymd < todayYmdLive;
 
           const isToday = isSameDate(cellDate, todayDate);
           const afterSix = now.getHours() >= 18;
@@ -375,18 +378,19 @@ export default function Calendar({
           const holidayInfo = holidayMap.get(ymd);
           const isWeekendDay = isWeekend(cell.date);
 
-          const isHolidayWeekend = isWeekendDay;
-          const isHolidayRegistered = holidayInfo?.type === "HOLIDAY";
-
+          // 관리자는 주말/휴무일/오늘 18시 이후/14일 범위 제한 없음
+          const isHolidayWeekend = !isAdmin && isWeekendDay;
+          const isHolidayRegistered = !isAdmin && holidayInfo?.type === "HOLIDAY";
+          const isTodayAfterSix = !isAdmin && isToday && afterSix;
           const exceedsMaxRange =
-            !!startDate && !endDate && ymd > addDaysToYmd(startDate, 14);
+            !isAdmin && !!startDate && !endDate && ymd > addDaysToYmd(startDate, 14);
 
           const isBlocked =
             !inMonth ||
             isPast ||
             isHolidayWeekend ||
             isHolidayRegistered ||
-            (isToday && afterSix) ||
+            isTodayAfterSix ||
             exceedsMaxRange;
 
           const av = mapByDate.get(ymd);
@@ -410,7 +414,7 @@ export default function Calendar({
             (isPast ||
               isHolidayWeekend ||
               isHolidayRegistered ||
-              (isToday && afterSix) ||
+              isTodayAfterSix ||
               exceedsMaxRange)
           ) {
             base =

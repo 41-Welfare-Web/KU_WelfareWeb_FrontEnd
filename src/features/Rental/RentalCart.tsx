@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import Calendar from "../../components/Rental/Calendar";
@@ -127,6 +128,8 @@ type EditRentalData = {
 };
 
 export default function RentalCart() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -483,6 +486,7 @@ export default function RentalCart() {
                 <Calendar
                   itemId={selected.itemId}
                   requestedQty={selected.count}
+                  isAdmin={isAdmin}
                   value={{
                     startDate: selected.startDate,
                     endDate: selected.endDate,
