@@ -802,10 +802,8 @@ function AdminDashboard() {
                         { label: "신청번호", width: "w-[7%] min-w-0" },
                         { label: "신청자", width: "w-[8%] min-w-0" },
                         { label: "소속", width: "w-[12%] min-w-0" },
-                        { label: "대여 품목", width: "flex-1 min-w-0" },
-                        { label: "수량", width: "w-[6%] min-w-0" },
-                        { label: "대여 날짜", width: "w-[10%] min-w-0", icon: sortIcon, sortKey: "startDate" },
-                        { label: "반납 날짜", width: "w-[10%] min-w-0", icon: sortIcon, sortKey: "endDate" },
+                        { label: "대여 품목 (수량)", width: "flex-1 min-w-0" },
+                        { label: "기간", width: "w-[14%] min-w-0", icon: sortIcon, sortKey: "startDate" },
                         { label: "상태", width: "w-[9%] min-w-0" },
                         { label: "수정", width: "w-[5%] min-w-0" },
                       ]}
@@ -854,7 +852,7 @@ function AdminDashboard() {
                                 quantity={item.quantity}
                                 startDate={rental.startDate}
                                 endDate={rental.endDate}
-                                note={rental.memo || ""}
+                                note={idx === 0 ? rental.memo || "" : ""}
                                 status={
                                   RENTAL_STATUS_MAP_REVERSE[item.status as keyof typeof RENTAL_STATUS_MAP_REVERSE] as
                                     | "reserved"

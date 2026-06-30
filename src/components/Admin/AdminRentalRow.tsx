@@ -101,10 +101,13 @@ export default function AdminRentalRow({
   // status 변환: overdue -> defective로 매핑
   const badgeStatus = status === "overdue" ? "defective" : status as "reserved" | "renting" | "returned" | "defective" | "canceled";
 
-  // 날짜 포맷팅 함수: ISO 형식에서 YYYY-MM-DD만 추출
-  const formatDate = (dateString: string) => {
+  // YY/M/DD 형식 (기간 칸 절약용)
+  const formatShortDate = (dateString: string) => {
     if (!dateString) return '';
-    return dateString.split('T')[0];
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString.split('T')[0];
+    const yy = String(d.getFullYear()).slice(2);
+    return `${yy}/${d.getMonth() + 1}/${String(d.getDate()).padStart(2, '0')}`;
   };
 
   // 가능한 모든 상태
@@ -175,64 +178,72 @@ export default function AdminRentalRow({
           <span className="text-[14px] font-semibold text-black" title={phoneNumber || '-'}>{userName}</span>
           <span className="text-[13px] text-gray-500">{department}</span>
         </div>
-        <div className="flex items-center gap-2 mb-2 justify-between">
-          <p className="text-[13px] text-gray-700 truncate flex-1">{itemName}</p>
-          {quantity !== undefined && (
-            <span className="text-[13px] font-medium text-gray-600">수량: {quantity}</span>
-          )}
+        <div className="flex items-center gap-2 mb-1 justify-between">
+          <p className="text-[13px] text-gray-700 truncate flex-1">
+            {itemName}{quantity !== undefined ? ` (${quantity}개)` : ''}
+          </p>
         </div>
         <div className="flex items-center gap-2 text-[12px] text-gray-500 justify-between">
-          <div>
-            <span>{formatDate(startDate)}</span>
-            <span>~</span>
-            <span>{formatDate(endDate)}</span>
-          </div>
+          <span>{formatShortDate(startDate)} ~ {formatShortDate(endDate)}</span>
           <button onClick={handleEditClick} className="hover:opacity-70 transition-opacity" aria-label="상세 관리">
             <img src={editIcon} alt="수정" className="w-[18px] h-[18px]" />
           </button>
         </div>
+        {note && (
+          <div className="mt-1.5 text-[12px] text-gray-500 bg-gray-50 rounded px-2 py-1">
+            <span className="font-medium text-gray-600">비고: </span>{note}
+          </div>
+        )}
       </div>
 
       {/* 데스크톱 테이블 행 뷰 */}
-      <div className={`hidden md:flex w-full h-[52px] bg-white border-b border-[#e5e5e5] items-center px-4 gap-2 ${className}`}>
-        {/* 체크박스 */}
-        <div className="w-[3%] min-w-0 shrink flex items-center justify-center">
-          <input
-            type="checkbox"
-            checked={checked}
-            onChange={(e) => onCheck?.(e.target.checked)}
-            className="w-4 h-4 accent-[#f72] cursor-pointer"
-            onClick={(e) => e.stopPropagation()}
+      <div className={`hidden md:flex w-full flex-col bg-white border-b border-[#e5e5e5] ${className}`}>
+        <div className="flex w-full h-[52px] items-center px-4 gap-2">
+          {/* 체크박스 */}
+          <div className="w-[3%] min-w-0 shrink flex items-center justify-center">
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={(e) => onCheck?.(e.target.checked)}
+              className="w-4 h-4 accent-[#f72] cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          {/* 대여 코드 */}
+          <TruncatedCell text={rentalCode} className="w-[7%] min-w-0 text-center shrink" />
+          {/* 이름 */}
+          <TruncatedCell text={userName} tooltipText={phoneNumber || '-'} showTooltipOnOverflowOnly={false} className="w-[8%] min-w-0 text-center shrink" />
+          {/* 소속 */}
+          <TruncatedCell text={department} className="w-[12%] min-w-0 text-center shrink" />
+          {/* 물품명 + 수량 */}
+          <TruncatedCell
+            text={`${itemName}${quantity !== undefined ? ` (${quantity}개)` : ''}`}
+            className="flex-1 min-w-0 text-center"
           />
+          {/* 기간 */}
+          <span className="text-[13px] font-medium text-black w-[14%] min-w-0 text-center shrink whitespace-nowrap">
+            {formatShortDate(startDate)} ~ {formatShortDate(endDate)}
+          </span>
+          {/* 상태 배지 */}
+          <div className="w-[9%] min-w-0 shrink flex items-center justify-center">
+            <button ref={badgeBtnRef} onClick={handleToggleDropdown} className="hover:opacity-80 transition">
+              <RentalStatusBadge status={badgeStatus} />
+            </button>
+          </div>
+          {/* 수정 버튼 */}
+          <div className="w-[5%] min-w-0 shrink flex items-center justify-center">
+            <button onClick={handleEditClick} className="hover:opacity-70 transition-opacity" aria-label="상세 관리">
+              <img src={editIcon} alt="수정" className="w-[18px] h-[18px]" />
+            </button>
+          </div>
         </div>
-        {/* 대여 코드 */}
-        <TruncatedCell text={rentalCode} className="w-[7%] min-w-0 text-center shrink" />
-        {/* 이름 */}
-        <TruncatedCell text={userName} tooltipText={phoneNumber || '-'} showTooltipOnOverflowOnly={false} className="w-[8%] min-w-0 text-center shrink" />
-        {/* 소속 */}
-        <TruncatedCell text={department} className="w-[12%] min-w-0 text-center shrink" />
-        {/* 물품명 */}
-        <TruncatedCell text={itemName} className="flex-1 min-w-0 text-center" />
-        {/* 수량 */}
-        <span className="text-[14px] font-medium text-black w-[6%] min-w-0 text-center shrink">{quantity !== undefined ? quantity : '-'}</span>
-        {/* 대여 시작일 */}
-        <span className="text-[14px] font-medium text-black w-[10%] min-w-0 text-center shrink">{formatDate(startDate)}</span>
-        {/* 대여 종료일 */}
-        <span className="text-[14px] font-medium text-black w-[10%] min-w-0 text-center shrink">{formatDate(endDate)}</span>
-
-        {/* 상태 배지 */}
-        <div className="w-[9%] min-w-0 shrink flex items-center justify-center">
-          <button ref={badgeBtnRef} onClick={handleToggleDropdown} className="hover:opacity-80 transition">
-            <RentalStatusBadge status={badgeStatus} />
-          </button>
-        </div>
-
-        {/* 수정 버튼 */}
-        <div className="w-[5%] min-w-0 shrink flex items-center justify-center">
-          <button onClick={handleEditClick} className="hover:opacity-70 transition-opacity" aria-label="상세 관리">
-            <img src={editIcon} alt="수정" className="w-[18px] h-[18px]" />
-          </button>
-        </div>
+        {/* 비고 서브 행 */}
+        {note && (
+          <div className="flex items-center gap-2 bg-[#fafafa] border-t border-[#f0f0f0] px-4 py-1.5">
+            <span className="text-[12px] font-medium text-gray-500 shrink-0">비고</span>
+            <span className="text-[12px] text-gray-600 truncate">{note}</span>
+          </div>
+        )}
       </div>
 
       {/* 포털 드롭다운 – overflow 컨테이너 바깥 body에 렌더링 */}
