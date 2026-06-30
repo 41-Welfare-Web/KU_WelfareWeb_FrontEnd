@@ -921,7 +921,7 @@ function AdminDashboard() {
                                   // 불량 반납은 해당 아이템만, 나머지는 대여 전체 변경
                                   const body: any = { status: apiStatus, memo: newMemo };
                                   if (apiStatus === "DEFECTIVE") body.rentalItemId = itemId;
-                                  axiosInstance.put(`/api/rentals/${rental.id}/status`, body)
+                                  return axiosInstance.put(`/api/rentals/${rental.id}/status`, body)
                                     .then(() => {
                                       alert("상태가 변경되었습니다.");
                                       // 전체 재조회 없이 로컬 상태만 업데이트
@@ -942,6 +942,7 @@ function AdminDashboard() {
                                     })
                                     .catch((err) => {
                                       alert(err.response?.data?.message || "저장에 실패했습니다.");
+                                      throw err;
                                     });
                                 }}
                               />

@@ -71,7 +71,7 @@ interface AdminRentalRowProps {
   checked?: boolean;
   onCheck?: (checked: boolean) => void;
   onSelectGroup?: () => void;
-  onSave: (payload: { status: typeof status; memo: string; rentalItemId?: number }) => void;
+  onSave: (payload: { status: typeof status; memo: string; rentalItemId?: number }) => Promise<void> | void;
   className?: string;
 }
 
@@ -97,6 +97,7 @@ export default function AdminRentalRow({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isRowLoading, setIsRowLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const badgeBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -148,9 +149,14 @@ export default function AdminRentalRow({
     setIsDropdownOpen((prev) => !prev);
   };
 
-  const handleStatusClick = (newStatus: "reserved" | "renting" | "returned" | "defective" | "canceled") => {
-    onSave({ status: newStatus, memo: note, rentalItemId });
+  const handleStatusClick = async (newStatus: "reserved" | "renting" | "returned" | "defective" | "canceled") => {
     setIsDropdownOpen(false);
+    setIsRowLoading(true);
+    try {
+      await onSave({ status: newStatus, memo: note, rentalItemId });
+    } finally {
+      setIsRowLoading(false);
+    }
   };
 
   const handleEditClick = () => {
@@ -172,8 +178,15 @@ export default function AdminRentalRow({
             />
             <span className="text-[13px] font-semibold text-gray-500">{rentalCode}</span>
           </div>
-          <div>
-            <RentalStatusBadge status={badgeStatus} />
+          <div className="flex items-center justify-center w-[60px]">
+            {isRowLoading ? (
+              <svg className="animate-spin w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+            ) : (
+              <RentalStatusBadge status={badgeStatus} />
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2 mb-1">
@@ -240,10 +253,18 @@ export default function AdminRentalRow({
           <div className="w-[9%] min-w-0 shrink flex items-center justify-center">
             <button
               ref={badgeBtnRef}
-              onClick={(e) => { e.stopPropagation(); handleToggleDropdown(); }}
-              className="hover:opacity-80 transition"
+              onClick={(e) => { e.stopPropagation(); if (!isRowLoading) handleToggleDropdown(); }}
+              disabled={isRowLoading}
+              className="hover:opacity-80 transition disabled:cursor-not-allowed"
             >
-              <RentalStatusBadge status={badgeStatus} />
+              {isRowLoading ? (
+                <svg className="animate-spin w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+              ) : (
+                <RentalStatusBadge status={badgeStatus} />
+              )}
             </button>
           </div>
           {/* 수정 버튼 */}
