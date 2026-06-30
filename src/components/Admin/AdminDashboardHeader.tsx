@@ -8,6 +8,8 @@ interface AdminDashboardHeaderProps {
   onAddItem?: () => void;
   inspectionMode?: boolean;
   onToggleInspection?: () => void;
+  inspectionTimeEnabled?: boolean;
+  onToggleInspectionTime?: () => void;
   className?: string;
 }
 
@@ -17,6 +19,8 @@ export default function AdminDashboardHeader({
   onAddItem,
   inspectionMode = false,
   onToggleInspection,
+  inspectionTimeEnabled = false,
+  onToggleInspectionTime,
   className = '',
 }: AdminDashboardHeaderProps) {
   return (
@@ -28,6 +32,21 @@ export default function AdminDashboardHeader({
 
       {/* 버튼 그룹 */}
       <div className="flex gap-2 md:gap-3 flex-shrink-0 flex-wrap">
+        {/* 시간 기반 점검 토글 (00:00~05:00) */}
+        {onToggleInspectionTime && (
+          <button
+            onClick={onToggleInspectionTime}
+            className={`flex items-center gap-1.5 border rounded-[13px] h-[36px] md:h-[40px] px-3 md:px-4 transition-colors font-['Gmarket_Sans'] font-medium text-[13px] md:text-[16px] whitespace-nowrap ${
+              inspectionTimeEnabled
+                ? 'bg-[#410f07] border-[#410f07] text-white hover:bg-[#5a1a0a]'
+                : 'bg-white border-[#a4a4a4] text-[#410f07] hover:bg-gray-50'
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${inspectionTimeEnabled ? 'bg-[#f72]' : 'bg-gray-400'}`} />
+            {inspectionTimeEnabled ? '야간 점검 ON' : '야간 점검 OFF'}
+          </button>
+        )}
+
         {/* 점검 모드 토글 */}
         {onToggleInspection && (
           <button

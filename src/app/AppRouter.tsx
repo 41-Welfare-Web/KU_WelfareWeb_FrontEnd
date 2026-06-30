@@ -42,11 +42,16 @@ export default function AppRouter() {
     return () => clearInterval(interval);
   }, []);
 
+  // 시간 기반 점검 활성화 여부 (DB 설정)
+  const [inspectionTimeEnabled, setInspectionTimeEnabled] = useState(false);
   // 강제 점검 모드: 마운트 시 + 1분마다 API 폴링
   useEffect(() => {
     const check = () => {
       getCommonMetadata()
-        .then((meta) => setForcedInspection(meta.inspectionMode ?? false))
+        .then((meta) => {
+          setForcedInspection(meta.inspectionMode ?? false);
+          setInspectionTimeEnabled(meta.inspectionTimeEnabled ?? false);
+        })
         .catch(() => {});
     };
     check();
@@ -54,7 +59,7 @@ export default function AppRouter() {
     return () => clearInterval(interval);
   }, []);
 
-  const showInspection = (isInspectionTime || forcedInspection) && !isAdmin && !isLoginPage;
+  const showInspection = ((isInspectionTime && inspectionTimeEnabled) || forcedInspection) && !isAdmin && !isLoginPage;
 
   if (showInspection) {
     return <InspectionScreen forcedMode={forcedInspection} />;

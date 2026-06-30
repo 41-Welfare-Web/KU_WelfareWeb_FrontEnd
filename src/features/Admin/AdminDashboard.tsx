@@ -243,6 +243,8 @@ function AdminDashboard() {
   const [isBulkLoading, setIsBulkLoading] = useState(false);
   const [inspectionMode, setInspectionMode] = useState(false);
   const [isInspectionToggling, setIsInspectionToggling] = useState(false);
+  const [inspectionTimeEnabled, setInspectionTimeEnabled] = useState(false);
+  const [isInspectionTimeToggling, setIsInspectionTimeToggling] = useState(false);
 
   const fetchRentals = async () => {
     try {
@@ -428,7 +430,10 @@ function AdminDashboard() {
   useEffect(() => {
     import("../../services/commonApi").then(({ getCommonMetadata }) => {
       getCommonMetadata()
-        .then((meta) => setInspectionMode(meta.inspectionMode ?? false))
+        .then((meta) => {
+          setInspectionMode(meta.inspectionMode ?? false);
+          setInspectionTimeEnabled(meta.inspectionTimeEnabled ?? false);
+        })
         .catch(() => {});
     });
   }, []);
@@ -449,6 +454,25 @@ function AdminDashboard() {
       alert(err.response?.data?.message || '점검 모드 변경에 실패했습니다.');
     } finally {
       setIsInspectionToggling(false);
+    }
+  };
+
+  const handleToggleInspectionTime = async () => {
+    if (isInspectionTimeToggling) return;
+    const next = !inspectionTimeEnabled;
+    const label = next ? '시간 기반 점검(00:00~05:00)을 활성화하겠습니까?' : '시간 기반 점검을 비활성화하겠습니까?';
+    if (!window.confirm(label)) return;
+    try {
+      setIsInspectionTimeToggling(true);
+      await axiosInstance.put('/api/admin/configurations', {
+        configKey: 'inspection_time_enabled',
+        configValue: next ? 'true' : 'false',
+      });
+      setInspectionTimeEnabled(next);
+    } catch (err: any) {
+      alert(err.response?.data?.message || '시간 기반 점검 변경에 실패했습니다.');
+    } finally {
+      setIsInspectionTimeToggling(false);
     }
   };
 
@@ -749,6 +773,8 @@ function AdminDashboard() {
             onAddItem={() => setCreateOpen(true)}
             inspectionMode={inspectionMode}
             onToggleInspection={isInspectionToggling ? undefined : handleToggleInspection}
+            inspectionTimeEnabled={inspectionTimeEnabled}
+            onToggleInspectionTime={isInspectionTimeToggling ? undefined : handleToggleInspectionTime}
           />
 
           <AdminItemCreateModal

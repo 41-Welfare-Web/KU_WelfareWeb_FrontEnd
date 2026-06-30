@@ -27,6 +27,7 @@ interface CommonMetadataResponse {
     [key: string]: number; // { a0: 5000, a1: 3000 }
   };
   inspectionMode?: boolean;
+  inspectionTimeEnabled?: boolean;
 }
 
 // 프론트엔드에서 사용하는 형식
@@ -36,6 +37,7 @@ export interface CommonMetadata {
   plotterFreePurposes: string[];
   plotterPaperSizes: PaperSize[];
   inspectionMode?: boolean;
+  inspectionTimeEnabled?: boolean;
 }
 
 export interface ApiError {
