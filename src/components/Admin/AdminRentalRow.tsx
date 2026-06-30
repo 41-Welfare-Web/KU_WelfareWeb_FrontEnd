@@ -103,11 +103,7 @@ export default function AdminRentalRow({
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isRowLoading, setIsRowLoading] = useState(false);
 
-  // 그룹 인덱스 기반 배경색 (체크 시 오버라이드)
-  const groupBg = checked
-    ? 'bg-[#fff5f2]'
-    : groupIndex % 2 === 0 ? 'bg-white' : 'bg-[#f7f8fa]';
-  // 그룹 첫 행: 구분선 강조
+  const groupBg = checked ? 'bg-[#fff5f2]' : 'bg-white';
   const groupBorderTop = isFirstInGroup ? 'border-t-2 border-t-[#b8b8b8]' : '';
   const dropdownRef = useRef<HTMLDivElement>(null);
   const badgeBtnRef = useRef<HTMLButtonElement>(null);
