@@ -238,6 +238,8 @@ function AdminDashboard() {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [userSelectOpen, setUserSelectOpen] = useState(false);
+  const [checkedRentalItems, setCheckedRentalItems] = useState<Set<number>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState<"reserved" | "renting" | "returned" | "defective" | "canceled">("renting");
 
   const fetchRentals = async () => {
     try {
@@ -283,6 +285,37 @@ function AdminDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBulkApply = () => {
+    if (checkedRentalItems.size === 0) return;
+
+    const apiStatus = (
+      Object.keys(RENTAL_STATUS_MAP_REVERSE) as Array<keyof typeof RENTAL_STATUS_MAP_REVERSE>
+    ).find((k) => RENTAL_STATUS_MAP_REVERSE[k] === bulkStatus) || "RESERVED";
+
+    const ownerRental = rentalData.find((r) =>
+      r.rentalItems?.some((ri) => ri.id !== undefined && checkedRentalItems.has(ri.id))
+    );
+    if (!ownerRental) return;
+
+    const checkedIds = Array.from(checkedRentalItems);
+    Promise.all(
+      checkedIds.map((itemId) =>
+        axiosInstance.put(`/api/rentals/${ownerRental.id}/status`, {
+          status: apiStatus,
+          rentalItemId: itemId,
+        })
+      )
+    )
+      .then(() => {
+        setCheckedRentalItems(new Set());
+        alert("상태가 변경되었습니다.");
+        fetchRentals();
+      })
+      .catch((err) => {
+        alert(err.response?.data?.message || "저장에 실패했습니다.");
+      });
   };
 
   const fetchPlotterOrders = async () => {
@@ -730,10 +763,42 @@ function AdminDashboard() {
 
                 {/* 테이블 */}
                 <div className="overflow-x-auto mt-4 md:mt-6">
+                  {/* 일괄 처리 액션 바 */}
+                  {checkedRentalItems.size > 0 && (
+                    <div className="flex items-center gap-3 bg-[#EDEDED] text-black border border-[#C2C2C2] px-4 py-2 rounded-[8px] mb-2 flex-wrap">
+                      <span className="text-[14px] font-semibold">{checkedRentalItems.size}개 선택됨</span>
+                      <div className="flex-1" />
+                      <span className="text-[13px] whitespace-nowrap">상태 변경:</span>
+                      <select
+                        value={bulkStatus}
+                        onChange={(e) => setBulkStatus(e.target.value as typeof bulkStatus)}
+                        className="h-[30px] px-2 rounded-[6px] text-black text-[13px] border border-[#C2C2C2] bg-white outline-none cursor-pointer"
+                      >
+                        <option value="reserved">예약</option>
+                        <option value="renting">대여중</option>
+                        <option value="returned">정상 반납</option>
+                        <option value="defective">불량 반납</option>
+                        <option value="canceled">예약 취소</option>
+                      </select>
+                      <button
+                        onClick={handleBulkApply}
+                        className="h-[30px] px-4 bg-[#f72] rounded-[6px] text-white text-[13px] font-semibold hover:bg-[#e65a3d] transition-colors whitespace-nowrap"
+                      >
+                        일괄 적용
+                      </button>
+                      <button
+                        onClick={() => setCheckedRentalItems(new Set())}
+                        className="h-[30px] px-3 bg-white border border-[#C2C2C2] rounded-[6px] text-black text-[13px] hover:bg-gray-100 transition-colors whitespace-nowrap"
+                      >
+                        선택 해제
+                      </button>
+                    </div>
+                  )}
                   <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible md:min-w-[680px]">
                     {/* 테이블 헤더 */}
                     <AdminTableHeader
                       columns={[
+                        { label: "", width: "w-[3%] min-w-0" },
                         { label: "신청번호", width: "w-[7%] min-w-0" },
                         { label: "신청자", width: "w-[8%] min-w-0" },
                         { label: "소속", width: "w-[12%] min-w-0" },
@@ -776,6 +841,7 @@ function AdminDashboard() {
                               <AdminRentalRow
                                 key={rental.id + '-' + (item.id ?? idx)}
                                 rentalId={rental.id}
+                                rentalItemId={item.id}
                                 rentalCode={`R-${rental.id}`}
                                 userName={rental.user.name}
                                 phoneNumber={rental.user.phoneNumber || "-"}
@@ -790,32 +856,47 @@ function AdminDashboard() {
                                 endDate={rental.endDate}
                                 note={rental.memo || ""}
                                 status={
-                                  RENTAL_STATUS_MAP_REVERSE[rental.status] as
+                                  RENTAL_STATUS_MAP_REVERSE[item.status as keyof typeof RENTAL_STATUS_MAP_REVERSE] as
                                     | "reserved"
                                     | "renting"
                                     | "returned"
                                     | "overdue"
                                     | "canceled"
                                     | "defective"
+                                    ?? "reserved"
                                 }
-                                onSave={({ status: newStatus, memo: newMemo }) => {
-                                  // status, memo 둘 다 한 번에 반영
+                                checked={item.id !== undefined && checkedRentalItems.has(item.id)}
+                                onCheck={(checked) => {
+                                  if (item.id === undefined) return;
+                                  setCheckedRentalItems((prev) => {
+                                    const next = new Set(prev);
+                                    if (checked) {
+                                      const thisRentalItemIds = new Set(
+                                        (rental.rentalItems || []).map((ri) => ri.id)
+                                      );
+                                      const hasForeignChecked = [...prev].some(
+                                        (id) => !thisRentalItemIds.has(id)
+                                      );
+                                      if (hasForeignChecked) next.clear();
+                                      next.add(item.id!);
+                                    } else {
+                                      next.delete(item.id!);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                onSave={({ status: newStatus, memo: newMemo, rentalItemId: itemId }) => {
                                   const apiStatus = (
                                     Object.keys(RENTAL_STATUS_MAP_REVERSE) as Array<keyof typeof RENTAL_STATUS_MAP_REVERSE>
                                   ).find(
                                     (k) => RENTAL_STATUS_MAP_REVERSE[k] === newStatus
                                   ) || "RESERVED";
-                                  axiosInstance.put(`/api/rentals/${rental.id}/status`, {
-                                    status: apiStatus,
-                                    memo: newMemo,
-                                  })
+                                  // 불량 반납은 해당 아이템만, 나머지는 대여 전체 변경
+                                  const body: any = { status: apiStatus, memo: newMemo };
+                                  if (apiStatus === "DEFECTIVE") body.rentalItemId = itemId;
+                                  axiosInstance.put(`/api/rentals/${rental.id}/status`, body)
                                     .then(() => {
-                                      let msg = [];
-                                      if (RENTAL_STATUS_MAP_REVERSE[rental.status] !== newStatus) msg.push("상태");
-                                      if ((rental.memo || "") !== newMemo) msg.push("비고");
-                                      if (msg.length > 0) {
-                                        alert(msg.join(", ") + "가 변경되었습니다.");
-                                      }
+                                      alert("상태가 변경되었습니다.");
                                       fetchRentals();
                                     })
                                     .catch((err) => {

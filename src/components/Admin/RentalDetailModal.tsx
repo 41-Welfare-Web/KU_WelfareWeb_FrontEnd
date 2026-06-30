@@ -8,6 +8,7 @@ interface RentalDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   rentalId: number;
+  rentalItemId?: number;
   rentalCode: string;
   userName: string;
   department: string;
@@ -28,13 +29,14 @@ const statusToAPI = {
   'returned': 'RETURNED',
   'overdue': 'OVERDUE',
   'canceled': 'CANCELED',
-  'defective': 'RETURNED', // 불량도 반납 처리
+  'defective': 'DEFECTIVE',
 } as const;
 
 export default function RentalDetailModal({
   isOpen,
   onClose,
   rentalId,
+  rentalItemId,
   rentalCode,
   userName,
   department,
@@ -82,6 +84,7 @@ export default function RentalDetailModal({
       await updateRentalStatus(rentalId, {
         status: apiStatus as any,
         memo: memoValue,
+        rentalItemId,
       });
       // 저장 후 콜백 하나만 호출
       onSave({ status: selectedStatus, memo: memoValue });

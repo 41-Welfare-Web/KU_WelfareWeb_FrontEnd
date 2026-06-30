@@ -57,6 +57,7 @@ function TruncatedCell({
 
 interface AdminRentalRowProps {
   rentalId: number;
+  rentalItemId?: number;
   rentalCode: string;
   userName: string;
   phoneNumber?: string;
@@ -67,12 +68,15 @@ interface AdminRentalRowProps {
   endDate: string;
   status: "reserved" | "renting" | "returned" | "overdue" | "canceled" | "defective";
   note?: string;
-  onSave: (payload: { status: typeof status; memo: string }) => void;
+  checked?: boolean;
+  onCheck?: (checked: boolean) => void;
+  onSave: (payload: { status: typeof status; memo: string; rentalItemId?: number }) => void;
   className?: string;
 }
 
 export default function AdminRentalRow({
   rentalId,
+  rentalItemId,
   rentalCode,
   userName,
   phoneNumber,
@@ -83,6 +87,8 @@ export default function AdminRentalRow({
   endDate,
   status,
   note = '',
+  checked = false,
+  onCheck,
   onSave,
   className = "",
 }: AdminRentalRowProps) {
@@ -138,7 +144,7 @@ export default function AdminRentalRow({
   };
 
   const handleStatusClick = (newStatus: "reserved" | "renting" | "returned" | "defective" | "canceled") => {
-    onSave({ status: newStatus, memo: note });
+    onSave({ status: newStatus, memo: note, rentalItemId });
     setIsDropdownOpen(false);
   };
 
@@ -151,7 +157,16 @@ export default function AdminRentalRow({
       {/* 모바일 카드 뷰 */}
       <div className={`md:hidden w-full bg-white border-b border-[#e5e5e5] p-4 ${className}`}>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[13px] font-semibold text-gray-500">{rentalCode}</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={(e) => onCheck?.(e.target.checked)}
+              className="w-4 h-4 accent-[#f72] cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <span className="text-[13px] font-semibold text-gray-500">{rentalCode}</span>
+          </div>
           <div>
             <RentalStatusBadge status={badgeStatus} />
           </div>
@@ -180,6 +195,16 @@ export default function AdminRentalRow({
 
       {/* 데스크톱 테이블 행 뷰 */}
       <div className={`hidden md:flex w-full h-[52px] bg-white border-b border-[#e5e5e5] items-center px-4 gap-2 ${className}`}>
+        {/* 체크박스 */}
+        <div className="w-[3%] min-w-0 shrink flex items-center justify-center">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => onCheck?.(e.target.checked)}
+            className="w-4 h-4 accent-[#f72] cursor-pointer"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
         {/* 대여 코드 */}
         <TruncatedCell text={rentalCode} className="w-[7%] min-w-0 text-center shrink" />
         {/* 이름 */}
@@ -237,6 +262,7 @@ export default function AdminRentalRow({
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         rentalId={rentalId}
+        rentalItemId={rentalItemId}
         rentalCode={rentalCode}
         userName={userName}
         department={department}
@@ -246,7 +272,7 @@ export default function AdminRentalRow({
         status={status}
         note={note}
         onSave={({ status: newStatus, memo: newMemo }) => {
-          onSave({ status: newStatus, memo: newMemo });
+          onSave({ status: newStatus, memo: newMemo, rentalItemId });
           setIsDetailModalOpen(false);
         }}
       />
