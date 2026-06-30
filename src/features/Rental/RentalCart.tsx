@@ -659,13 +659,13 @@ export default function RentalCart() {
                           departmentType,
                           departmentName,
                           items: itemsToSend,
-                        }, !!editFromAdminState);
+                        }, isAdmin);
 
                         alert("예약이 수정되었습니다.");
                         setConfirmOpen(false);
                         // 관리자 모드와 일반 사용자 모드 구분
-                        if (editFromAdminState) {
-                          navigate("/");
+                        if (isAdmin) {
+                          navigate("/admin");
                         } else {
                           navigate("/mypage?tab=rental");
                         }
