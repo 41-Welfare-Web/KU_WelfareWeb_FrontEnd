@@ -37,6 +37,8 @@ type Reservation = {
   endDate: string;
   totalCount: number;
   items?: Array<{ name: string; quantity: number }>;
+  canEdit: boolean;
+  canCancel: boolean;
 };
 
 type PlotterReservation = {
@@ -128,10 +130,14 @@ export default function MyPage() {
               
               // rentalItems가 있으면 각 품목별로 별도의 reservation 생성
               if (rental.rentalItems && rental.rentalItems.length > 0) {
+                // 취소 가능 여부: 전체 품목이 모두 RESERVED일 때만 가능
+                const allReserved = rental.rentalItems.every(
+                  (ri) => ri.status === 'RESERVED',
+                );
                 return rental.rentalItems.map((rentalItem, index) => ({
                   id: `${rental.id}-${rentalItem.id || index}`,
                   title: rentalItem.item?.name || "대여 항목",
-                  status: mapRentalStatus(rental.status),
+                  status: mapRentalStatus(rentalItem.status || rental.status),
                   code: `RENT-${rental.id}`,
                   applicationDate: rental.createdAt
                     ? rental.createdAt.split("T")[0]
@@ -140,9 +146,12 @@ export default function MyPage() {
                   endDate: rental.endDate || "",
                   totalCount: rentalItem.quantity,
                   items: [{ name: rentalItem.item?.name || '물품', quantity: rentalItem.quantity }],
+                  canEdit: rentalItem.status === 'RESERVED',
+                  canCancel: allReserved,
                 }));
               } else {
                 // fallback: rentalItems가 없으면 기본값 사용
+                const isReserved = rental.status === 'RESERVED';
                 return [{
                   id: rental.id.toString(),
                   title: "대여 항목",
@@ -154,6 +163,8 @@ export default function MyPage() {
                   startDate: rental.startDate || "",
                   endDate: rental.endDate || "",
                   totalCount: 1,
+                  canEdit: isReserved,
+                  canCancel: isReserved,
                 }];
               }
             },
@@ -234,18 +245,22 @@ export default function MyPage() {
       const response = await getRentals({ userId: userProfile?.id, pageSize: 100 });
       const mappedRentals: Reservation[] = response.rentals.flatMap((rental) => {
         if (rental.rentalItems && rental.rentalItems.length > 0) {
+          const allReserved = rental.rentalItems.every((ri) => ri.status === 'RESERVED');
           return rental.rentalItems.map((rentalItem, index) => ({
             id: `${rental.id}-${rentalItem.id || index}`,
             title: rentalItem.item?.name || "대여 항목",
-            status: mapRentalStatus(rental.status),
+            status: mapRentalStatus(rentalItem.status || rental.status),
             code: `RENT-${rental.id}`,
             applicationDate: rental.createdAt ? rental.createdAt.split("T")[0] : "",
             startDate: rental.startDate || "",
             endDate: rental.endDate || "",
             totalCount: rentalItem.quantity,
             items: [{ name: rentalItem.item?.name || '물품', quantity: rentalItem.quantity }],
+            canEdit: rentalItem.status === 'RESERVED',
+            canCancel: allReserved,
           }));
         } else {
+          const isReserved = rental.status === 'RESERVED';
           return [{
             id: rental.id.toString(),
             title: "대여 항목",
@@ -255,6 +270,8 @@ export default function MyPage() {
             startDate: rental.startDate || "",
             endDate: rental.endDate || "",
             totalCount: 1,
+            canEdit: isReserved,
+            canCancel: isReserved,
           }];
         }
       });
@@ -363,8 +380,8 @@ export default function MyPage() {
                           endDate={reservation.endDate}
                           totalCount={reservation.totalCount}
                           items={reservation.items}
-                          onEdit={reservation.status === "reserved" ? () => handleEdit(reservation.id) : undefined}
-                          onCancel={reservation.status === "reserved" ? () => handleCancel(reservation.id) : undefined}
+                          onEdit={reservation.canEdit ? () => handleEdit(reservation.id) : undefined}
+                          onCancel={reservation.canCancel ? () => handleCancel(reservation.id) : undefined}
                         />
                       ))}
                     </div>

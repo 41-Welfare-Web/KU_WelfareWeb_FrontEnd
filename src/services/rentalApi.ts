@@ -91,8 +91,9 @@ export async function createRental(data: CreateRentalRequest): Promise<CreateRen
  * PUT /api/rentals/{rentalId}/status
  */
 export interface UpdateRentalStatusRequest {
-  status: 'RESERVED' | 'RENTED' | 'RETURNED' | 'CANCELED' | 'OVERDUE';
+  status?: 'RESERVED' | 'RENTED' | 'RETURNED' | 'CANCELED' | 'OVERDUE' | 'DEFECTIVE';
   memo?: string;
+  rentalItemId?: number;
 }
 
 export async function updateRentalStatus(

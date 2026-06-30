@@ -386,14 +386,16 @@ export default function RentalCart() {
             departmentName: detail.departmentName ?? "",
             startDate: String(detail.startDate).slice(0, 10),
             endDate: String(detail.endDate).slice(0, 10),
-            items: (detail.rentalItems ?? []).map((ri: any) => ({
-              itemId: ri.itemId ?? ri.item?.id,
-              name: ri.item?.name ?? "이름 없음",
-              quantity: ri.quantity ?? 1,
-              totalQuantity: ri.item?.totalQuantity ?? 1,
-              imageUrl: ri.item?.imageUrl ?? undefined,
-              categoryName: ri.item?.category?.name ?? undefined,
-            })),
+            items: (detail.rentalItems ?? [])
+              .filter((ri: any) => ri.status === 'RESERVED')
+              .map((ri: any) => ({
+                itemId: ri.itemId ?? ri.item?.id,
+                name: ri.item?.name ?? "이름 없음",
+                quantity: ri.quantity ?? 1,
+                totalQuantity: ri.item?.totalQuantity ?? 1,
+                imageUrl: ri.item?.imageUrl ?? undefined,
+                categoryName: ri.item?.category?.name ?? undefined,
+              })),
             userName: detail.user?.name ?? "",
             studentId: detail.user?.studentId ?? "",
             phoneNumber: detail.user?.phoneNumber ?? "",

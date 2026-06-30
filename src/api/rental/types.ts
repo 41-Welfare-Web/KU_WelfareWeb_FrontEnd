@@ -102,7 +102,7 @@ export type AdminRentalCreateRequest = {
   targetUserId: string;
 };
 
-export type RentalStatus = "RESERVED" | "RENTED" | "RETURNED" | "CANCELED";
+export type RentalStatus = "RESERVED" | "RENTED" | "RETURNED" | "CANCELED" | "OVERDUE" | "DEFECTIVE";
 
 export type RentalUser = {
   id: string;
@@ -139,6 +139,7 @@ export type RentalRentalItem = {
   rentalId: number;
   itemId: number;
   quantity: number;
+  status: RentalStatus;
   instanceId: number | null;
   item: RentalItemDetail;
 };
