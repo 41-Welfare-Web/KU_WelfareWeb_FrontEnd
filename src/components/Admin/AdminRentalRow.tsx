@@ -240,11 +240,15 @@ export default function AdminRentalRow({
           <TruncatedCell text={userName} tooltipText={phoneNumber || '-'} showTooltipOnOverflowOnly={false} className="w-[8%] min-w-0 text-center shrink" />
           {/* 소속 */}
           <TruncatedCell text={department} className="w-[12%] min-w-0 text-center shrink" />
-          {/* 물품명 + 수량 */}
+          {/* 물품명 */}
           <TruncatedCell
-            text={`${itemName}${quantity !== undefined ? ` (${quantity}개)` : ''}`}
+            text={itemName}
             className="flex-1 min-w-0 text-center"
           />
+          {/* 수량 */}
+          <span className="text-[14px] font-medium text-black w-[6%] min-w-0 text-center shrink">
+            {quantity !== undefined ? `${quantity}개` : '-'}
+          </span>
           {/* 기간 */}
           <span className="text-[13px] font-medium text-black w-[14%] min-w-0 text-center shrink whitespace-nowrap">
             {formatShortDate(startDate)} ~ {formatShortDate(endDate)}
