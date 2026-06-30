@@ -894,12 +894,11 @@ function AdminDashboard() {
                             </span>
                           </div>
                         ) : (
-                          paginatedRentalData.flatMap((rental, groupIdx) =>
+                          paginatedRentalData.flatMap((rental) =>
                             (rental.rentalItems || []).map((item, idx) => (
                               <AdminRentalRow
                                 key={rental.id + '-' + (item.id ?? idx)}
                                 rentalId={rental.id}
-                                groupIndex={groupIdx}
                                 isFirstInGroup={idx === 0}
                                 rentalItemId={item.id}
                                 rentalCode={`R-${rental.id}`}

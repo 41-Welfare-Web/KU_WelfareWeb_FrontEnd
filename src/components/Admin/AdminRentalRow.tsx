@@ -72,7 +72,6 @@ interface AdminRentalRowProps {
   onCheck?: (checked: boolean) => void;
   onSelectGroup?: () => void;
   onSave: (payload: { status: typeof status; memo: string; rentalItemId?: number }) => Promise<void> | void;
-  groupIndex?: number;
   isFirstInGroup?: boolean;
   className?: string;
 }
@@ -94,7 +93,6 @@ export default function AdminRentalRow({
   onCheck,
   onSelectGroup,
   onSave,
-  groupIndex = 0,
   isFirstInGroup = false,
   className = "",
 }: AdminRentalRowProps) {
