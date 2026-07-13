@@ -90,6 +90,7 @@ const RENTAL_STATUS_MAP: Record<string, string> = {
   "대여 중": "RENTED",
   "정상 반납": "RETURNED",
   "불량 반납": "DEFECTIVE",
+  연체: "OVERDUE",
   "예약 취소": "CANCELED",
 };
 const RENTAL_STATUS_MAP_REVERSE: Record<
@@ -332,7 +333,9 @@ function AdminDashboard() {
       setCheckedRentalItems(new Set());
       alert("상태가 변경되었습니다.");
     } catch (err: any) {
-      alert(err.response?.data?.message || "저장에 실패했습니다.");
+      // 순차 처리 도중 일부만 성공했을 수 있으므로 서버 상태로 재동기화
+      alert(err.response?.data?.message || "저장에 실패했습니다. 목록을 새로고침합니다.");
+      await fetchRentals();
     } finally {
       setIsBulkLoading(false);
     }
@@ -568,7 +571,8 @@ function AdminDashboard() {
   };
 
   const handleDownload = () => {
-    exportCSV(activeTab, rentalData, plotterData);
+    // 화면에 보이는 필터/검색 결과를 그대로 내보냄
+    exportCSV(activeTab, filteredRentalData, filteredPlotterData);
   };
 
   const handleRentalColumnSort = (sortKey: string) => {
@@ -598,9 +602,7 @@ function AdminDashboard() {
     let statusMatch = true;
     if (rentalStatusFilter !== "전체 보기") {
       const items = item.rentalItems || [];
-      if (rentalStatusFilter === "불량 반납") {
-        statusMatch = items.some(ri => ri.status === "DEFECTIVE" || ri.status === "OVERDUE");
-      } else if (rentalStatusFilter === "금일 대여") {
+      if (rentalStatusFilter === "금일 대여") {
         const today = new Date().toLocaleDateString("en-CA");
         const itemStart = item.startDate.slice(0, 10);
         statusMatch = itemStart === today && !items.every(ri => ri.status === "CANCELED");
@@ -644,11 +646,13 @@ function AdminDashboard() {
 
     if (statusMatch && dateMatch && searchMatch) {
       // rentalItems도 검색어에 맞게 필터링
-      const filteredRentalItems = item.rentalItems.filter((ri) =>
+      const matchedItems = item.rentalItems.filter((ri) =>
         norm(ri.item?.name).includes(query) ||
         norm(item.user?.name).includes(query) ||
         norm(departmentName).includes(query)
       );
+      // 학번/신청번호(R-xx) 등으로만 매치된 경우 품목 매치가 없으므로 전체 품목 유지
+      const filteredRentalItems = matchedItems.length > 0 ? matchedItems : item.rentalItems;
       return {
         ...item,
         rentalItems: filteredRentalItems,
@@ -820,6 +824,7 @@ function AdminDashboard() {
                     "대여 중",
                     "정상 반납",
                     "불량 반납",
+                    "연체",
                     "예약 취소",
                     "금일 대여",
                     "금일 반납",
@@ -940,7 +945,7 @@ function AdminDashboard() {
                                 quantity={item.quantity}
                                 startDate={rental.startDate}
                                 endDate={rental.endDate}
-                                note={idx === 0 ? rental.memo || "" : ""}
+                                note={rental.memo || ""}
                                 status={
                                   RENTAL_STATUS_MAP_REVERSE[item.status as keyof typeof RENTAL_STATUS_MAP_REVERSE] as
                                     | "reserved"
@@ -979,7 +984,7 @@ function AdminDashboard() {
                                   ).find(
                                     (k) => RENTAL_STATUS_MAP_REVERSE[k] === newStatus
                                   ) || "RESERVED";
-                                  // 불량 반납은 해당 아이템만, 나머지는 대여 전체 변경
+                                  // rentalItemId가 있으면 해당 품목만, 없으면 대여 전체 변경
                                   const body: any = { status: apiStatus, memo: newMemo };
                                   if (itemId !== undefined) body.rentalItemId = itemId;
                                   return axiosInstance.put(`/api/rentals/${rental.id}/status`, body)

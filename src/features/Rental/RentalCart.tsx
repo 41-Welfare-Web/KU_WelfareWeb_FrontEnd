@@ -196,10 +196,18 @@ export default function RentalCart() {
     );
   };
 
+  // 백엔드 가용성 계산은 RESERVED/RENTED 품목만 재고 점유로 계산하므로,
+  // 그 외 상태(반납/불량/연체)의 locked 품목은 재고 검증 대상이 아님
+  const occupiesStock = (it: UiCartItem) =>
+    !it.locked || it.itemStatus === "RENTED";
+
   // 초기 전체 판정 함수
   const buildInitialStatusMap = async (items: UiCartItem[]) => {
     const entries = await Promise.all(
       items.map(async (it) => {
+        if (isEditMode && !occupiesStock(it)) {
+          return [it.cartId, "OK"] as const;
+        }
         if (!it.startDate || !it.endDate) {
           return [it.cartId, "WAIT"] as const;
         }
@@ -251,6 +259,9 @@ export default function RentalCart() {
 
       const entries = await Promise.all(
         nextItems.map(async (it) => {
+          if (!occupiesStock(it)) {
+            return [it.cartId, "OK"] as const;
+          }
           const ok =
             it.originalStartDate &&
             it.originalEndDate &&
@@ -490,6 +501,14 @@ export default function RentalCart() {
         alert("예약 상태가 아닌 품목은 삭제할 수 없습니다.");
         return;
       }
+      if (
+        target &&
+        !window.confirm(
+          `'${target.name}' 품목을 예약에서 제거합니다.\n예약 확정 시 실제로 삭제되며 되돌릴 수 없습니다. 계속할까요?`,
+        )
+      ) {
+        return;
+      }
       setCartItems((prev) => prev.filter((it) => it.cartId !== cartId));
       if (selectedCartId === cartId) {
         const rest = cartItems.filter((it) => it.cartId !== cartId);
@@ -540,7 +559,10 @@ export default function RentalCart() {
                       ? {
                           originalStartDate: selected.originalStartDate ?? null,
                           originalEndDate: selected.originalEndDate ?? null,
-                          originalCount: selected.originalCount ?? 0,
+                          // 재고를 점유하지 않는 품목(반납/불량/연체)은 원복 가산 없음
+                          originalCount: occupiesStock(selected)
+                            ? selected.originalCount ?? 0
+                            : 0,
                         }
                       : null
                   }
@@ -700,6 +722,18 @@ export default function RentalCart() {
 
                         // RESERVED 품목만 items로 전송 — 그 외 품목은 상태 유지, 날짜만 대여 건 단위로 변경
                         const editableItems = cartItems.filter((it) => !it.locked);
+
+                        // 원래 있던 RESERVED 품목을 전부 삭제한 경우: 날짜 전용 분기로 빠지면
+                        // 삭제가 서버에 반영되지 않으므로 차단 (전체 삭제는 예약 취소로 유도)
+                        const originalEditableCount = (editRental?.items ?? []).filter(
+                          (it) => !it.locked,
+                        ).length;
+                        if (originalEditableCount > 0 && editableItems.length === 0) {
+                          alert(
+                            "예약 품목을 모두 삭제할 수는 없습니다.\n예약 전체를 취소하려면 예약 취소 기능을 이용해주세요.",
+                          );
+                          return;
+                        }
 
                         if (editableItems.length > 0) {
                           await updateRental(editRentalId, {

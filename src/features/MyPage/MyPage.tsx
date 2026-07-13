@@ -232,13 +232,27 @@ export default function MyPage() {
   };
 
   const handleCancel = async (id: string) => {
-    if (!window.confirm("예약을 취소하시겠습니까?")) {
+    // id가 "rentalId-itemId" 형식이므로 rentalId만 추출
+    const rentalId = parseInt(id.split('-')[0]);
+
+    // 취소는 rental 단위 — 같은 예약에 묶인 모든 품목이 함께 취소됨을 명시
+    const groupItems = reservations
+      .filter((r) => r.code === `RENT-${rentalId}`)
+      .map((r) => `· ${r.title} ${r.totalCount ?? 1}개`);
+    const itemsText =
+      groupItems.length > 1
+        ? `\n\n함께 취소되는 품목:\n${groupItems.join("\n")}`
+        : "";
+
+    if (
+      !window.confirm(
+        `이 예약에 포함된 모든 품목이 함께 취소됩니다.${itemsText}\n\n예약 전체를 취소하시겠습니까?`,
+      )
+    ) {
       return;
     }
 
     try {
-      // id가 "rentalId-itemId" 형식이므로 rentalId만 추출
-      const rentalId = parseInt(id.split('-')[0]);
       await cancelRental(rentalId);
       alert("예약이 취소되었습니다.");
       // 목록 새로고침 - 품목별로 분리

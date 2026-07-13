@@ -209,7 +209,7 @@ export default function AdminRentalRow({
             <img src={editIcon} alt="수정" className="w-[18px] h-[18px]" />
           </button>
         </div>
-        {note && (
+        {isFirstInGroup && note && (
           <div className="mt-1 text-[12px] text-gray-500 text-right">
             {note}
           </div>
@@ -288,7 +288,7 @@ export default function AdminRentalRow({
           </div>
         </div>
         {/* 비고 서브 행 */}
-        {note && (
+        {isFirstInGroup && note && (
           <div className={`flex justify-end px-4 py-1.5 ${groupBg}`}>
             <span className="text-[12px] text-gray-500 truncate">{note}</span>
           </div>

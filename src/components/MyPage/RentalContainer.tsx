@@ -104,7 +104,7 @@ const RentalContainer = ({
               onClick={onCancel}
               className="flex-1 md:flex-none w-full md:w-[120px] h-[32px] md:h-[40px] bg-[#ffd2d2] border-[0.5px] border-[#ff5151] rounded-[13px] text-[12px] md:text-[16px] font-medium text-[red] hover:bg-[#ffc0c0] whitespace-nowrap"
             >
-              예약 취소
+              예약 전체 취소
             </button>
           )}
         </div>

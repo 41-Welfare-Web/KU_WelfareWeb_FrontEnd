@@ -16,6 +16,12 @@ interface RentalData {
   status: string;
   itemSummary?: string;
   createdAt: string;
+  rentalItems?: {
+    id?: number;
+    status?: string;
+    quantity?: number;
+    item?: { name?: string };
+  }[];
 }
 
 interface PlotterData {
@@ -73,22 +79,41 @@ export function useExportCSV() {
       return;
     }
 
-    // 테이블 컬럼 순서: 신청번호 / 신청자 / 소속 / 대여 품목 / 대여 날짜 / 반납 날짜 / 상태
-    let csvContent = '신청번호,신청자,학번,소속,대여 품목,대여 날짜,반납 날짜,상태\n';
+    // 품목당 1행 — 품목별 상태/수량을 그대로 반영 (화면 테이블과 동일 단위)
+    let csvContent = '신청번호,신청자,학번,소속,품목명,수량,대여 날짜,반납 날짜,상태\n';
 
-    data.forEach(item => {
-      const dept = item.departmentName || item.departmentType || item.user.departmentName || item.user.departmentType || '-';
-      const row = [
-        esc(`R-${item.id}`),
-        esc(item.user.name),
-        esc(item.user.studentId),
+    data.forEach(rental => {
+      const dept = rental.departmentName || rental.departmentType || rental.user.departmentName || rental.user.departmentType || '-';
+      const base = [
+        esc(`R-${rental.id}`),
+        esc(rental.user.name),
+        esc(rental.user.studentId),
         esc(dept),
-        esc(item.itemSummary?.replace(/\s*외\s*0건$/, '') || '-'),
-        escDate(item.startDate),
-        escDate(item.endDate),
-        esc(RENTAL_STATUS_KO[item.status] ?? item.status),
-      ].join(',');
-      csvContent += row + '\n';
+      ];
+
+      const items = rental.rentalItems ?? [];
+      if (items.length === 0) {
+        csvContent += [
+          ...base,
+          esc(rental.itemSummary?.replace(/\s*외\s*0건$/, '') || '-'),
+          esc('-'),
+          escDate(rental.startDate),
+          escDate(rental.endDate),
+          esc(RENTAL_STATUS_KO[rental.status] ?? rental.status),
+        ].join(',') + '\n';
+        return;
+      }
+
+      items.forEach(ri => {
+        csvContent += [
+          ...base,
+          esc(ri.item?.name ?? '-'),
+          esc(ri.quantity ?? '-'),
+          escDate(rental.startDate),
+          escDate(rental.endDate),
+          esc(RENTAL_STATUS_KO[ri.status ?? ''] ?? ri.status ?? '-'),
+        ].join(',') + '\n';
+      });
     });
 
     downloadCSV(csvContent, '대여관리');
