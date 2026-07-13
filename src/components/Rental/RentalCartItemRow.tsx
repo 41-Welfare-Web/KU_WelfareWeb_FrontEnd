@@ -13,6 +13,15 @@ export type RentalCartRowItem = {
   imageUrl?: string;
   startDate: string | null;
   endDate: string | null;
+  locked?: boolean;
+  itemStatus?: string;
+};
+
+const ITEM_STATUS_LABEL: Record<string, string> = {
+  RENTED: "대여중",
+  RETURNED: "반납됨",
+  OVERDUE: "연체",
+  DEFECTIVE: "불량",
 };
 
 type Props = {
@@ -63,6 +72,7 @@ export default function RentalCartItemRow({
   const hasDates = !!item.startDate && !!item.endDate;
   const [inputValue, setInputValue] = useState(String(item.count));
   const maxQty = Math.max(1, item.totalQuantity);
+  const locked = !!item.locked;
 
   useEffect(() => {
     setInputValue(String(item.count));
@@ -122,29 +132,31 @@ export default function RentalCartItemRow({
         "hover:bg-[#E3E3E3]",
       ].join(" ")}
     >
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove();
-        }}
-        className="
-          absolute top-2 right-2
-          grid place-items-center
-          w-8 h-8 sm:w-9 sm:h-9
-          rounded-full
-          hover:bg-black/10
-          transition
-          z-10
-        "
-        aria-label="삭제"
-      >
-        <img
-          src={cancel}
-          alt="취소"
-          className="block w-3.5 h-3.5 sm:w-4 sm:h-4 pointer-events-none"
-        />
-      </button>
+      {!locked && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="
+            absolute top-2 right-2
+            grid place-items-center
+            w-8 h-8 sm:w-9 sm:h-9
+            rounded-full
+            hover:bg-black/10
+            transition
+            z-10
+          "
+          aria-label="삭제"
+        >
+          <img
+            src={cancel}
+            alt="취소"
+            className="block w-3.5 h-3.5 sm:w-4 sm:h-4 pointer-events-none"
+          />
+        </button>
+      )}
 
       <div className="flex items-start gap-3 sm:gap-4">
         <div className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-full bg-white overflow-hidden flex items-center justify-center">
@@ -174,6 +186,11 @@ export default function RentalCartItemRow({
                   : "기간 미선택"}
               </span>
               <StatusBadge status={status} />
+              {locked && (
+                <span className="px-2 py-1 rounded-md bg-[#3B160D] text-white text-[10px] sm:text-[12px] font-semibold">
+                  {ITEM_STATUS_LABEL[item.itemStatus ?? ""] ?? "수정 제한"} — 날짜만 변경
+                </span>
+              )}
             </div>
           </div>
 
@@ -186,7 +203,7 @@ export default function RentalCartItemRow({
               <button
                 type="button"
                 onClick={decrease}
-                disabled={item.count <= 1}
+                disabled={locked || item.count <= 1}
                 className="w-7 h-7 sm:w-8 sm:h-8 hover:bg-black/5 text-sm sm:text-base disabled:opacity-40"
                 aria-label="수량 감소"
               >
@@ -197,6 +214,7 @@ export default function RentalCartItemRow({
                 type="text"
                 inputMode="numeric"
                 value={inputValue}
+                readOnly={locked}
                 onClick={(e) => e.stopPropagation()}
                 onChange={handleInputChange}
                 onBlur={applyInputValue}
@@ -218,7 +236,7 @@ export default function RentalCartItemRow({
               <button
                 type="button"
                 onClick={increase}
-                disabled={item.count >= maxQty}
+                disabled={locked || item.count >= maxQty}
                 className="w-7 h-7 sm:w-8 sm:h-8 hover:bg-black/5 text-sm sm:text-base disabled:opacity-40"
                 aria-label="수량 증가"
               >

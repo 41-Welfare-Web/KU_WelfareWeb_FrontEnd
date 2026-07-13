@@ -201,7 +201,10 @@ export type RentalUpsertItem = {
 export type RentalUpsertRequest = {
   departmentType: string;
   departmentName: string | null;
-  items: RentalUpsertItem[];
+  items?: RentalUpsertItem[];
+  // 품목 변경 없이 날짜만 수정할 때 사용 (items 미포함 시)
+  startDate?: string;
+  endDate?: string;
 };
 
 export type RentalUpsertResponse = {

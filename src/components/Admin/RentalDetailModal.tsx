@@ -22,21 +22,10 @@ interface RentalDetailModalProps {
 
 const allStatuses = ['reserved', 'renting', 'returned', 'defective', 'canceled'] as const;
 
-// 상태 매핑: 프론트엔드 상태 -> API 상태
-const statusToAPI = {
-  'reserved': 'RESERVED',
-  'renting': 'RENTED',
-  'returned': 'RETURNED',
-  'overdue': 'OVERDUE',
-  'canceled': 'CANCELED',
-  'defective': 'DEFECTIVE',
-} as const;
-
 export default function RentalDetailModal({
   isOpen,
   onClose,
   rentalId,
-  rentalItemId,
   rentalCode,
   userName,
   department,

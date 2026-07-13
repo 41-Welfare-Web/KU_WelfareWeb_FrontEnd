@@ -71,4 +71,8 @@ export type UiCartItem = {
   originalStartDate?: string | null;
   originalEndDate?: string | null;
   originalCount?: number;
+
+  // 수정 모드: RESERVED가 아닌 품목은 수량/삭제 불가 (날짜만 대여 건 단위로 변경됨)
+  locked?: boolean;
+  itemStatus?: string;
 };

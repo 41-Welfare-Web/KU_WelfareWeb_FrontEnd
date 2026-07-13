@@ -121,6 +121,8 @@ type EditRentalData = {
     totalQuantity: number;
     imageUrl?: string;
     categoryName?: string;
+    locked?: boolean;
+    itemStatus?: string;
   }[];
   userName?: string;
   studentId?: string;
@@ -231,6 +233,50 @@ export default function RentalCart() {
   }) => {
     if (!selected) return;
 
+    // 수정 모드: 날짜는 대여 건 단위 — 모든 품목에 동일하게 적용 후 전체 재검증
+    if (isEditMode) {
+      const nextItems = cartItems.map((x) => ({
+        ...x,
+        startDate: range.startDate,
+        endDate: range.endDate,
+      }));
+      setCartItems(nextItems);
+
+      if (!range.startDate || !range.endDate) {
+        setStatusByCartId(
+          Object.fromEntries(nextItems.map((x) => [x.cartId, "WAIT"] as const)),
+        );
+        return;
+      }
+
+      const entries = await Promise.all(
+        nextItems.map(async (it) => {
+          const ok =
+            it.originalStartDate &&
+            it.originalEndDate &&
+            typeof it.originalCount === "number"
+              ? await checkEnoughForEdit(
+                  it.itemId,
+                  range.startDate!,
+                  range.endDate!,
+                  it.count,
+                  it.originalStartDate,
+                  it.originalEndDate,
+                  it.originalCount,
+                )
+              : await checkEnough(
+                  it.itemId,
+                  range.startDate!,
+                  range.endDate!,
+                  it.count,
+                );
+          return [it.cartId, ok ? "OK" : "NO"] as const;
+        }),
+      );
+      setStatusByCartId(Object.fromEntries(entries));
+      return;
+    }
+
     patchLocalCart(selected.cartId, {
       startDate: range.startDate,
       endDate: range.endDate,
@@ -241,30 +287,14 @@ export default function RentalCart() {
       return;
     }
 
-    const ok =
-      isEditMode &&
-      selected.originalStartDate &&
-      selected.originalEndDate &&
-      typeof selected.originalCount === "number"
-        ? await checkEnoughForEdit(
-            selected.itemId,
-            range.startDate,
-            range.endDate,
-            selected.count,
-            selected.originalStartDate,
-            selected.originalEndDate,
-            selected.originalCount,
-          )
-        : await checkEnough(
-            selected.itemId,
-            range.startDate,
-            range.endDate,
-            selected.count,
-          );
+    const ok = await checkEnough(
+      selected.itemId,
+      range.startDate,
+      range.endDate,
+      selected.count,
+    );
 
     setStatusByCartId((m) => ({ ...m, [selected.cartId]: ok ? "OK" : "NO" }));
-
-    if (isEditMode) return;
 
     try {
       await updateCartItem(selected.cartId, {
@@ -284,6 +314,7 @@ export default function RentalCart() {
     if (!it) return;
 
     if (isEditMode) {
+      if (it.locked) return; // RESERVED가 아닌 품목은 수량 변경 불가
       patchLocalCart(cartId, { count: nextQty });
 
       if (it.startDate && it.endDate) {
@@ -390,7 +421,11 @@ export default function RentalCart() {
             startDate: String(detail.startDate).slice(0, 10),
             endDate: String(detail.endDate).slice(0, 10),
             items: (detail.rentalItems ?? [])
-              .filter((ri: any) => ri.status === 'RESERVED')
+              // 관리자: 취소 외 전체 표시 (RESERVED가 아닌 품목은 날짜만 변경 가능)
+              // 일반 사용자: RESERVED 품목만 수정 가능
+              .filter((ri: any) =>
+                isAdmin ? ri.status !== 'CANCELED' : ri.status === 'RESERVED',
+              )
               .map((ri: any) => ({
                 itemId: ri.itemId ?? ri.item?.id,
                 name: ri.item?.name ?? "이름 없음",
@@ -398,6 +433,8 @@ export default function RentalCart() {
                 totalQuantity: ri.item?.totalQuantity ?? 1,
                 imageUrl: ri.item?.imageUrl ?? undefined,
                 categoryName: ri.item?.category?.name ?? undefined,
+                locked: ri.status !== 'RESERVED',
+                itemStatus: ri.status,
               })),
             userName: detail.user?.name ?? "",
             studentId: detail.user?.studentId ?? "",
@@ -420,6 +457,8 @@ export default function RentalCart() {
               originalCount: it.quantity,
               imageUrl: it.imageUrl,
               categoryName: it.categoryName,
+              locked: it.locked,
+              itemStatus: it.itemStatus,
             }),
           );
 
@@ -446,6 +485,11 @@ export default function RentalCart() {
   // 대여 물품 장바구니에서 삭제
   const handleRemove = async (cartId: number) => {
     if (isEditMode) {
+      const target = cartItems.find((it) => it.cartId === cartId);
+      if (target?.locked) {
+        alert("예약 상태가 아닌 품목은 삭제할 수 없습니다.");
+        return;
+      }
       setCartItems((prev) => prev.filter((it) => it.cartId !== cartId));
       if (selectedCartId === cartId) {
         const rest = cartItems.filter((it) => it.cartId !== cartId);
@@ -632,7 +676,7 @@ export default function RentalCart() {
                   onSubmit={async ({
                     departmentType,
                     departmentName,
-                    cartItems,
+                    cartItems: modalCartItems,
                   }) => {
                     try {
                       // 수정 모드: URL에 editRentalId가 있으면 수정 API 호출
@@ -643,23 +687,40 @@ export default function RentalCart() {
                           return;
                         }
 
-                        const itemsToSend = cartItems.map((it) => ({
-                          itemId: it.itemId,
-                          quantity: it.quantity,
-                          startDate: String(it.startDate ?? "").slice(0, 10),
-                          endDate: String(it.endDate ?? "").slice(0, 10),
-                        }));
-
-                        if (!itemsToSend.length) {
+                        if (!cartItems.length) {
                           alert("수정할 물품이 없어요.");
                           return;
                         }
 
-                        await updateRental(editRentalId, {
-                          departmentType,
-                          departmentName,
-                          items: itemsToSend,
-                        }, isAdmin);
+                        const first = cartItems[0];
+                        if (!first.startDate || !first.endDate) {
+                          alert("대여 기간을 선택해주세요.");
+                          return;
+                        }
+
+                        // RESERVED 품목만 items로 전송 — 그 외 품목은 상태 유지, 날짜만 대여 건 단위로 변경
+                        const editableItems = cartItems.filter((it) => !it.locked);
+
+                        if (editableItems.length > 0) {
+                          await updateRental(editRentalId, {
+                            departmentType,
+                            departmentName,
+                            items: editableItems.map((it) => ({
+                              itemId: it.itemId,
+                              quantity: it.count,
+                              startDate: String(it.startDate ?? "").slice(0, 10),
+                              endDate: String(it.endDate ?? "").slice(0, 10),
+                            })),
+                          }, isAdmin);
+                        } else {
+                          // RESERVED 품목이 없으면 날짜만 수정
+                          await updateRental(editRentalId, {
+                            departmentType,
+                            departmentName,
+                            startDate: String(first.startDate).slice(0, 10),
+                            endDate: String(first.endDate).slice(0, 10),
+                          }, isAdmin);
+                        }
 
                         alert("예약이 수정되었습니다.");
                         setConfirmOpen(false);
@@ -680,7 +741,7 @@ export default function RentalCart() {
                         result = await import("../../api/rental/rentalApi").then(mod => mod.createAdminRental({
                           departmentType,
                           departmentName,
-                          items: cartItems.map((it: any) => ({
+                          items: modalCartItems.map((it: any) => ({
                             itemId: it.item?.id ?? it.itemId,
                             quantity: it.quantity ?? it.count ?? 1,
                             startDate: String(it.startDate ?? "").slice(0, 10),
@@ -705,7 +766,7 @@ export default function RentalCart() {
                         result = await createRentals({
                           departmentType,
                           departmentName,
-                          items: cartItems.map((it: any) => ({
+                          items: modalCartItems.map((it: any) => ({
                             itemId: it.item?.id ?? it.itemId,
                             quantity: it.quantity ?? it.count ?? 1,
                             startDate: String(it.startDate ?? "").slice(0, 10),
