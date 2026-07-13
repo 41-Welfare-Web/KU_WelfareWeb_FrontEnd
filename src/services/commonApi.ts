@@ -81,6 +81,7 @@ export async function getCommonMetadata(): Promise<CommonMetadata> {
       plotterFreePurposes: data.freePurposes || [],
       plotterPaperSizes,
       inspectionMode: data.inspectionMode ?? false,
+      inspectionTimeEnabled: data.inspectionTimeEnabled ?? false,
     };
   } catch (error: any) {
     throw new Error(error.response?.data?.message || "메타데이터 조회에 실패했습니다.");
