@@ -77,7 +77,8 @@ function applyLocalStatusUpdate(
       ...r,
       memo: newMemo ?? r.memo,
       rentalItems: r.rentalItems.map((ri) => {
-        if (apiStatus === 'DEFECTIVE' && ri.id !== rentalItemId) return ri;
+        // rentalItemId가 있으면 해당 아이템만, 없으면 전체 적용
+        if (rentalItemId !== undefined && ri.id !== rentalItemId) return ri;
         return { ...ri, status: apiStatus };
       }),
     };
@@ -109,7 +110,7 @@ const mockRentalData: RentalData[] = [
 ];
 
 describe('applyLocalStatusUpdate (개별 상태 변경)', () => {
-  it('대상 rental의 모든 items 상태가 변경된다 (DEFECTIVE 아닐 때)', () => {
+  it('rentalItemId 없이 호출하면 대상 rental의 모든 items 상태가 변경된다', () => {
     const result = applyLocalStatusUpdate(mockRentalData, 1, 'RENTED', undefined);
     const rental = result.find((r) => r.id === 1)!;
     expect(rental.rentalItems[0].status).toBe('RENTED');
@@ -122,7 +123,14 @@ describe('applyLocalStatusUpdate (개별 상태 변경)', () => {
     expect(other.rentalItems[0].status).toBe('RENTED'); // 원래 값 유지
   });
 
-  it('DEFECTIVE 일 때 해당 rentalItemId의 item만 변경된다', () => {
+  it('rentalItemId가 있으면 해당 item만 변경된다 (상태 무관)', () => {
+    const result = applyLocalStatusUpdate(mockRentalData, 1, 'RETURNED', undefined, 10);
+    const rental = result.find((r) => r.id === 1)!;
+    expect(rental.rentalItems[0].status).toBe('RETURNED'); // id=10 변경됨
+    expect(rental.rentalItems[1].status).toBe('RESERVED'); // id=11 유지
+  });
+
+  it('DEFECTIVE도 rentalItemId 기준으로 해당 item만 변경된다', () => {
     const result = applyLocalStatusUpdate(mockRentalData, 1, 'DEFECTIVE', undefined, 10);
     const rental = result.find((r) => r.id === 1)!;
     expect(rental.rentalItems[0].status).toBe('DEFECTIVE'); // id=10 변경됨

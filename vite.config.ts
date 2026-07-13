@@ -8,5 +8,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./src/test/setup.ts",
+    // 병렬 워커 실행 시 jsdom 메모리 부족(OOM) 크래시 방지
+    fileParallelism: false,
   },
 });
