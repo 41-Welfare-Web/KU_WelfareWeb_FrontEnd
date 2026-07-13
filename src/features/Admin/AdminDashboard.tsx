@@ -981,7 +981,7 @@ function AdminDashboard() {
                                   ) || "RESERVED";
                                   // 불량 반납은 해당 아이템만, 나머지는 대여 전체 변경
                                   const body: any = { status: apiStatus, memo: newMemo };
-                                  if (apiStatus === "DEFECTIVE") body.rentalItemId = itemId;
+                                  if (itemId !== undefined) body.rentalItemId = itemId;
                                   return axiosInstance.put(`/api/rentals/${rental.id}/status`, body)
                                     .then(() => {
                                       alert("상태가 변경되었습니다.");
@@ -993,8 +993,8 @@ function AdminDashboard() {
                                             ...r,
                                             memo: newMemo ?? r.memo,
                                             rentalItems: r.rentalItems.map((ri) => {
-                                              // DEFECTIVE는 해당 아이템만, 나머지는 전체 적용
-                                              if (apiStatus === "DEFECTIVE" && ri.id !== itemId) return ri;
+                                              // rentalItemId가 있으면 해당 아이템만, 없으면 전체 적용
+                                              if (itemId !== undefined && ri.id !== itemId) return ri;
                                               return { ...ri, status: apiStatus as typeof ri.status };
                                             }),
                                           };

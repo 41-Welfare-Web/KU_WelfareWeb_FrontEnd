@@ -331,8 +331,8 @@ export default function AdminRentalRow({
         endDate={endDate}
         status={status}
         note={note}
-        onSave={({ status: newStatus, memo: newMemo }) => {
-          onSave({ status: newStatus, memo: newMemo, rentalItemId });
+        onSave={async ({ status: newStatus, memo: newMemo }) => {
+          await onSave({ status: newStatus, memo: newMemo, rentalItemId });
           setIsDetailModalOpen(false);
         }}
       />

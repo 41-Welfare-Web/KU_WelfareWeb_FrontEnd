@@ -3,7 +3,6 @@ import { useLockBodyScroll } from '../../hooks/useLockBodyScroll';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import RentalStatusBadge from '../MyPage/RentalStatusBadge';
-import { updateRentalStatus } from '../../services/rentalApi';
 
 interface RentalDetailModalProps {
   isOpen: boolean;
@@ -18,7 +17,7 @@ interface RentalDetailModalProps {
   endDate: string;
   status: 'reserved' | 'renting' | 'returned' | 'overdue' | 'canceled' | 'defective';
   note?: string;
-  onSave: (payload: { status: typeof status; memo: string }) => void;
+  onSave: (payload: { status: typeof status; memo: string }) => Promise<void> | void;
 }
 
 const allStatuses = ['reserved', 'renting', 'returned', 'defective', 'canceled'] as const;
@@ -82,18 +81,11 @@ export default function RentalDetailModal({
     setIsLoading(true);
     setError(null);
     try {
-      const apiStatus = statusToAPI[selectedStatus];
-      await updateRentalStatus(rentalId, {
-        status: apiStatus as any,
-        memo: memoValue,
-        rentalItemId,
-      });
-      // 저장 후 콜백 하나만 호출
-      onSave({ status: selectedStatus, memo: memoValue });
+      await onSave({ status: selectedStatus, memo: memoValue });
       onClose();
     } catch (err: any) {
       console.error("대여 상태 변경 실패:", err);
-      const errorMessage = err instanceof Error ? err.message : '저장에 실패했습니다.';
+      const errorMessage = err?.response?.data?.message ?? (err instanceof Error ? err.message : '저장에 실패했습니다.');
       setError(errorMessage);
     } finally {
       setIsLoading(false);
