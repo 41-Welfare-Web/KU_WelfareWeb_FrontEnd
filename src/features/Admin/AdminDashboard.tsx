@@ -17,14 +17,30 @@ import { useExportCSV } from "../../hooks/useExportCSV";
 import { getRentals } from "../../services/rentalApi";
 import { getPlotterOrders } from "../../services/plotterApi";
 import { getCommonMetadata } from "../../services/commonApi";
-import { getCategories, getItems } from "../../api/rental/rentalApi";
+import {
+  getCategories,
+  getItems,
+  getRentalDetail,
+  updateRental,
+} from "../../api/rental/rentalApi";
 import type { Item, Category } from "../../api/rental/types";
 import axiosInstance from "../../api/axiosInstance";
 import AdminItemCreateModal from "../../components/Admin/AdminItemCreateModal";
+import AdminTentTable from "../../components/Admin/AdminTentTable";
+import {
+  getTents,
+  getTentItem,
+  updateTent,
+  createTent,
+} from "../../api/tent/tentApi";
+import type { Tent } from "../../api/tent/types";
+import TentAssignModal from "../../components/Admin/TentAssignModal";
+import type { TentAssignTarget } from "../../components/Admin/TentAssignModal";
+import { isTentItem, toLocalDateKey, withTentTag } from "../../utils/tentUtils";
 import AdminUserSelectModal from "../../components/Admin/AdminUserSelectModal";
 import sortIcon from "../../assets/admin/sort.svg";
 
-type TabType = "rental" | "plotter" | "items";
+type TabType = "rental" | "plotter" | "items" | "tent";
 
 interface RentalData {
   id: number;
@@ -225,6 +241,24 @@ function AdminDashboard() {
   const [plotterData, setPlotterData] = useState<PlotterData[]>([]);
   const [itemsData, setItemsData] = useState<ItemData[]>([]);
   const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [tentData, setTentData] = useState<Tent[]>([]);
+  // 물품 목록 관리에 등록된 천막 총 수량 (천막 관리의 일괄 등록/불일치 안내용)
+  const [tentItemTotal, setTentItemTotal] = useState(0);
+  // 천막 품목 예약 -> 대여중 변경 시 띄우는 천막 지정 팝업
+  const [tentAssign, setTentAssign] = useState<
+    | (TentAssignTarget & {
+        key: string;
+        rentalId: number;
+        rentalItemId?: number;
+        memo: string;
+      })
+    | null
+  >(null);
+  // 팝업 결과를 상태 변경을 요청한 쪽(행 드롭다운 / 상세 모달)에 돌려주기 위한 콜백
+  const tentAssignSettleRef = useRef<{
+    resolve: () => void;
+    reject: (err: Error) => void;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rentalSortColumn, setRentalSortColumn] = useState<'startDate' | 'endDate' | null>(null);
@@ -299,6 +333,28 @@ function AdminDashboard() {
     const apiStatus = (
       Object.keys(RENTAL_STATUS_MAP_REVERSE) as Array<keyof typeof RENTAL_STATUS_MAP_REVERSE>
     ).find((k) => RENTAL_STATUS_MAP_REVERSE[k] === bulkStatus) || "RESERVED";
+
+    // 천막은 내보낼 천막을 지정해야 하므로 일괄 대여 처리에서 제외
+    if (apiStatus === "RENTED") {
+      const tentRentalCodes = rentalData.flatMap((r) =>
+        (r.rentalItems || [])
+          .filter(
+            (ri) =>
+              ri.id !== undefined &&
+              checkedRentalItems.has(ri.id) &&
+              ri.status === "RESERVED" &&
+              isTentItem(ri.item?.name),
+          )
+          .map(() => `R-${r.id}`),
+      );
+      if (tentRentalCodes.length > 0) {
+        alert(
+          `선택한 항목에 예약 상태의 천막이 있습니다 (${tentRentalCodes.join(", ")}).\n` +
+            "천막은 내보낼 천막을 지정해야 하므로 해당 행의 상태를 개별로 변경해주세요.",
+        );
+        return;
+      }
+    }
 
     // 체크된 아이템을 대여별로 그룹화
     const requestsByRental: { rentalId: number; rentalItemId: number }[] = [];
@@ -406,6 +462,29 @@ function AdminDashboard() {
     }
   };
 
+  /** 서버가 준 에러 메시지 우선, 없으면 fallback */
+  const apiErrorMessage = (err: unknown, fallback: string) =>
+    (err as { response?: { data?: { message?: string | string[] } } })?.response
+      ?.data?.message?.toString() ||
+    (err instanceof Error && !("response" in err) ? err.message : "") ||
+    fallback;
+
+  const fetchTents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [response, tentItem] = await Promise.all([getTents(), getTentItem()]);
+      setTentData(response || []);
+      setTentItemTotal(tentItem.totalQuantity);
+    } catch (err: unknown) {
+      console.error("[Admin] 천막 목록 조회 실패:", err);
+      setError(apiErrorMessage(err, "천막 목록을 불러오는데 실패했습니다."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchCategories = async () => {
     try {
       const response = await getCategories();
@@ -422,6 +501,8 @@ function AdminDashboard() {
       fetchPlotterOrders();
     } else if (activeTab === "items") {
       fetchItems();
+    } else if (activeTab === "tent") {
+      fetchTents();
     }
   }, [activeTab]);
 
@@ -551,6 +632,230 @@ function AdminDashboard() {
 
   const handleItemsSearch = () => {
     fetchItems();
+  };
+
+  const patchTent = async (
+    tentId: number,
+    patch: { note?: string; damaged?: boolean },
+    failMessage: string,
+  ) => {
+    // 화면에 먼저 반영하고, 저장 실패하면 서버 값으로 되돌림
+    setTentData((prev) =>
+      prev.map((tent) => (tent.id === tentId ? { ...tent, ...patch } : tent)),
+    );
+    try {
+      await updateTent(tentId, patch);
+    } catch (err: unknown) {
+      alert(apiErrorMessage(err, failMessage));
+      try {
+        setTentData(await getTents());
+      } catch {
+        // 재조회까지 실패하면 다음 탭 진입 때 다시 불러옴
+      }
+    }
+  };
+
+  const handleTentNoteChange = (tentId: number, note: string) =>
+    patchTent(tentId, { note }, "비고 저장에 실패했습니다.");
+
+  const handleTentDamagedChange = (tentId: number, damaged: boolean) =>
+    patchTent(tentId, { damaged }, "파손 여부 저장에 실패했습니다.");
+
+  /** 천막 등록 (여러 동 한 번에 가능). 등록 후 목록 재조회 */
+  const handleTentCreate = async (tentNumbers: string[]) => {
+    const done: string[] = [];
+    try {
+      // 순서대로 등록 — 중간에 실패해도 앞에서 등록된 건은 남음
+      for (const tentNumber of tentNumbers) {
+        await createTent(tentNumber);
+        done.push(tentNumber);
+      }
+    } catch (err: unknown) {
+      const failed = tentNumbers[done.length];
+      alert(
+        `'${failed}' 등록에 실패했습니다: ${apiErrorMessage(err, "알 수 없는 오류")}` +
+          (done.length ? `\n(${done.join(", ")}은(는) 등록됨)` : ""),
+      );
+    } finally {
+      await fetchTents();
+    }
+  };
+
+  /** 대여 품목 상태 변경 API 호출 + 로컬 상태 반영 (알림은 호출하는 쪽에서) */
+  const saveRentalItemStatus = async (
+    rentalId: number,
+    apiStatus: string,
+    memo: string,
+    rentalItemId?: number,
+  ) => {
+    // rentalItemId가 있으면 해당 품목만, 없으면 대여 전체 변경
+    const body: { status: string; memo: string; rentalItemId?: number } = {
+      status: apiStatus,
+      memo,
+    };
+    if (rentalItemId !== undefined) body.rentalItemId = rentalItemId;
+    await axiosInstance.put(`/api/rentals/${rentalId}/status`, body);
+
+    // 전체 재조회 없이 로컬 상태만 업데이트
+    setRentalData((prev) =>
+      prev.map((r) => {
+        if (r.id !== rentalId) return r;
+        return {
+          ...r,
+          memo: memo ?? r.memo,
+          rentalItems: r.rentalItems.map((ri) => {
+            // rentalItemId가 있으면 해당 아이템만, 없으면 전체 적용
+            if (rentalItemId !== undefined && ri.id !== rentalItemId) return ri;
+            return { ...ri, status: apiStatus as typeof ri.status };
+          }),
+        };
+      }),
+    );
+  };
+
+  const closeTentAssign = () => {
+    tentAssignSettleRef.current = null;
+    setTentAssign(null);
+  };
+
+  const handleTentAssignCancel = () => {
+    tentAssignSettleRef.current?.reject(
+      new Error("천막 지정을 취소해 상태를 변경하지 않았습니다."),
+    );
+    closeTentAssign();
+  };
+
+  /**
+   * 대여 기록의 천막 수량을 줄이고, 새로 만들어진 천막 품목의 ID를 돌려줍니다.
+   *
+   * 관리자 예약 수정 API(PUT /api/rentals/admin/:id)는 이 대여 건의 '예약' 상태 품목을
+   * 전부 지우고 보낸 목록으로 다시 만듭니다. 그래서 천막 외 예약 품목도 수량 그대로
+   * 함께 보내야 하고, 끝나면 품목 ID가 모두 바뀝니다. (관리자 예약 수정 화면과 같은 방식)
+   *
+   * onQuantityChanged: 수량 변경이 서버에 반영된 직후 호출 (이후 단계 실패 시 복구 판단용)
+   */
+  const reduceTentQuantity = async (
+    rentalId: number,
+    tentRentalItemId: number,
+    nextQty: number,
+    onQuantityChanged: () => void,
+  ): Promise<number> => {
+    // 목록 데이터가 오래됐을 수 있으므로 서버에서 최신 상태를 다시 받아서 사용
+    const detail = await getRentalDetail(rentalId);
+    const tentItem = detail.rentalItems.find((ri) => ri.id === tentRentalItemId);
+    if (!tentItem || tentItem.status !== "RESERVED") {
+      throw new Error(
+        "천막 품목이 더 이상 예약 상태가 아닙니다. 목록을 새로고침한 뒤 다시 시도해주세요.",
+      );
+    }
+
+    const startDate = toLocalDateKey(detail.startDate);
+    const endDate = toLocalDateKey(detail.endDate);
+    await updateRental(
+      rentalId,
+      {
+        // 소속 정보는 기존 값 그대로
+        departmentType: detail.departmentType,
+        departmentName: detail.departmentName,
+        items: detail.rentalItems
+          .filter((ri) => ri.status === "RESERVED")
+          .map((ri) => ({
+            itemId: ri.itemId,
+            quantity: ri.id === tentRentalItemId ? nextQty : ri.quantity,
+            startDate,
+            endDate,
+          })),
+      },
+      true,
+    );
+    onQuantityChanged();
+
+    // 품목이 새 ID로 다시 만들어졌으므로 천막 품목을 다시 찾음
+    const after = await getRentalDetail(rentalId);
+    const recreated = after.rentalItems.find(
+      (ri) =>
+        ri.status === "RESERVED" &&
+        ri.itemId === tentItem.itemId &&
+        ri.quantity === nextQty,
+    );
+    if (!recreated) {
+      throw new Error("수량을 바꾼 천막 품목을 찾지 못했습니다.");
+    }
+    return recreated.id;
+  };
+
+  const handleTentAssignConfirm = async (
+    tents: Pick<Tent, "id" | "tentNumber">[],
+  ) => {
+    if (!tentAssign) return;
+    const { rentalId, quantity: requested } = tentAssign;
+    const sendCount = tents.length;
+    const names = tents.map((t) => t.tentNumber);
+    // 어느 천막이 나갔는지는 대여 메모에 태그로 남김 (천막 관리 탭의 현재/최근 대여 단위 계산용)
+    const memoWithTents = withTentTag(tentAssign.memo, names);
+    const reduce = sendCount < requested && tentAssign.rentalItemId !== undefined;
+    let rentalItemId = tentAssign.rentalItemId;
+    let quantityChanged = false;
+
+    try {
+      // 1) 신청보다 적게 내보내면 대여 기록의 천막 수량부터 줄임
+      if (reduce) {
+        rentalItemId = await reduceTentQuantity(
+          rentalId,
+          rentalItemId!,
+          sendCount,
+          () => {
+            quantityChanged = true;
+          },
+        );
+      }
+      // 2) 대여중으로 변경 + 내보낸 천막을 메모에 기록 (한 요청)
+      await saveRentalItemStatus(rentalId, "RENTED", memoWithTents, rentalItemId);
+    } catch (err) {
+      if (!quantityChanged) throw err; // 아무것도 안 바뀜 -> 팝업에 에러 표시, 재시도 가능
+
+      // 수량만 줄고 대여중 변경은 실패한 상태.
+      // 품목 ID가 바뀌어 이 팝업으로는 재시도할 수 없으므로 닫고 목록을 서버 기준으로 맞춤
+      const message =
+        `대여 기록의 천막 수량은 ${sendCount}동으로 줄였지만, 대여중 변경에는 실패했습니다.\n` +
+        "해당 행에서 다시 대여중으로 바꿔주세요.";
+      tentAssignSettleRef.current?.reject(new Error(message));
+      closeTentAssign();
+      await fetchRentals();
+      alert(message);
+      return;
+    }
+
+    // 3) 천막 관리 탭을 이미 불러왔다면 새로고침 (실패해도 처리 결과는 이미 저장됨)
+    if (tentData.length > 0) {
+      getTents()
+        .then(setTentData)
+        .catch(() => {});
+    }
+
+    tentAssignSettleRef.current?.resolve();
+    closeTentAssign();
+
+    if (quantityChanged) {
+      // 이 대여 건의 품목 ID가 모두 바뀌었으므로 선택 체크를 풀고 서버 기준으로 다시 불러옴
+      const oldIds = new Set(
+        rentalData
+          .find((r) => r.id === rentalId)
+          ?.rentalItems.map((ri) => ri.id)
+          .filter((id): id is number => id !== undefined) ?? [],
+      );
+      setCheckedRentalItems((prev) => {
+        const next = new Set(prev);
+        oldIds.forEach((id) => next.delete(id));
+        return next;
+      });
+      await fetchRentals();
+    }
+
+    const shortNote = quantityChanged
+      ? `\n대여 기록의 천막 수량도 ${requested}동 → ${sendCount}동으로 변경했습니다.`
+      : "";
+    alert(`대여중으로 변경했습니다.\n내보낸 천막: ${names.join(", ")}${shortNote}`);
   };
 
   const handleItemEdit = async (_itemId: number) => {};
@@ -984,27 +1289,36 @@ function AdminDashboard() {
                                   ).find(
                                     (k) => RENTAL_STATUS_MAP_REVERSE[k] === newStatus
                                   ) || "RESERVED";
-                                  // rentalItemId가 있으면 해당 품목만, 없으면 대여 전체 변경
-                                  const body: any = { status: apiStatus, memo: newMemo };
-                                  if (itemId !== undefined) body.rentalItemId = itemId;
-                                  return axiosInstance.put(`/api/rentals/${rental.id}/status`, body)
+
+                                  // 천막: 예약 -> 대여중이면 내보낼 천막을 먼저 지정받음
+                                  if (
+                                    isTentItem(item.item?.name) &&
+                                    item.status === "RESERVED" &&
+                                    apiStatus === "RENTED"
+                                  ) {
+                                    return new Promise<void>((resolve, reject) => {
+                                      tentAssignSettleRef.current = { resolve, reject };
+                                      setTentAssign({
+                                        key: `${rental.id}-${itemId ?? "all"}-${Date.now()}`,
+                                        rentalId: rental.id,
+                                        rentalItemId: itemId,
+                                        memo: newMemo,
+                                        rentalCode: `R-${rental.id}`,
+                                        userName: rental.user.name,
+                                        department:
+                                          rental.departmentName ||
+                                          rental.departmentType ||
+                                          "-",
+                                        startDate: rental.startDate,
+                                        endDate: rental.endDate,
+                                        quantity: item.quantity ?? 1,
+                                      });
+                                    });
+                                  }
+
+                                  return saveRentalItemStatus(rental.id, apiStatus, newMemo, itemId)
                                     .then(() => {
                                       alert("상태가 변경되었습니다.");
-                                      // 전체 재조회 없이 로컬 상태만 업데이트
-                                      setRentalData((prev) =>
-                                        prev.map((r) => {
-                                          if (r.id !== rental.id) return r;
-                                          return {
-                                            ...r,
-                                            memo: newMemo ?? r.memo,
-                                            rentalItems: r.rentalItems.map((ri) => {
-                                              // rentalItemId가 있으면 해당 아이템만, 없으면 전체 적용
-                                              if (itemId !== undefined && ri.id !== itemId) return ri;
-                                              return { ...ri, status: apiStatus as typeof ri.status };
-                                            }),
-                                          };
-                                        })
-                                      );
                                     })
                                     .catch((err) => {
                                       alert(err.response?.data?.message || "저장에 실패했습니다.");
@@ -1248,11 +1562,32 @@ function AdminDashboard() {
                 )}
               </div>
             )}
+
+            {/* 천막 관리 탭 내용 */}
+            {activeTab === "tent" && (
+              <AdminTentTable
+                tents={tentData}
+                onDamagedChange={handleTentDamagedChange}
+                onNoteChange={handleTentNoteChange}
+                onCreateTents={handleTentCreate}
+                itemTotalQuantity={tentItemTotal}
+                loading={loading}
+                error={error}
+              />
+            )}
           </div>
         </div>
       </div>
 
       <Footer />
+      {tentAssign && (
+        <TentAssignModal
+          key={tentAssign.key}
+          target={tentAssign}
+          onCancel={handleTentAssignCancel}
+          onConfirm={handleTentAssignConfirm}
+        />
+      )}
       <PlotterRejectHandler
         ref={rejectHandlerRef}
         onSubmit={(orderId, newStatus, reason) => {

@@ -1,6 +1,6 @@
 import downloadIcon from '../../assets/admin/download.svg';
 
-type TabType = 'rental' | 'plotter' | 'items';
+type TabType = 'rental' | 'plotter' | 'items' | 'tent';
 
 interface AdminDashboardHeaderProps {
   activeTab: TabType;

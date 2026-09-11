@@ -159,6 +159,8 @@ export default function AdminRentalRow({
     setIsRowLoading(true);
     try {
       await onSave({ status: newStatus, memo: note, rentalItemId });
+    } catch {
+      // 실패 알림은 onSave 쪽에서 이미 띄움 (천막 지정 취소 포함)
     } finally {
       setIsRowLoading(false);
     }

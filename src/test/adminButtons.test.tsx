@@ -130,12 +130,13 @@ describe('AdminDashboardHeader', () => {
 /* 2. AdminTabNavigation                                               */
 /* ------------------------------------------------------------------ */
 describe('AdminTabNavigation', () => {
-  it('탭 버튼 3개가 렌더링된다', () => {
+  it('탭 버튼 4개가 렌더링된다', () => {
     render(<AdminTabNavigation activeTab="rental" onTabChange={vi.fn()} />);
 
     expect(screen.getByRole('button', { name: '물품 대여 관리' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '플로터 인쇄 관리' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '물품 목록 관리' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '천막 관리' })).toBeInTheDocument();
   });
 
   it('각 탭 클릭 시 onTabChange가 해당 탭 id로 호출된다', async () => {
@@ -148,9 +149,12 @@ describe('AdminTabNavigation', () => {
     await userEvent.click(screen.getByRole('button', { name: '물품 목록 관리' }));
     expect(onTabChange).toHaveBeenLastCalledWith('items');
 
+    await userEvent.click(screen.getByRole('button', { name: '천막 관리' }));
+    expect(onTabChange).toHaveBeenLastCalledWith('tent');
+
     await userEvent.click(screen.getByRole('button', { name: '물품 대여 관리' }));
     expect(onTabChange).toHaveBeenLastCalledWith('rental');
-    expect(onTabChange).toHaveBeenCalledTimes(3);
+    expect(onTabChange).toHaveBeenCalledTimes(4);
   });
 });
 
