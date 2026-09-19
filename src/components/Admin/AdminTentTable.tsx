@@ -139,7 +139,6 @@ export default function AdminTentTable({
         <div className="flex items-center justify-between gap-3 mb-3">
           <span className="font-['Gmarket_Sans'] text-[13px] text-[#8E8E8E]">
             총 {tents.length}동
-            <span className="ml-2">· 비고는 이 브라우저에만 저장됩니다</span>
             {itemTotalQuantity > 0 && tents.length !== itemTotalQuantity && (
               <span className="ml-2 text-[#d72002]">
                 (물품 목록의 천막 수량 {itemTotalQuantity}개와 다릅니다)

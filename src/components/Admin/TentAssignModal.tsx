@@ -122,11 +122,29 @@ export default function TentAssignModal({
         .map(({ tent }) => ({ id: tent.id, tentNumber: tent.tentNumber }));
       await onConfirm(ordered);
     } catch (err: unknown) {
+      const response = (
+        err as { response?: { status?: number; data?: { message?: string } } }
+      )?.response;
       const message =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ??
+        response?.data?.message ??
         (err instanceof Error ? err.message : "대여 처리에 실패했습니다.");
       setError(message);
+
+      // 409: 그 사이 다른 대여가 같은 천막을 가져감 -> 최신 현황으로 다시 그리고 잠긴 천막은 선택 해제
+      if (response?.status === 409) {
+        try {
+          const latest = await getTents();
+          setTents(latest);
+          const blocked = new Set(
+            latest.filter((t) => getTentBlockReason(t)).map((t) => t.id),
+          );
+          setSelected(
+            (prev) => new Set(Array.from(prev).filter((id) => !blocked.has(id))),
+          );
+        } catch {
+          // 재조회 실패 시 에러 메시지만 보여줌
+        }
+      }
     } finally {
       setSubmitting(false);
     }

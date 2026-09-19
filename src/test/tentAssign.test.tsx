@@ -9,8 +9,6 @@ import type { Tent } from '../api/tent/types';
 
 const mocks = vi.hoisted(() => ({
   getRentals: vi.fn(),
-  getRentalDetail: vi.fn(),
-  updateRental: vi.fn(),
   put: vi.fn(),
   getTents: vi.fn(),
 }));
@@ -36,8 +34,6 @@ vi.mock('../api/rental/rentalApi', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../api/rental/rentalApi')>()),
   getCategories: vi.fn().mockResolvedValue([]),
   getItems: vi.fn().mockResolvedValue([]),
-  getRentalDetail: mocks.getRentalDetail,
-  updateRental: mocks.updateRental,
 }));
 vi.mock('../api/tent/tentApi', () => ({
   getTents: mocks.getTents,
@@ -76,7 +72,15 @@ const tentFixtures = (): Tent[] =>
     };
   });
 
-type Item = { id: number; itemId: number; name: string; quantity: number; status: string };
+type Item = {
+  id: number;
+  itemId: number;
+  name: string;
+  quantity: number;
+  status: string;
+  /** 서버가 돌려주는 출고 실물 번호 */
+  assigned?: string[];
+};
 
 /** 테스트용 대여 건. 날짜는 UTC 정오로 넣어 어느 타임존에서 돌려도 날짜가 밀리지 않게 함 */
 const makeRental = (id: number, items: Item[], memo = '') => ({
@@ -98,12 +102,14 @@ const makeRental = (id: number, items: Item[], memo = '') => ({
     status: it.status,
     instanceId: null,
     item: { id: it.itemId, name: it.name },
+    assignments: (it.assigned ?? []).map((serialNumber, i) => ({
+      itemInstance: { id: i + 1, serialNumber },
+    })),
   })),
 });
 
 const renderDashboard = async (rental: ReturnType<typeof makeRental>) => {
   mocks.getRentals.mockResolvedValue({ rentals: [rental] });
-  mocks.getRentalDetail.mockResolvedValue(rental);
   render(
     <MemoryRouter>
       <AdminDashboard />
@@ -151,7 +157,6 @@ beforeEach(() => {
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
   alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
   mocks.put.mockResolvedValue({ data: {} });
-  mocks.updateRental.mockResolvedValue({ rentals: [] });
   mocks.getTents.mockImplementation(async () => tentFixtures());
 });
 
@@ -171,21 +176,14 @@ describe('천막 예약 -> 대여중 변경', () => {
     expect(enabledCheckboxes(dialog)).toHaveLength(5);
   });
 
-  it('천막을 적게 내보내면: 예약 품목 전체를 수량만 바꿔 수정 -> 새 천막 품목 ID로 대여중 변경 + 메모에 천막 기록', async () => {
-    const rental = makeRental(500, [
-      { id: 11, itemId: 1, name: '천막', quantity: 3, status: 'RESERVED' },
-      { id: 12, itemId: 3, name: '빔프로젝터', quantity: 1, status: 'RESERVED' },
-      { id: 13, itemId: 8, name: '천막용 LED등', quantity: 2, status: 'RENTED' },
-    ]);
-    await renderDashboard(rental);
-
-    // 수정 후 서버는 예약 품목을 새 ID로 다시 만든다
-    const recreated = makeRental(500, [
-      { id: 21, itemId: 1, name: '천막', quantity: 2, status: 'RESERVED' },
-      { id: 22, itemId: 3, name: '빔프로젝터', quantity: 1, status: 'RESERVED' },
-      { id: 13, itemId: 8, name: '천막용 LED등', quantity: 2, status: 'RENTED' },
-    ]);
-    mocks.getRentalDetail.mockResolvedValueOnce(rental).mockResolvedValueOnce(recreated);
+  it('천막을 적게 내보내면: 한 요청으로 대여중 변경 + 고른 천막 전송 (수량 조정은 서버가 같은 트랜잭션에서)', async () => {
+    await renderDashboard(
+      makeRental(500, [
+        { id: 11, itemId: 1, name: '천막', quantity: 3, status: 'RESERVED' },
+        { id: 12, itemId: 3, name: '빔프로젝터', quantity: 1, status: 'RESERVED' },
+        { id: 13, itemId: 8, name: '천막용 LED등', quantity: 2, status: 'RENTED' },
+      ]),
+    );
 
     await changeStatus('천막', '대여 중');
 
@@ -204,41 +202,23 @@ describe('천막 예약 -> 대여중 변경', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
-    // 1) 예약 품목(천막, 빔프로젝터)만 전부 보내고 천막 수량만 2로. 이미 대여중인 LED등은 제외
-    expect(mocks.updateRental).toHaveBeenCalledTimes(1);
-    expect(mocks.updateRental).toHaveBeenCalledWith(
-      500,
-      {
-        departmentType: '학과',
-        departmentName: '교육공학과 학생회',
-        items: [
-          { itemId: 1, quantity: 2, startDate: '2026-10-05', endDate: '2026-10-07' },
-          { itemId: 3, quantity: 1, startDate: '2026-10-05', endDate: '2026-10-07' },
-        ],
-      },
-      true,
-    );
-
-    // 2) 새로 만들어진 천막 품목(21)을 대여중으로 + 고른 천막(4, 5)을 메모에 기록 (한 요청)
+    // 요청은 딱 한 번: 기존 천막 품목(11)을 대여중으로 + 내보낸 천막 ID. 메모는 건드리지 않음
     expect(mocks.put).toHaveBeenCalledTimes(1);
     expect(mocks.put).toHaveBeenCalledWith('/api/rentals/500/status', {
       status: 'RENTED',
-      memo: '[대여 천막: 천막 4, 천막 5]',
-      rentalItemId: 21,
+      memo: '',
+      rentalItemId: 11,
+      instanceIds: [4, 5],
     });
 
-    // 수량 수정이 상태 변경보다 먼저
-    expect(mocks.updateRental.mock.invocationCallOrder[0]).toBeLessThan(
-      mocks.put.mock.invocationCallOrder[0],
-    );
-
-    // 품목 ID가 바뀌었으므로 목록 재조회 + 안내
-    await waitFor(() => expect(mocks.getRentals).toHaveBeenCalledTimes(2));
+    // 품목 ID가 그대로라 목록 재조회 없이 화면만 갱신: 수량 2개 + 내보낸 천막 번호 표시
+    expect(mocks.getRentals).toHaveBeenCalledTimes(1);
+    expect(getRow('천막 [천막 4, 천막 5]')).toHaveTextContent('2개');
     expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('3동 → 2동'));
     expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('천막 4, 천막 5'));
   });
 
-  it('신청 수량대로 내보내면: 수량 수정 없이 기존 품목 ID로 대여중 변경, 기존 메모는 살리고 천막만 덧붙임', async () => {
+  it('신청 수량대로 내보내면: 기존 품목 ID로 대여중 변경, 기존 메모는 그대로', async () => {
     await renderDashboard(
       makeRental(
         501,
@@ -255,12 +235,13 @@ describe('천막 예약 -> 대여중 변경', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: '2동 대여 처리' }));
 
     await waitFor(() => expect(mocks.put).toHaveBeenCalledTimes(1));
-    expect(mocks.updateRental).not.toHaveBeenCalled();
     expect(mocks.put).toHaveBeenCalledWith('/api/rentals/501/status', {
       status: 'RENTED',
-      memo: '오전 10시 수령 [대여 천막: 천막 5, 천막 7]',
+      memo: '오전 10시 수령',
       rentalItemId: 31,
+      instanceIds: [5, 7],
     });
+    expect(alertSpy).toHaveBeenCalledWith(expect.not.stringContaining('→'));
   });
 
   it('서버가 거부하면 팝업에 사유를 보여주고 다시 시도할 수 있다', async () => {
@@ -268,7 +249,7 @@ describe('천막 예약 -> 대여중 변경', () => {
       makeRental(506, [{ id: 36, itemId: 1, name: '천막', quantity: 1, status: 'RESERVED' }]),
     );
     mocks.put.mockRejectedValueOnce({
-      response: { data: { message: '대여 건을 찾을 수 없습니다.' } },
+      response: { status: 404, data: { message: '대여 건을 찾을 수 없습니다.' } },
     });
 
     await changeStatus('천막', '대여 중');
@@ -278,7 +259,81 @@ describe('천막 예약 -> 대여중 변경', () => {
 
     expect(await within(dialog).findByText('대여 건을 찾을 수 없습니다.')).toBeInTheDocument();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(mocks.updateRental).not.toHaveBeenCalled();
+    // 409가 아니면 목록을 다시 부르지 않음
+    expect(mocks.getTents).toHaveBeenCalledTimes(1);
+  });
+
+  it('다른 관리자가 먼저 가져가면(409): 사유 표시 + 최신 현황으로 다시 그리고 그 천막은 선택 해제', async () => {
+    await renderDashboard(
+      makeRental(507, [{ id: 37, itemId: 1, name: '천막', quantity: 1, status: 'RESERVED' }]),
+    );
+    mocks.put.mockRejectedValueOnce({
+      response: {
+        status: 409,
+        data: { message: '다른 대여 건이 이미 사용 중인 실물입니다: 천막 4(R-999)' },
+      },
+    });
+
+    await changeStatus('천막', '대여 중');
+    const dialog = await openedDialog();
+
+    // 팝업을 연 뒤 다른 관리자가 천막 4를 내보낸 상황
+    mocks.getTents.mockImplementation(async () =>
+      tentFixtures().map((t) =>
+        t.id === 4
+          ? {
+              ...t,
+              rentals: [
+                {
+                  rentalId: 999,
+                  rentalItemId: 998,
+                  status: 'RENTED' as const,
+                  startDate: '2026-09-05T12:00:00Z',
+                  endDate: '2026-09-12T12:00:00Z',
+                  departmentName: '공과대학',
+                },
+              ],
+            }
+          : t,
+      ),
+    );
+
+    await userEvent.click(enabledCheckboxes(dialog)[0]); // 천막 4
+    await userEvent.click(within(dialog).getByRole('button', { name: '1동 대여 처리' }));
+
+    expect(
+      await within(dialog).findByText(/이미 사용 중인 실물입니다: 천막 4/),
+    ).toBeInTheDocument();
+    const row4 = within(dialog).getByText('천막 4').closest('li') as HTMLElement;
+    expect(await within(row4).findByText('대여중 (공과대학)')).toBeInTheDocument();
+    expect(within(dialog).getByText('0 / 1 선택')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('요청이 실패해도 반쯤 반영되는 일이 없어, 팝업에서 그대로 다시 시도할 수 있다', async () => {
+    await renderDashboard(
+      makeRental(503, [{ id: 51, itemId: 1, name: '천막', quantity: 2, status: 'RESERVED' }]),
+    );
+    mocks.put.mockRejectedValueOnce(new Error('network'));
+
+    await changeStatus('천막', '대여 중');
+    const dialog = await openedDialog();
+    await userEvent.click(within(dialog).getByLabelText('내보낼 천막 수 줄이기'));
+    await userEvent.click(enabledCheckboxes(dialog)[0]);
+    await userEvent.click(within(dialog).getByRole('button', { name: '1동 대여 처리' }));
+
+    expect(await within(dialog).findByText('network')).toBeInTheDocument();
+
+    // 같은 품목 ID로 재시도
+    await userEvent.click(within(dialog).getByRole('button', { name: '1동 대여 처리' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(mocks.put).toHaveBeenCalledTimes(2);
+    expect(mocks.put).toHaveBeenLastCalledWith('/api/rentals/503/status', {
+      status: 'RENTED',
+      memo: '',
+      rentalItemId: 51,
+      instanceIds: [4],
+    });
   });
 
   it('팝업에서 취소하면 아무 요청도 나가지 않는다', async () => {
@@ -292,37 +347,9 @@ describe('천막 예약 -> 대여중 변경', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(mocks.put).not.toHaveBeenCalled();
-    expect(mocks.updateRental).not.toHaveBeenCalled();
   });
 
-  it('수량은 줄었는데 대여중 변경이 실패하면: 팝업을 닫고 목록 재조회 + 안내', async () => {
-    const rental = makeRental(503, [
-      { id: 51, itemId: 1, name: '천막', quantity: 2, status: 'RESERVED' },
-    ]);
-    await renderDashboard(rental);
-    const recreated = makeRental(503, [
-      { id: 61, itemId: 1, name: '천막', quantity: 1, status: 'RESERVED' },
-    ]);
-    mocks.getRentalDetail.mockResolvedValueOnce(rental).mockResolvedValueOnce(recreated);
-    mocks.put.mockRejectedValueOnce(new Error('network'));
-
-    await changeStatus('천막', '대여 중');
-    const dialog = await openedDialog();
-    await userEvent.click(within(dialog).getByLabelText('내보낼 천막 수 줄이기'));
-    await userEvent.click(enabledCheckboxes(dialog)[0]);
-    await userEvent.click(within(dialog).getByRole('button', { name: '1동 대여 처리' }));
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(mocks.updateRental).toHaveBeenCalledTimes(1);
-    expect(mocks.put).toHaveBeenCalledWith(
-      '/api/rentals/503/status',
-      expect.objectContaining({ rentalItemId: 61, memo: '[대여 천막: 천막 4]' }),
-    );
-    await waitFor(() => expect(mocks.getRentals).toHaveBeenCalledTimes(2));
-    expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('줄였지만, 대여중 변경에는 실패'));
-  });
-
-  it("'천막용 LED등'은 천막으로 보지 않는다 (팝업 없이 바로 변경, 메모도 그대로)", async () => {
+  it("'천막용 LED등'은 천막으로 보지 않는다 (팝업 없이 바로 변경, 실물 지정 없음)", async () => {
     await renderDashboard(
       makeRental(504, [{ id: 71, itemId: 8, name: '천막용 LED등', quantity: 1, status: 'RESERVED' }]),
     );
@@ -349,5 +376,27 @@ describe('천막 예약 -> 대여중 변경', () => {
 
     expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('개별로 변경해주세요'));
     expect(mocks.put).not.toHaveBeenCalled();
+  });
+});
+
+describe('대여 목록의 출고 천막 표시', () => {
+  it('서버가 준 출고 기록이 있으면 품목명 옆에 천막 번호를 보여준다', async () => {
+    await renderDashboard(
+      makeRental(508, [
+        {
+          id: 88,
+          itemId: 1,
+          name: '천막',
+          quantity: 2,
+          status: 'RENTED',
+          assigned: ['천막 3', '천막 8'],
+        },
+        { id: 89, itemId: 3, name: '빔프로젝터', quantity: 1, status: 'RENTED' },
+      ]),
+    );
+
+    expect(getRow('천막 [천막 3, 천막 8]')).toHaveTextContent('2개');
+    // 출고 기록이 없는 품목은 이름 그대로
+    expect(getRow('빔프로젝터')).toBeInTheDocument();
   });
 });

@@ -142,6 +142,8 @@ export type RentalRentalItem = {
   status: RentalStatus;
   instanceId: number | null;
   item: RentalItemDetail;
+  /** 출고 때 지정한 개별 실물 (천막 번호 등). 대여 목록/상세 응답에 포함 */
+  assignments?: { itemInstance: { id: number; serialNumber: string } }[];
 };
 
 export type Rental = {

@@ -16,33 +16,6 @@ export const toLocalDateKey = (value: string) => {
 };
 
 /* ------------------------------------------------------------------ */
-/* 대여 메모의 천막 배정 태그                                           */
-/* 서버에 '어느 천막이 어느 대여에 나갔는지' 저장할 곳이 없어서,          */
-/* 대여중으로 바꿀 때 대여 메모에 [대여 천막: 천막 5, 천막 6] 을 남깁니다. */
-/* 관리자 화면의 대여 메모에 그대로 보이므로 사람이 읽어도 알 수 있습니다. */
-/* ------------------------------------------------------------------ */
-
-const TENT_TAG_RE = /\s*\[대여 천막: ([^\]]*)\]/;
-
-/** 메모에서 천막 번호 목록 추출 (태그가 없으면 빈 배열) */
-export const parseTentTag = (memo?: string | null): string[] => {
-  const m = (memo ?? "").match(TENT_TAG_RE);
-  return m
-    ? m[1]
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [];
-};
-
-/** 기존 메모는 살리고 천막 태그만 붙이거나 교체 */
-export const withTentTag = (memo: string | null | undefined, tentNumbers: string[]) => {
-  const base = (memo ?? "").replace(TENT_TAG_RE, "").trim();
-  const tag = `[대여 천막: ${tentNumbers.join(", ")}]`;
-  return base ? `${base} ${tag}` : tag;
-};
-
-/* ------------------------------------------------------------------ */
 /* 현재/최근 대여 단위, 내보낼 수 있는지                                 */
 /* ------------------------------------------------------------------ */
 

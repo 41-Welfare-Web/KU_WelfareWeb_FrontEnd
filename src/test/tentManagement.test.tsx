@@ -1,15 +1,9 @@
-// 천막 관리: 기존 백엔드 API 연동(응답 변환/요청 형식), 메모 태그, 현재·최근 대여 단위, 천막 등록 버튼
+// 천막 관리: 백엔드 API 연동(응답 변환/요청 형식), 현재·최근 대여 단위, 천막 등록 버튼
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Tent, TentRental } from '../api/tent/types';
-import {
-  getCurrentUnit,
-  getLastUnit,
-  getTentBlockReason,
-  parseTentTag,
-  withTentTag,
-} from '../utils/tentUtils';
+import { getCurrentUnit, getLastUnit, getTentBlockReason } from '../utils/tentUtils';
 import AdminTentTable from '../components/Admin/AdminTentTable';
 
 const mocks = vi.hoisted(() => ({
@@ -38,14 +32,6 @@ const loadTentApi = async () => {
   return import('../api/tent/tentApi');
 };
 
-const tentRentalItem = (id: number, status: string) => ({
-  id,
-  itemId: 1,
-  quantity: 1,
-  status,
-  item: { id: 1, name: '천막' },
-});
-
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
@@ -58,24 +44,7 @@ beforeEach(() => {
   mocks.post.mockResolvedValue({ data: {} });
 });
 
-describe('대여 메모의 천막 태그', () => {
-  it('기존 메모는 살리고 태그만 붙이거나 교체한다', () => {
-    expect(withTentTag('', ['천막 1'])).toBe('[대여 천막: 천막 1]');
-    expect(withTentTag(null, ['천막 1', '천막 2'])).toBe('[대여 천막: 천막 1, 천막 2]');
-    expect(withTentTag('오전 수령', ['천막 3'])).toBe('오전 수령 [대여 천막: 천막 3]');
-    expect(withTentTag('오전 수령 [대여 천막: 천막 3]', ['천막 5'])).toBe(
-      '오전 수령 [대여 천막: 천막 5]',
-    );
-  });
-
-  it('메모에서 천막 번호를 읽는다 (태그가 없으면 빈 목록)', () => {
-    expect(parseTentTag('오전 수령 [대여 천막: 천막 5, 천막 6]')).toEqual(['천막 5', '천막 6']);
-    expect(parseTentTag('그냥 메모')).toEqual([]);
-    expect(parseTentTag(null)).toEqual([]);
-  });
-});
-
-describe('tentApi (기존 백엔드 API)', () => {
+describe('tentApi (백엔드 API)', () => {
   it("'천막용 LED등'이 아니라 이름이 정확히 '천막'인 물품을 쓴다", async () => {
     const api = await loadTentApi();
     await expect(api.getTentItem()).resolves.toEqual({ id: 1, totalQuantity: 8 });
@@ -88,56 +57,42 @@ describe('tentApi (기존 백엔드 API)', () => {
     await expect(api.getTents()).rejects.toThrow("물품 목록에 '천막'이 없습니다");
   });
 
-  it('개별 실물 + 대여 메모 태그로 천막 목록을 만든다 (파손, 나갔던 대여, 비고, 번호순)', async () => {
+  it('서버 실물 목록(비고·출고 이력 포함)으로 천막 목록을 만든다 (번호순, 대여 목록은 조회 안 함)', async () => {
+    const outRental = {
+      rentalId: 44,
+      rentalItemId: 55,
+      status: 'RENTED',
+      startDate: '2026-09-05T00:00:00Z',
+      endDate: '2026-09-12T00:00:00Z',
+      renterName: '박도윤',
+      departmentName: '학과',
+      assignedAt: '2026-09-05T01:00:00Z',
+    };
     mocks.get.mockResolvedValue({
       data: [
-        { id: 30, serialNumber: '천막 10', status: 'AVAILABLE' },
-        { id: 12, serialNumber: '천막 2', status: 'BROKEN' },
+        { id: 30, serialNumber: '천막 10', status: 'AVAILABLE', note: null, rentals: [outRental] },
+        { id: 12, serialNumber: '천막 2', status: 'BROKEN', note: '프레임 휨', rentals: [outRental] },
+        { id: 31, serialNumber: '천막 11', status: 'AVAILABLE', note: null }, // rentals 필드 없는 응답도 허용
       ],
     });
-    mocks.getRentals.mockResolvedValue({
-      rentals: [
-        {
-          id: 44,
-          startDate: '2026-09-05T00:00:00Z',
-          endDate: '2026-09-12T00:00:00Z',
-          memo: '오전 수령 [대여 천막: 천막 2, 천막 10]',
-          departmentName: null,
-          departmentType: '학과',
-          user: { name: '박도윤' },
-          rentalItems: [
-            { id: 54, itemId: 3, quantity: 1, status: 'RENTED', item: { id: 3, name: '빔프로젝터' } },
-            tentRentalItem(55, 'RENTED'),
-          ],
-        },
-        // 태그 없는 대여, 등록 안 된 천막 번호는 무시
-        { id: 45, startDate: '', endDate: '', memo: '', rentalItems: [tentRentalItem(56, 'RENTED')] },
-        { id: 46, startDate: '', endDate: '', memo: '[대여 천막: 천막 99]', rentalItems: [tentRentalItem(57, 'RENTED')] },
-      ],
-    });
-    localStorage.setItem('admin.tentNotes', JSON.stringify({ 12: '프레임 휨' }));
 
     const api = await loadTentApi();
     const tents = await api.getTents();
 
     expect(mocks.get).toHaveBeenCalledWith('/api/items/1/instances');
-    expect(mocks.getRentals).toHaveBeenCalledWith({ page: 1, pageSize: 1000 });
-    expect(tents.map((t) => t.tentNumber)).toEqual(['천막 2', '천막 10']);
+    expect(mocks.getRentals).not.toHaveBeenCalled();
+    expect(tents.map((t) => t.tentNumber)).toEqual(['천막 2', '천막 10', '천막 11']);
 
     const expectedRental = {
       rentalId: 44,
-      rentalItemId: 55, // 빔프로젝터가 아니라 천막 품목
+      rentalItemId: 55,
       status: 'RENTED',
       renterName: '박도윤',
-      departmentName: '학과', // 단위명이 없으면 소속 유형으로
+      departmentName: '학과',
     };
-    expect(tents[0]).toMatchObject({
-      id: 12,
-      damaged: true,
-      note: '프레임 휨',
-      rentals: [expectedRental],
-    });
+    expect(tents[0]).toMatchObject({ id: 12, damaged: true, note: '프레임 휨', rentals: [expectedRental] });
     expect(tents[1]).toMatchObject({ id: 30, damaged: false, note: '', rentals: [expectedRental] });
+    expect(tents[2]).toMatchObject({ id: 31, note: '', rentals: [] });
   });
 
   it('파손 여부는 실물 상태로 서버에 저장한다', async () => {
@@ -150,14 +105,25 @@ describe('tentApi (기존 백엔드 API)', () => {
     ]);
   });
 
-  it('비고는 서버로 보내지 않고 이 브라우저에 저장한다 (비우면 삭제)', async () => {
+  it('비고는 실물의 note로 서버에 저장한다 (비우면 빈 값으로)', async () => {
     const api = await loadTentApi();
     await api.updateTent(12, { note: '지퍼 수선 완료' });
-    expect(mocks.put).not.toHaveBeenCalled();
-    expect(JSON.parse(localStorage.getItem('admin.tentNotes')!)).toEqual({ 12: '지퍼 수선 완료' });
-
     await api.updateTent(12, { note: '' });
-    expect(JSON.parse(localStorage.getItem('admin.tentNotes')!)).toEqual({});
+    expect(mocks.put.mock.calls).toEqual([
+      ['/api/items/instances/12', { note: '지퍼 수선 완료' }],
+      ['/api/items/instances/12', { note: '' }],
+    ]);
+    expect(localStorage.getItem('admin.tentNotes')).toBeNull();
+  });
+
+  it('파손과 비고를 함께 바꾸면 한 요청으로 보낸다', async () => {
+    const api = await loadTentApi();
+    await api.updateTent(12, { damaged: true, note: '폴대 부러짐' });
+    expect(mocks.put).toHaveBeenCalledTimes(1);
+    expect(mocks.put).toHaveBeenCalledWith('/api/items/instances/12', {
+      status: 'BROKEN',
+      note: '폴대 부러짐',
+    });
   });
 
   it('천막 등록은 천막 번호를 시리얼 번호로 보낸다', async () => {
@@ -253,12 +219,12 @@ describe('AdminTentTable 천막 등록', () => {
     expect(onCreateTents).not.toHaveBeenCalled();
   });
 
-  it('등록된 천막 수가 물품 목록의 수량과 다르면 알려주고, 비고가 브라우저 저장임을 안내한다', () => {
+  it('등록된 천막 수가 물품 목록의 수량과 다르면 알려준다 (비고는 서버 저장이라 브라우저 안내 없음)', () => {
     render(
       <AdminTentTable {...baseProps} tents={[tent()]} itemTotalQuantity={8} onCreateTents={vi.fn()} />,
     );
     expect(screen.getByText(/물품 목록의 천막 수량 8개와 다릅니다/)).toBeInTheDocument();
-    expect(screen.getByText(/비고는 이 브라우저에만 저장됩니다/)).toBeInTheDocument();
+    expect(screen.queryByText(/이 브라우저에만 저장/)).not.toBeInTheDocument();
   });
 });
 

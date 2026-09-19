@@ -2,7 +2,7 @@ import type { RentalStatus } from "../rental/types";
 
 /**
  * 천막 한 동이 나갔던 대여 건.
- * 대여중으로 바꿀 때 대여 메모에 남기는 `[대여 천막: 천막 5, 천막 6]` 태그로 연결합니다.
+ * 대여중으로 바꿀 때 instanceIds로 지정한 출고 기록을 서버가 돌려줍니다 (GET /api/items/:id/instances 의 rentals).
  */
 export interface TentRental {
   rentalId: number;
@@ -29,7 +29,7 @@ export interface Tent {
    * 대여 가능 여부는 이 값과 현재 대여 상태에서 파생됩니다 (파손 또는 대여중/연체 = 불가).
    */
   damaged: boolean;
-  /** 비고 (관리자가 직접 수정 — 서버에 저장할 칸이 없어 이 브라우저에만 저장) */
+  /** 비고 (관리자가 직접 수정, 실물의 note로 서버에 저장) */
   note: string;
   /** 이 천막이 나갔던 대여 건들 */
   rentals: TentRental[];
