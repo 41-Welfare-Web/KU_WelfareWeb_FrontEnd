@@ -70,9 +70,9 @@ describe('tentApi (백엔드 API)', () => {
     };
     mocks.get.mockResolvedValue({
       data: [
-        { id: 30, serialNumber: '천막 10', status: 'AVAILABLE', note: null, rentals: [outRental] },
-        { id: 12, serialNumber: '천막 2', status: 'BROKEN', note: '프레임 휨', rentals: [outRental] },
-        { id: 31, serialNumber: '천막 11', status: 'AVAILABLE', note: null }, // rentals 필드 없는 응답도 허용
+        { id: 30, serialNumber: '천막 10', status: 'AVAILABLE', note: null, rentals: [outRental], fabricCondition: 'LOW', frameCondition: 'NORMAL' },
+        { id: 12, serialNumber: '천막 2', status: 'BROKEN', note: '프레임 휨', rentals: [outRental], fabricCondition: 'NORMAL', frameCondition: 'HIGH' },
+        { id: 31, serialNumber: '천막 11', status: 'AVAILABLE', note: null }, // rentals·부위 상태 없는 응답도 허용
       ],
     });
 
@@ -90,9 +90,10 @@ describe('tentApi (백엔드 API)', () => {
       renterName: '박도윤',
       departmentName: '학과',
     };
-    expect(tents[0]).toMatchObject({ id: 12, damaged: true, note: '프레임 휨', rentals: [expectedRental] });
-    expect(tents[1]).toMatchObject({ id: 30, damaged: false, note: '', rentals: [expectedRental] });
-    expect(tents[2]).toMatchObject({ id: 31, note: '', rentals: [] });
+    expect(tents[0]).toMatchObject({ id: 12, damaged: true, note: '프레임 휨', fabric: 'NORMAL', frame: 'HIGH', rentals: [expectedRental] });
+    expect(tents[1]).toMatchObject({ id: 30, damaged: false, note: '', fabric: 'LOW', frame: 'NORMAL', rentals: [expectedRental] });
+    // 부위 상태가 없는 응답은 정상으로 간주
+    expect(tents[2]).toMatchObject({ id: 31, note: '', fabric: 'NORMAL', frame: 'NORMAL', rentals: [] });
   });
 
   it('파손 여부는 실물 상태로 서버에 저장한다', async () => {
@@ -126,6 +127,16 @@ describe('tentApi (백엔드 API)', () => {
     });
   });
 
+  it('천·다리 상태는 실물의 부위 상태로 서버에 저장한다', async () => {
+    const api = await loadTentApi();
+    await api.updateTent(12, { fabric: 'MEDIUM' });
+    await api.updateTent(12, { frame: 'HIGH', damaged: true });
+    expect(mocks.put.mock.calls).toEqual([
+      ['/api/items/instances/12', { fabricCondition: 'MEDIUM' }],
+      ['/api/items/instances/12', { status: 'BROKEN', frameCondition: 'HIGH' }],
+    ]);
+  });
+
   it('천막 등록은 천막 번호를 시리얼 번호로 보낸다', async () => {
     const api = await loadTentApi();
     await api.createTent('천막 9');
@@ -147,6 +158,8 @@ const tent = (over: Partial<Tent> = {}): Tent => ({
   tentNumber: '천막 1',
   damaged: false,
   note: '',
+  fabric: 'NORMAL',
+  frame: 'NORMAL',
   rentals: [],
   ...over,
 });
@@ -185,6 +198,7 @@ describe('AdminTentTable 천막 등록', () => {
   const baseProps = {
     onDamagedChange: vi.fn(),
     onNoteChange: vi.fn(),
+    onConditionChange: vi.fn(),
   };
 
   it('천막이 하나도 없으면 물품 수량만큼 천막 1~N을 한 번에 등록한다', async () => {
@@ -254,6 +268,7 @@ describe('AdminTentTable 대여 가능 여부', () => {
         itemTotalQuantity={5}
         onDamagedChange={vi.fn()}
         onNoteChange={vi.fn()}
+        onConditionChange={vi.fn()}
         onCreateTents={vi.fn()}
       />,
     );
@@ -273,5 +288,54 @@ describe('AdminTentTable 대여 가능 여부', () => {
     expect(availabilityOf('천막 4')).toHaveAttribute('title', '미반납 (예술대학)');
     // 반납된 천막은 다시 가능
     expect(availabilityOf('천막 5')).toHaveTextContent('가능');
+  });
+});
+
+describe('AdminTentTable 부위 상태', () => {
+  it('천·다리 상태를 표시하고, 바꾸면 해당 부위만 저장 요청한다', async () => {
+    const onConditionChange = vi.fn();
+    render(
+      <AdminTentTable
+        tents={[tent({ id: 7, tentNumber: '천막 7', fabric: 'MEDIUM', frame: 'NORMAL' })]}
+        itemTotalQuantity={1}
+        onDamagedChange={vi.fn()}
+        onNoteChange={vi.fn()}
+        onConditionChange={onConditionChange}
+        onCreateTents={vi.fn()}
+      />,
+    );
+
+    const fabric = screen.getByLabelText('천막 7 천 상태') as HTMLSelectElement;
+    const frame = screen.getByLabelText('천막 7 다리 상태') as HTMLSelectElement;
+    expect(fabric.value).toBe('MEDIUM');
+    expect(frame.value).toBe('NORMAL');
+    // 선택지는 정상 + 파손 3등급
+    expect(Array.from(fabric.options).map((o) => o.textContent)).toEqual([
+      '정상',
+      '파손(하)',
+      '파손(중)',
+      '파손(상)',
+    ]);
+
+    await userEvent.selectOptions(frame, 'HIGH');
+    expect(onConditionChange).toHaveBeenCalledWith(7, 'frame', 'HIGH');
+  });
+
+  it('부위가 파손이어도 대여 가능 여부는 막지 않는다 (등급은 기록용)', () => {
+    render(
+      <AdminTentTable
+        tents={[tent({ id: 8, tentNumber: '천막 8', fabric: 'HIGH', frame: 'HIGH' })]}
+        itemTotalQuantity={1}
+        onDamagedChange={vi.fn()}
+        onNoteChange={vi.fn()}
+        onConditionChange={vi.fn()}
+        onCreateTents={vi.fn()}
+      />,
+    );
+    const row = screen.getByText('천막 8').closest('[class*="h-[56px]"]') as HTMLElement;
+    const badge = Array.from(row.querySelectorAll('span')).find(
+      (el) => el.textContent === '가능' || el.textContent === '불가',
+    );
+    expect(badge).toHaveTextContent('가능');
   });
 });

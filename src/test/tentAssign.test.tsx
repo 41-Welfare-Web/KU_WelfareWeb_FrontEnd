@@ -56,6 +56,8 @@ const tentFixtures = (): Tent[] =>
       tentNumber: `천막 ${id}`,
       damaged: id === 1 || id === 3,
       note: '',
+      fabric: 'NORMAL' as const,
+      frame: 'NORMAL' as const,
       rentals:
         id === 2
           ? [

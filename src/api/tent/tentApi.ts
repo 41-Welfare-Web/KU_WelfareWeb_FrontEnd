@@ -1,7 +1,7 @@
 import axiosInstance from "../axiosInstance";
 import { getItems } from "../rental/rentalApi";
 import { isTentItem } from "../../utils/tentUtils";
-import type { Tent, TentItemInfo, TentRental } from "./types";
+import type { PartCondition, Tent, TentItemInfo, TentRental } from "./types";
 
 /**
  * 천막 API
@@ -18,6 +18,8 @@ interface InstanceResponse {
   serialNumber: string;
   status: "AVAILABLE" | "RENTED" | "BROKEN";
   note: string | null;
+  fabricCondition?: PartCondition;
+  frameCondition?: PartCondition;
   /** 이 실물이 출고됐던 대여 건 (최신 배정순) */
   rentals?: {
     rentalId: number;
@@ -73,6 +75,8 @@ export async function getTents(): Promise<Tent[]> {
       tentNumber: inst.serialNumber,
       damaged: inst.status === "BROKEN",
       note: inst.note ?? "",
+      fabric: inst.fabricCondition ?? "NORMAL",
+      frame: inst.frameCondition ?? "NORMAL",
       rentals: (inst.rentals ?? []).map(
         (r): TentRental => ({
           rentalId: r.rentalId,
@@ -92,14 +96,25 @@ export async function getTents(): Promise<Tent[]> {
 
 export async function updateTent(
   tentId: number,
-  patch: Partial<Pick<Tent, "damaged" | "note">>,
+  patch: Partial<Pick<Tent, "damaged" | "note" | "fabric" | "frame">>,
 ): Promise<void> {
-  const body: { status?: "BROKEN" | "AVAILABLE"; note?: string } = {};
+  const body: {
+    status?: "BROKEN" | "AVAILABLE";
+    note?: string;
+    fabricCondition?: PartCondition;
+    frameCondition?: PartCondition;
+  } = {};
   if (patch.damaged !== undefined) {
     body.status = patch.damaged ? "BROKEN" : "AVAILABLE";
   }
   if (patch.note !== undefined) {
     body.note = patch.note;
+  }
+  if (patch.fabric !== undefined) {
+    body.fabricCondition = patch.fabric;
+  }
+  if (patch.frame !== undefined) {
+    body.frameCondition = patch.frame;
   }
   if (Object.keys(body).length === 0) return;
   await axiosInstance.put(`/api/items/instances/${tentId}`, body);

@@ -1,5 +1,16 @@
 import type { RentalStatus } from "../rental/types";
 
+/** 실물 부위 상태 — 정상 / 파손 하·중·상 */
+export type PartCondition = "NORMAL" | "LOW" | "MEDIUM" | "HIGH";
+
+/** 화면 표시용 라벨 */
+export const PART_CONDITION_LABEL: Record<PartCondition, string> = {
+  NORMAL: "정상",
+  LOW: "파손(하)",
+  MEDIUM: "파손(중)",
+  HIGH: "파손(상)",
+};
+
 /**
  * 천막 한 동이 나갔던 대여 건.
  * 대여중으로 바꿀 때 instanceIds로 지정한 출고 기록을 서버가 돌려줍니다 (GET /api/items/:id/instances 의 rentals).
@@ -31,6 +42,10 @@ export interface Tent {
   damaged: boolean;
   /** 비고 (관리자가 직접 수정, 실물의 note로 서버에 저장) */
   note: string;
+  /** 천(원단) 상태 — 기록·표시용이며 대여 가능 여부와는 무관 */
+  fabric: PartCondition;
+  /** 다리(프레임) 상태 — 기록·표시용 */
+  frame: PartCondition;
   /** 이 천막이 나갔던 대여 건들 */
   rentals: TentRental[];
 }

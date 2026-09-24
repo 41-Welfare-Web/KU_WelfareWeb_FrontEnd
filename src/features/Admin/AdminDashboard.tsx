@@ -28,7 +28,7 @@ import {
   updateTent,
   createTent,
 } from "../../api/tent/tentApi";
-import type { Tent } from "../../api/tent/types";
+import type { PartCondition, Tent } from "../../api/tent/types";
 import TentAssignModal from "../../components/Admin/TentAssignModal";
 import type { TentAssignTarget } from "../../components/Admin/TentAssignModal";
 import { isTentItem } from "../../utils/tentUtils";
@@ -638,7 +638,7 @@ function AdminDashboard() {
 
   const patchTent = async (
     tentId: number,
-    patch: { note?: string; damaged?: boolean },
+    patch: { note?: string; damaged?: boolean; fabric?: PartCondition; frame?: PartCondition },
     failMessage: string,
   ) => {
     // 화면에 먼저 반영하고, 저장 실패하면 서버 값으로 되돌림
@@ -662,6 +662,18 @@ function AdminDashboard() {
 
   const handleTentDamagedChange = (tentId: number, damaged: boolean) =>
     patchTent(tentId, { damaged }, "파손 여부 저장에 실패했습니다.");
+
+  /** 천/다리 부위 상태 저장 (기록용 — 대여 가능 여부에는 영향 없음) */
+  const handleTentConditionChange = (
+    tentId: number,
+    part: "fabric" | "frame",
+    value: PartCondition,
+  ) =>
+    patchTent(
+      tentId,
+      { [part]: value },
+      `${part === "fabric" ? "천" : "다리"} 상태 저장에 실패했습니다.`,
+    );
 
   /** 천막 등록 (여러 동 한 번에 가능). 등록 후 목록 재조회 */
   const handleTentCreate = async (tentNumbers: string[]) => {
@@ -1493,6 +1505,7 @@ function AdminDashboard() {
                 tents={tentData}
                 onDamagedChange={handleTentDamagedChange}
                 onNoteChange={handleTentNoteChange}
+                onConditionChange={handleTentConditionChange}
                 onCreateTents={handleTentCreate}
                 itemTotalQuantity={tentItemTotal}
                 loading={loading}

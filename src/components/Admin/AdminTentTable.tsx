@@ -1,11 +1,46 @@
 import { useEffect, useRef, useState } from "react";
-import type { Tent } from "../../api/tent/types";
+import type { PartCondition, Tent } from "../../api/tent/types";
+import { PART_CONDITION_LABEL } from "../../api/tent/types";
 import AdminTableHeader from "./AdminTableHeader";
 import {
   getCurrentUnit,
   getLastUnit,
   getTentBlockReason,
 } from "../../utils/tentUtils";
+
+const CONDITIONS: PartCondition[] = ["NORMAL", "LOW", "MEDIUM", "HIGH"];
+
+/** 정상/파손 등급 선택. 등급은 기록·표시용이라 대여를 막지는 않습니다 */
+function PartConditionCell({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: PartCondition;
+  onChange: (next: PartCondition) => void;
+}) {
+  return (
+    <select
+      value={value}
+      aria-label={label}
+      onChange={(e) => onChange(e.target.value as PartCondition)}
+      className={`w-full h-[28px] px-1.5 rounded-[8px] border font-['Gmarket_Sans'] font-medium text-[12px] cursor-pointer outline-none transition-colors focus:ring-2 focus:ring-[#fe6949] ${
+        value === "NORMAL"
+          ? "border-[#CDE8D4] bg-[#E7F5EA] text-[#1F7A34]"
+          : value === "HIGH"
+            ? "border-[#F3C4BC] bg-[#FBE3DF] text-[#d72002]"
+            : "border-[#FFD9A8] bg-[#FFF4E5] text-[#8A5300]"
+      }`}
+    >
+      {CONDITIONS.map((c) => (
+        <option key={c} value={c}>
+          {PART_CONDITION_LABEL[c]}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 interface TentNoteCellProps {
   note: string;
@@ -84,6 +119,8 @@ interface AdminTentTableProps {
   onDamagedChange: (tentId: number, damaged: boolean) => void;
   /** 비고 변경 (관리자 직접 수정) */
   onNoteChange: (tentId: number, note: string) => void;
+  /** 부위(천/다리) 상태 변경 */
+  onConditionChange: (tentId: number, part: "fabric" | "frame", value: PartCondition) => void;
   /** 천막 등록 (천막 번호 목록) */
   onCreateTents: (tentNumbers: string[]) => Promise<void>;
   /** 물품 목록 관리에 등록된 천막 총 수량 (처음 일괄 등록 시 기본 개수) */
@@ -97,6 +134,7 @@ export default function AdminTentTable({
   tents,
   onDamagedChange,
   onNoteChange,
+  onConditionChange,
   onCreateTents,
   itemTotalQuantity = 0,
   loading = false,
@@ -156,15 +194,17 @@ export default function AdminTentTable({
         </div>
       )}
 
-      <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible md:min-w-[680px]">
+      <div className="bg-white border border-[#D9D9D9] rounded-[10px] overflow-visible md:min-w-[900px]">
         <AdminTableHeader
           columns={[
-            { label: "천막 번호", width: "w-[13%] min-w-0" },
+            { label: "천막 번호", width: "w-[11%] min-w-0" },
             { label: "현재 대여 단위", width: "flex-1 min-w-0" },
             { label: "최근 대여 단위", width: "flex-1 min-w-0" },
-            { label: "파손 여부", width: "w-[11%] min-w-0" },
-            { label: "대여 가능 여부", width: "w-[13%] min-w-0" },
-            { label: "비고", width: "w-[24%] min-w-0" },
+            { label: "천 상태", width: "w-[11%] min-w-0" },
+            { label: "다리 상태", width: "w-[11%] min-w-0" },
+            { label: "파손 여부", width: "w-[9%] min-w-0" },
+            { label: "대여 가능 여부", width: "w-[11%] min-w-0" },
+            { label: "비고", width: "w-[17%] min-w-0" },
           ]}
         />
 
@@ -212,7 +252,7 @@ export default function AdminTentTable({
                 key={tent.id}
                 className="flex items-center border-b border-[#EDEDED] last:border-b-0 h-[56px] px-4 gap-2 hover:bg-[#FFFBF9] transition-colors"
               >
-                <div className="w-[13%] min-w-0 flex items-center justify-center font-['Noto_Sans'] font-semibold text-[14px] text-[#410f07]">
+                <div className="w-[11%] min-w-0 flex items-center justify-center font-['Noto_Sans'] font-semibold text-[14px] text-[#410f07]">
                   {tent.tentNumber}
                 </div>
 
@@ -230,7 +270,23 @@ export default function AdminTentTable({
                   <span className="truncate">{lastUnit}</span>
                 </div>
 
-                <div className="w-[11%] min-w-0 flex items-center justify-center">
+                <div className="w-[11%] min-w-0 flex items-center">
+                  <PartConditionCell
+                    label={`${tent.tentNumber} 천 상태`}
+                    value={tent.fabric}
+                    onChange={(v) => onConditionChange(tent.id, "fabric", v)}
+                  />
+                </div>
+
+                <div className="w-[11%] min-w-0 flex items-center">
+                  <PartConditionCell
+                    label={`${tent.tentNumber} 다리 상태`}
+                    value={tent.frame}
+                    onChange={(v) => onConditionChange(tent.id, "frame", v)}
+                  />
+                </div>
+
+                <div className="w-[9%] min-w-0 flex items-center justify-center">
                   <button
                     type="button"
                     onClick={() => onDamagedChange(tent.id, !tent.damaged)}
@@ -247,7 +303,7 @@ export default function AdminTentTable({
                   </button>
                 </div>
 
-                <div className="w-[13%] min-w-0 flex items-center justify-center">
+                <div className="w-[11%] min-w-0 flex items-center justify-center">
                   <span
                     title={
                       blockReason ?? undefined
@@ -262,7 +318,7 @@ export default function AdminTentTable({
                   </span>
                 </div>
 
-                <div className="w-[24%] min-w-0 flex items-center">
+                <div className="w-[17%] min-w-0 flex items-center">
                   <TentNoteCell
                     note={tent.note}
                     onSave={(next) => onNoteChange(tent.id, next)}
