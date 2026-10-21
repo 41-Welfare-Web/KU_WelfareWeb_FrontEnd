@@ -3,6 +3,7 @@ import orgChartImage from "../../assets/Intro/조직도.png";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import DepartmentCard from "../../components/Intro/DepartmentCard";
+import BylawsViewer from "../../components/Intro/BylawsViewer";
 import { bureauData } from "../../../intro/departIntro.js";
 import { greetingData } from "../../../intro/leaderIntro.js";
 import chairpersonImage from "../../../intro/위원장.png";
@@ -27,7 +28,7 @@ const bureauIconByName = Object.fromEntries(
  * 헤더의 "학생복지위원회"를 클릭하면 이 페이지로 이동합니다.
  */
 export default function WelfareIntro() {
-  const [activeTab, setActiveTab] = useState<"chairman" | "department" | "orgchart">("chairman");
+  const [activeTab, setActiveTab] = useState<"chairman" | "department" | "orgchart" | "bylaws">("chairman");
   const chairGreeting =
     greetingData.find((greeting) => greeting.id === "chairperson") ?? greetingData[0];
   const viceGreeting =
@@ -144,6 +145,19 @@ export default function WelfareIntro() {
                     <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#FE6949]"></div>
                   )}
                 </button>
+                <button
+                  onClick={() => setActiveTab("bylaws")}
+                  className={`pb-2 font-medium text-[13px] sm:text-[18px] md:text-[24px] relative whitespace-normal md:whitespace-nowrap break-keep transition-colors ${
+                    activeTab === "bylaws"
+                      ? "text-[#FE6949]"
+                      : "text-[#8E8E8E] hover:text-[#FE6949]"
+                  }`}
+                >
+                  회칙
+                  {activeTab === "bylaws" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#FE6949]"></div>
+                  )}
+                </button>
               </div>
             </div>
 
@@ -221,7 +235,7 @@ export default function WelfareIntro() {
                     ))}
                   </div>
                 </div>
-              ) : (
+              ) : activeTab === "orgchart" ? (
                 <div>
                   <div className="flex justify-center">
                     <img
@@ -231,6 +245,8 @@ export default function WelfareIntro() {
                     />
                   </div>
                 </div>
+              ) : (
+                <BylawsViewer />
               )}
             </div>
           </div>
