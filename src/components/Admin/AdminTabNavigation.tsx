@@ -1,4 +1,4 @@
-type TabType = 'rental' | 'plotter' | 'items' | 'tent';
+type TabType = 'rental' | 'plotter' | 'items' | 'tent' | 'holiday';
 
 interface AdminTabNavigationProps {
   activeTab: TabType;
@@ -16,6 +16,7 @@ export default function AdminTabNavigation({
     { id: 'plotter' as const, label: '플로터 인쇄 관리' },
     { id: 'items' as const, label: '물품 목록 관리' },
     { id: 'tent' as const, label: '천막 관리' },
+    { id: 'holiday' as const, label: '휴무일 관리' },
   ];
 
   return (

@@ -1,4 +1,4 @@
-type TabType = 'rental' | 'plotter' | 'items' | 'tent';
+type TabType = 'rental' | 'plotter' | 'items' | 'tent' | 'holiday';
 
 interface RentalData {
   id: number;
@@ -169,8 +169,10 @@ export function useExportCSV() {
       exportPlotterCSV(plotterData);
     } else if (activeTab === 'items') {
       alert('물품 목록은 CSV 다운로드를 지원하지 않습니다.');
-    } else {
+    } else if (activeTab === 'tent') {
       alert('천막 관리는 CSV 다운로드를 지원하지 않습니다.');
+    } else {
+      alert('휴무일 관리는 CSV 다운로드를 지원하지 않습니다.');
     }
   };
 

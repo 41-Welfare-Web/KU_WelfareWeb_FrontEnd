@@ -22,6 +22,7 @@ import type { Item, Category } from "../../api/rental/types";
 import axiosInstance from "../../api/axiosInstance";
 import AdminItemCreateModal from "../../components/Admin/AdminItemCreateModal";
 import AdminTentTable from "../../components/Admin/AdminTentTable";
+import AdminHolidayPanel from "../../components/Admin/AdminHolidayPanel";
 import {
   getTents,
   getTentItem,
@@ -35,7 +36,7 @@ import { isTentItem } from "../../utils/tentUtils";
 import AdminUserSelectModal from "../../components/Admin/AdminUserSelectModal";
 import sortIcon from "../../assets/admin/sort.svg";
 
-type TabType = "rental" | "plotter" | "items" | "tent";
+type TabType = "rental" | "plotter" | "items" | "tent" | "holiday";
 
 interface RentalData {
   id: number;
@@ -1498,6 +1499,9 @@ function AdminDashboard() {
                 )}
               </div>
             )}
+
+            {/* 휴무일 관리 탭 내용 */}
+            {activeTab === "holiday" && <AdminHolidayPanel />}
 
             {/* 천막 관리 탭 내용 */}
             {activeTab === "tent" && (
