@@ -142,6 +142,13 @@ describe('tentApi (백엔드 API)', () => {
     await api.createTent('천막 9');
     expect(mocks.post).toHaveBeenCalledWith('/api/items/1/instances', { serialNumber: '천막 9' });
   });
+
+  it('천막 삭제는 실물 id로 DELETE를 보낸다', async () => {
+    const axios = (await import('../api/axiosInstance')).default;
+    const api = await loadTentApi();
+    await api.deleteTent(12);
+    expect(axios.delete).toHaveBeenCalledWith('/api/items/instances/12');
+  });
 });
 
 const rental = (over: Partial<TentRental>): TentRental => ({
@@ -204,7 +211,7 @@ describe('AdminTentTable 천막 등록', () => {
   it('천막이 하나도 없으면 물품 수량만큼 천막 1~N을 한 번에 등록한다', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     const onCreateTents = vi.fn().mockResolvedValue(undefined);
-    render(<AdminTentTable {...baseProps} tents={[]} itemTotalQuantity={3} onCreateTents={onCreateTents} />);
+    render(<AdminTentTable onDeleteTent={vi.fn()} {...baseProps} tents={[]} itemTotalQuantity={3} onCreateTents={onCreateTents} />);
 
     await userEvent.click(screen.getByRole('button', { name: '천막 3동 등록 (천막 1 ~ 3)' }));
     expect(onCreateTents).toHaveBeenCalledWith(['천막 1', '천막 2', '천막 3']);
@@ -214,7 +221,7 @@ describe('AdminTentTable 천막 등록', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     const onCreateTents = vi.fn().mockResolvedValue(undefined);
     render(
-      <AdminTentTable
+      <AdminTentTable onDeleteTent={vi.fn()}
         {...baseProps}
         tents={[tent({ id: 1, tentNumber: '천막 2' }), tent({ id: 2, tentNumber: '천막 10' })]}
         itemTotalQuantity={2}
@@ -228,24 +235,64 @@ describe('AdminTentTable 천막 등록', () => {
   it('확인 창에서 취소하면 등록하지 않는다', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(false);
     const onCreateTents = vi.fn();
-    render(<AdminTentTable {...baseProps} tents={[]} itemTotalQuantity={8} onCreateTents={onCreateTents} />);
+    render(<AdminTentTable onDeleteTent={vi.fn()} {...baseProps} tents={[]} itemTotalQuantity={8} onCreateTents={onCreateTents} />);
     await userEvent.click(screen.getByRole('button', { name: /천막 8동 등록/ }));
     expect(onCreateTents).not.toHaveBeenCalled();
   });
 
   it('등록된 천막 수가 물품 목록의 수량과 다르면 알려준다 (비고는 서버 저장이라 브라우저 안내 없음)', () => {
     render(
-      <AdminTentTable {...baseProps} tents={[tent()]} itemTotalQuantity={8} onCreateTents={vi.fn()} />,
+      <AdminTentTable onDeleteTent={vi.fn()} {...baseProps} tents={[tent()]} itemTotalQuantity={8} onCreateTents={vi.fn()} />,
     );
     expect(screen.getByText(/물품 목록의 천막 수량 8개와 다릅니다/)).toBeInTheDocument();
     expect(screen.queryByText(/이 브라우저에만 저장/)).not.toBeInTheDocument();
   });
 });
 
+describe('AdminTentTable 천막 삭제', () => {
+  const baseProps = {
+    onDamagedChange: vi.fn(),
+    onNoteChange: vi.fn(),
+    onConditionChange: vi.fn(),
+    onCreateTents: vi.fn(),
+    itemTotalQuantity: 3,
+  };
+  const tents = [
+    tent({ id: 1, tentNumber: '천막 2' }),
+    tent({ id: 2, tentNumber: '천막 10' }),
+    tent({ id: 3, tentNumber: '천막 3' }),
+  ];
+
+  it('기본으로 번호가 가장 큰 천막을 골라 확인 후 삭제한다', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const onDeleteTent = vi.fn().mockResolvedValue(undefined);
+    render(<AdminTentTable {...baseProps} tents={tents} onDeleteTent={onDeleteTent} />);
+
+    await userEvent.click(screen.getByRole('button', { name: '- 천막 삭제' }));
+    expect(screen.getByRole('combobox', { name: '삭제할 천막' })).toHaveValue('2');
+    await userEvent.click(screen.getByRole('button', { name: '삭제' }));
+    expect(onDeleteTent).toHaveBeenCalledWith(expect.objectContaining({ id: 2, tentNumber: '천막 10' }));
+  });
+
+  it('대여중인 천막은 고를 수 없고, 확인 창에서 취소하면 삭제하지 않는다', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const onDeleteTent = vi.fn();
+    const out = tent({ id: 2, tentNumber: '천막 10', rentals: [rental({ status: 'RENTED' })] });
+    render(<AdminTentTable {...baseProps} tents={[tents[0], out]} onDeleteTent={onDeleteTent} />);
+
+    await userEvent.click(screen.getByRole('button', { name: '- 천막 삭제' }));
+    const select = screen.getByRole('combobox', { name: '삭제할 천막' });
+    expect(select).toHaveValue('1');
+    expect(screen.getByRole('option', { name: '천막 10 (대여중)' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: '삭제' }));
+    expect(onDeleteTent).not.toHaveBeenCalled();
+  });
+});
+
 describe('AdminTentTable 대여 가능 여부', () => {
   it('파손이거나 지금 나가 있으면(대여중/연체) 불가, 사유는 툴팁으로', () => {
     render(
-      <AdminTentTable
+      <AdminTentTable onDeleteTent={vi.fn()}
         tents={[
           tent({ id: 1, tentNumber: '천막 1' }),
           tent({ id: 2, tentNumber: '천막 2', damaged: true }),
@@ -295,7 +342,7 @@ describe('AdminTentTable 부위 상태', () => {
   it('천·다리 상태를 표시하고, 바꾸면 해당 부위만 저장 요청한다', async () => {
     const onConditionChange = vi.fn();
     render(
-      <AdminTentTable
+      <AdminTentTable onDeleteTent={vi.fn()}
         tents={[tent({ id: 7, tentNumber: '천막 7', fabric: 'MEDIUM', frame: 'NORMAL' })]}
         itemTotalQuantity={1}
         onDamagedChange={vi.fn()}
@@ -323,7 +370,7 @@ describe('AdminTentTable 부위 상태', () => {
 
   it('부위가 파손이어도 대여 가능 여부는 막지 않는다 (등급은 기록용)', () => {
     render(
-      <AdminTentTable
+      <AdminTentTable onDeleteTent={vi.fn()}
         tents={[tent({ id: 8, tentNumber: '천막 8', fabric: 'HIGH', frame: 'HIGH' })]}
         itemTotalQuantity={1}
         onDamagedChange={vi.fn()}

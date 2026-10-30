@@ -9,6 +9,7 @@ import type { PartCondition, Tent, TentItemInfo, TentRental } from "./types";
  * 천막 한 동 = '천막' 물품의 개별 실물(item_instances) 1개.
  *   - 천막 번호 : 실물 시리얼 번호                  (GET/POST /api/items/:id/instances)
  *   - 파손/비고 : 실물 상태 BROKEN/AVAILABLE + note (PUT /api/items/instances/:id)
+ *   - 삭제      : DELETE /api/items/instances/:id
  *   - 대여 이력 : 실물 목록 응답의 rentals — 대여중으로 바꿀 때 instanceIds로 지정한 출고 기록
  */
 
@@ -126,4 +127,9 @@ export async function createTent(tentNumber: string): Promise<void> {
   await axiosInstance.post(`/api/items/${id}/instances`, {
     serialNumber: tentNumber,
   });
+}
+
+/** 천막 삭제 (실물 1개 삭제) */
+export async function deleteTent(tentId: number): Promise<void> {
+  await axiosInstance.delete(`/api/items/instances/${tentId}`);
 }
