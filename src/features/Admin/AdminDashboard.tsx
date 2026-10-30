@@ -28,6 +28,7 @@ import {
   getTentItem,
   updateTent,
   createTent,
+  deleteTent,
 } from "../../api/tent/tentApi";
 import type { PartCondition, Tent } from "../../api/tent/types";
 import TentAssignModal from "../../components/Admin/TentAssignModal";
@@ -690,6 +691,19 @@ function AdminDashboard() {
       alert(
         `'${failed}' 등록에 실패했습니다: ${apiErrorMessage(err, "알 수 없는 오류")}` +
           (done.length ? `\n(${done.join(", ")}은(는) 등록됨)` : ""),
+      );
+    } finally {
+      await fetchTents();
+    }
+  };
+
+  /** 천막 삭제. 삭제 후 목록 재조회 */
+  const handleTentDelete = async (tent: Pick<Tent, "id" | "tentNumber">) => {
+    try {
+      await deleteTent(tent.id);
+    } catch (err: unknown) {
+      alert(
+        `'${tent.tentNumber}' 삭제에 실패했습니다: ${apiErrorMessage(err, "알 수 없는 오류")}`,
       );
     } finally {
       await fetchTents();
@@ -1511,6 +1525,7 @@ function AdminDashboard() {
                 onNoteChange={handleTentNoteChange}
                 onConditionChange={handleTentConditionChange}
                 onCreateTents={handleTentCreate}
+                onDeleteTent={handleTentDelete}
                 itemTotalQuantity={tentItemTotal}
                 loading={loading}
                 error={error}

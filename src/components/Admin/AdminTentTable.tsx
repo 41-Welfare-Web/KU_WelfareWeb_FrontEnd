@@ -3,6 +3,7 @@ import type { PartCondition, Tent } from "../../api/tent/types";
 import { PART_CONDITION_LABEL } from "../../api/tent/types";
 import AdminTableHeader from "./AdminTableHeader";
 import {
+  getCurrentRental,
   getCurrentUnit,
   getLastUnit,
   getTentBlockReason,
@@ -123,6 +124,8 @@ interface AdminTentTableProps {
   onConditionChange: (tentId: number, part: "fabric" | "frame", value: PartCondition) => void;
   /** 천막 등록 (천막 번호 목록) */
   onCreateTents: (tentNumbers: string[]) => Promise<void>;
+  /** 천막 삭제 */
+  onDeleteTent: (tent: Tent) => Promise<void>;
   /** 물품 목록 관리에 등록된 천막 총 수량 (처음 일괄 등록 시 기본 개수) */
   itemTotalQuantity?: number;
   loading?: boolean;
@@ -136,12 +139,50 @@ export default function AdminTentTable({
   onNoteChange,
   onConditionChange,
   onCreateTents,
+  onDeleteTent,
   itemTotalQuantity = 0,
   loading = false,
   error = null,
   className = "",
 }: AdminTentTableProps) {
   const [creating, setCreating] = useState(false);
+  // 삭제할 천막 고르는 중이면 그 천막 id (null이면 삭제 선택 UI 닫힘)
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // 지금 나가 있는(대여중/연체) 천막은 삭제 불가
+  const deletableTents = tents.filter((t) => !getCurrentRental(t));
+  const deleteTarget = tents.find((t) => t.id === deleteTargetId);
+
+  // 기본 선택은 번호가 가장 큰 삭제 가능 천막
+  const openDelete = () => {
+    const last = deletableTents.reduce<Tent | undefined>(
+      (best, t) => (!best || tentNo(t.tentNumber) > tentNo(best.tentNumber) ? t : best),
+      undefined,
+    );
+    if (!last) {
+      alert("삭제할 수 있는 천막이 없습니다. (대여중/미반납 천막은 삭제할 수 없습니다)");
+      return;
+    }
+    setDeleteTargetId(last.id);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget || deleting) return;
+    if (
+      !window.confirm(
+        `'${deleteTarget.tentNumber}'을(를) 삭제할까요?\n대여 이력이 함께 사라질 수 있으며 되돌릴 수 없습니다.`,
+      )
+    )
+      return;
+    setDeleting(true);
+    try {
+      await onDeleteTent(deleteTarget);
+      setDeleteTargetId(null);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const create = async (tentNumbers: string[], confirmMessage: string) => {
     if (creating || !window.confirm(confirmMessage)) return;
@@ -183,14 +224,62 @@ export default function AdminTentTable({
               </span>
             )}
           </span>
-          <button
-            type="button"
-            onClick={handleAddOne}
-            disabled={creating}
-            className="shrink-0 whitespace-nowrap h-[32px] px-3 rounded-[8px] border border-[#a4a4a4] bg-white font-['Gmarket_Sans'] font-medium text-[13px] text-[#410f07] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {creating ? "등록 중..." : "+ 천막 추가"}
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {deleteTarget ? (
+              <>
+                <select
+                  value={deleteTarget.id}
+                  onChange={(e) => setDeleteTargetId(Number(e.target.value))}
+                  disabled={deleting}
+                  aria-label="삭제할 천막"
+                  className="h-[32px] px-2 rounded-[8px] border border-[#a4a4a4] bg-white font-['Gmarket_Sans'] text-[13px] text-[#410f07] outline-none focus:ring-2 focus:ring-[#fe6949]"
+                >
+                  {tents.map((t) => {
+                    const out = !!getCurrentRental(t);
+                    return (
+                      <option key={t.id} value={t.id} disabled={out}>
+                        {t.tentNumber}
+                        {out ? " (대여중)" : ""}
+                      </option>
+                    );
+                  })}
+                </select>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="whitespace-nowrap h-[32px] px-3 rounded-[8px] bg-[#d72002] font-['Gmarket_Sans'] font-medium text-[13px] text-white hover:bg-[#b81b02] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {deleting ? "삭제 중..." : "삭제"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteTargetId(null)}
+                  disabled={deleting}
+                  className="whitespace-nowrap h-[32px] px-3 rounded-[8px] border border-[#a4a4a4] bg-white font-['Gmarket_Sans'] font-medium text-[13px] text-[#410f07] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  취소
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={openDelete}
+                disabled={creating}
+                className="whitespace-nowrap h-[32px] px-3 rounded-[8px] border border-[#a4a4a4] bg-white font-['Gmarket_Sans'] font-medium text-[13px] text-[#d72002] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                - 천막 삭제
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleAddOne}
+              disabled={creating || deleting}
+              className="whitespace-nowrap h-[32px] px-3 rounded-[8px] border border-[#a4a4a4] bg-white font-['Gmarket_Sans'] font-medium text-[13px] text-[#410f07] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {creating ? "등록 중..." : "+ 천막 추가"}
+            </button>
+          </div>
         </div>
       )}
 
